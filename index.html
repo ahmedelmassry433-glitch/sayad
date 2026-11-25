@@ -249,6 +249,9 @@ html[dir=ltr] .greet{letter-spacing:-.4px}
 .sheet .sheetX{position:absolute;top:6px;inset-inline-end:14px;width:34px;height:34px;border-radius:50%;border:1px solid var(--brd2);
   background:rgba(255,255,255,.08);color:#fff;font-size:20px;line-height:1;display:grid;place-items:center;cursor:pointer}
 .sheet.dragging{transition:none}
+/* سحب يمين وشمال بين التابات */
+@keyframes swIn{from{opacity:.25;transform:translateX(var(--swx,0))}to{opacity:1;transform:none}}
+#app.swIn{animation:swIn .32s cubic-bezier(.22,1,.36,1)}
 .sheet h2{font-size:19px;margin:0 0 14px;font-weight:600}
 .field{margin-bottom:12px}
 .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
@@ -659,7 +662,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
-var APP_VER = 'v22';
+var APP_VER = 'v23';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
@@ -2020,7 +2023,8 @@ function zakatCard(){
   return '<div class="card" onclick="go(\'zakat\')" style="cursor:pointer"><h3>🕌 '+L('الزكاة','Zakat')+' <span class="muted">'+FWD()+'</span></h3>'+
     (z.due ? '<div class="row"><span class="muted">'+L('زكاة الدهب','Gold zakat')+'</span><b>'+zMoney(gz)+'</b></div>'+
       '<div class="dim" style="font-size:12px;margin:-2px 0 6px">'+L('أو تخرجها دهب: حوالي <span class="num">'+fmtN(z.goldZakatG,2)+'</span> جرام عيار 24','Or in gold: about <span class="num">'+fmtN(z.goldZakatG,2)+'</span> g of 24k')+'</div>'+
-      '<div class="row"><span class="muted">'+L('زكاة الفلوس (بنك وكاش)','Cash zakat (bank & cash)')+'</span><b>'+zMoney(mz)+'</b></div>'+
+      '<div class="row"><span class="muted">'+L('زكاة الفلوس','Money zakat')+'</span><b>'+zMoney(mz)+'</b></div>'+
+      '<div class="dim" style="font-size:12px;margin:-2px 0 6px">'+L('بنك ','Bank ')+zMoney(z.bank)+' + '+L('كاش ','cash ')+zMoney(z.cash)+(z.incRecv&&z.recv?' + '+L('فريلانس ليك ','freelance owed ')+zMoney(z.recv):'')+(z.decDebts&&z.debts?' − '+L('أقساط ','debts ')+zMoney(z.debts):'')+'</div>'+
       '<div class="row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--brd)"><span>'+L('الإجمالي','Total')+'</span><b class="good">'+zMoney(z.zakat)+'</b></div>'
     : '<div class="dim" style="font-size:13px">'+L('مالك لسه تحت النصاب ('+zMoney(z.nisab)+')','Below nisab ('+zMoney(z.nisab)+')')+'</div>')+
     '<div class="dim" style="font-size:11.5px;margin-top:8px">'+(nd ? L('يوم زكاتك: ','Zakat day: ')+dShort(nd)+' · '+hijri(nd) : L('دوس هنا وحدد يوم زكاتك عشان أفكرك بيه','Tap to set your zakat day for a reminder'))+'</div></div>';
@@ -2198,6 +2202,24 @@ function kv(k,v,on,sub){ return '<div class="kv" onclick="'+on+'"><div><span>'+k
 function openSheet(html){ var s=document.getElementById('sheet'); s.innerHTML='<div class="grabZone"><div class="grab"></div><button class="sheetX" onclick="closeSheet()" aria-label="'+L('اقفل','Close')+'">×</button></div>'+html; s.scrollTop=0; document.getElementById('sheetBg').style.display='block'; Motion.lock(true); s._open=true; requestAnimationFrame(function(){ if(s._open) s.classList.add('open');}); }
 function closeSheet(){ var s=document.getElementById('sheet'); s._open=false; s.classList.remove('dragging'); s.style.transform=''; s.classList.remove('open'); document.getElementById('sheetBg').style.display='none'; Motion.lock(false); }
 document.getElementById('sheetBg').onclick = closeSheet;
+// اسحب يمين/شمال في أي حتة فاضية عشان تروح للتاب اللي جنبك (زي ترتيب الأيقونات تحت)
+(function(){
+  var TABS = ['home','tx','report','income','gold','wealth'], x0=0, y0=0, t0=0, on=false;
+  function blocked(el){ return el.closest && el.closest('.rchips,.seg,.chips,.chart,canvas,input,textarea,select,.sheet,.donut,[data-noswipe],.scrollx'); }
+  var app = document.getElementById('app');
+  app.addEventListener('touchstart', function(e){ if(e.touches.length>1 || document.getElementById('sheet')._open || blocked(e.target)) { on=false; return; }
+    x0=e.touches[0].clientX; y0=e.touches[0].clientY; t0=Date.now(); on=true; }, {passive:true});
+  app.addEventListener('touchend', function(e){ if(!on) return; on=false;
+    var t=e.changedTouches[0], dx=t.clientX-x0, dy=t.clientY-y0, dt=Date.now()-t0;
+    if(Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy)*1.8 || dt > 700) return;
+    var cur = ({inst:'wealth',zakat:'wealth',subs:'home',settings:'home'})[UI.tab] || UI.tab, i = TABS.indexOf(cur); if(i<0) return;
+    var rtl = document.documentElement.dir !== 'ltr', next = i + ((dx<0) === rtl ? 1 : -1);
+    if(rtl && dx>0) next = i-1; if(rtl && dx<0) next = i+1; if(!rtl && dx<0) next = i+1; if(!rtl && dx>0) next = i-1;
+    if(next<0 || next>=TABS.length) return;
+    go(TABS[next]);
+    app.style.setProperty('--swx', (dx<0?'40px':'-40px')); app.classList.remove('swIn'); void app.offsetWidth; app.classList.add('swIn');
+  }, {passive:true});
+})();
 // اسحب الشيت لتحت عشان تقفله (من فوق، أو من أي حتة لو إنت في أول الصفحة)
 (function(){
   var s=document.getElementById('sheet'), y0=0, dy=0, t0=0, on=false, fromGrab=false;
