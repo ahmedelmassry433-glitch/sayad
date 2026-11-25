@@ -659,7 +659,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
-var APP_VER = 'v20';
+var APP_VER = 'v21';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
@@ -1131,16 +1131,16 @@ function vHome(){
     (pend? '<div class="row" style="margin-top:12px;font-size:13.5px"><span class="muted">'+L('فريلانس لسه برّه','Freelance still owed')+'</span><b class="warn">'+money(pend)+' '+CUR()+'</b></div>':'')+
     '</div>';
 
-  var alerts = budgetAlerts(monthTx, elapsed/daysTotal);
-  if(alerts) h += '<div class="section-title">'+L('تنبيهات','Alerts')+'</div>'+alerts;
+  var alerts = budgetAlerts(monthTx, elapsed/daysTotal).split('<div class="alert').filter(Boolean).map(function(x){ return '<div class="alert'+x; });
+  if(alerts.length) h += '<div class="section-title">'+L('تنبيهات','Alerts')+'</div>'+alerts.slice(0, UI.allAlerts?99:3).join('')+(UI.allAlerts?'':moreBtn(alerts.length-3, 'UI.allAlerts=1;render()'));
 
   h += vReview(2);
   h += donutCard(monthTx, mr, spentM, L('صرفك الشهر ده راح فين','Where this month’s money went'));
   h += vInstallments(true);
-  h += subsSection();
+  h += subsSection(3);
 
-  var last = D.tx.slice().sort(function(a,b){return pd(b.date)-pd(a.date);}).slice(0,6);
-  h += '<div class="card"><h3>'+L('آخر العمليات','Recent transactions')+' <a onclick="go(\'tx\')">'+L('الكل','See all')+' '+FWD()+'</a></h3>'+(last.length? last.map(txRow).join('') : emptyTx())+'</div>';
+  var last = D.tx.slice().sort(function(a,b){return pd(b.date)-pd(a.date);}).slice(0,3);
+  h += '<div class="card"><h3>'+L('آخر العمليات','Recent transactions')+' <a onclick="go(\'tx\')">'+L('الكل','See all')+' '+FWD()+'</a></h3>'+(last.length? last.map(txRow).join('')+moreBtn(D.tx.length-3, "go('tx')") : emptyTx())+'</div>';
 
   h += '<div class="card" onclick="go(\'wealth\')" style="cursor:pointer"><h3>'+L('كل اللي معاك','Everything you have')+' <span class="muted">'+FWD()+'</span></h3><b style="font-size:24px;font-weight:400">'+sar(wealth())+'</b>'+
     '<div class="dim" style="font-size:12.5px;margin-top:4px">'+L('بنك ','Bank ')+money(s.bankBalance)+' · '+L('كاش ','Cash ')+money(s.cash)+' · '+L('دهب ','Gold ')+money(goldSar())+'</div>'+
@@ -1221,7 +1221,7 @@ function vInstallments(compact){
   var thisMonth=up.filter(function(i){return i.dueDate<endM;}).reduce(function(a,i){return a+Number(i.amount);},0);
   return '<div class="card"><h3>'+L('الأقساط اللي عليك','Your installments')+' <a onclick="go(\'inst\')">'+L('الكل','See all')+' '+FWD()+'</a></h3>'+
     '<div class="row" style="margin:-4px 0 6px"><span class="muted" style="font-size:13px">'+L('الشهر ده','This month')+'</span><b class="num">'+fmtN(thisMonth,2)+' '+CUR()+'</b></div>'+
-    up.slice(0,3).map(instRow).join('')+'</div>';
+    up.slice(0,3).map(instRow).join('')+moreBtn(up.length-3, "go('inst')")+'</div>';
 }
 // القسط بيتعرض باسم وشعار الأبلكيشن اللي عليه (تابي/تمارا/بسيطة/الكريدت)، والمحل جنبه
 function instIc(prov){ return catIc('أقساط تابي وتمارا', prov||''); }
@@ -1369,6 +1369,7 @@ function setTxCat(id,c){
   var t=D.tx.filter(function(x){return x.id===id;})[0]; if(t){ t.category=c; render(); }
   call('updateTx', id, {category:c}, false).then(function(d){ D=d; render(); toast(L('اتحطت في «'+catName(c)+'» ✓','Moved to “'+catName(c)+'” ✓')); }).catch(function(e){ toast(String(e&&e.message||e)); });
 }
+function moreBtn(n, onclick){ return n>0 ? '<button class="btn ghost" style="margin-top:10px" onclick="'+onclick+'">'+L('شوف الباقي ('+n+')','See the rest ('+n+')')+'</button>' : ''; }
 function vReview(limit){
   var list = D.tx.filter(needsReview).sort(function(a,b){return pd(b.date)-pd(a.date);});
   if(!list.length) return '';
@@ -1876,13 +1877,13 @@ function subRow(x){
     '<div style="text-align:end"><div class="amt">'+money(x.amount,2)+'</div><span class="chg '+(soon?'down':'flat')+'">'+dayLabel(x.next)+'</span></div></div>';
 }
 // كارت الاشتراكات في الرئيسية والتقارير: زي الأقساط، تحت بعض باللوجو والميعاد
-function subsSection(){
-  var subs = subsOf('sub');
+function subsSection(limit){
+  var subs = subsOf('sub'), lim = limit || 99;
   if(!subs.length) return '<div class="card"><h3>🔁 '+L('اشتراكاتك','Your subscriptions')+' <a onclick="addSub()">+ '+L('ضيف','Add')+'</a></h3><div class="empty" style="padding:8px 0">'+L('لسه ملقتش اشتراكات. لو عندك اشتراك، ضيفه بإيدك.','No subscriptions found yet. Add one yourself.')+'</div></div>';
   return '<div class="card"><h3>🔁 '+L('اشتراكاتك','Your subscriptions')+' <a onclick="go(\'subs\')">'+L('الكل','See all')+' '+FWD()+'</a></h3>'+
     '<div class="row" style="margin:-4px 0 6px"><span class="muted" style="font-size:13px">'+L('كل شهر','Every month')+' · '+subs.length+L(' اشتراك',' subscriptions')+'</span><b class="num">'+fmtN(subsMonthly('sub'),2)+' '+CUR()+'</b></div>'+
-    subs.map(subRow).join('')+
-    '<div style="text-align:center;margin-top:6px"><a class="muted" style="font-size:13px;cursor:pointer" onclick="addSub()">+ '+L('ضيف اشتراك ناسيه','Add one I missed')+'</a></div></div>';
+    subs.slice(0,lim).map(subRow).join('')+moreBtn(subs.length-lim, "go('subs')")+
+    '<div style="text-align:center;margin-top:8px"><a class="muted" style="font-size:13px;cursor:pointer" onclick="addSub()">+ '+L('ضيف اشتراك ناسيه','Add one I missed')+'</a></div></div>';
 }
 function vSubs(){
   var all = detectSubs(), subs = subsOf('sub'), bills = subsOf('bill'), hid = all.filter(function(x){return x.hidden;}), canc = all.filter(function(x){return x.cancelled && !x.hidden;});
