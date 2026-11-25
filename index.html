@@ -659,7 +659,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
-var APP_VER = 'v17';
+var APP_VER = 'v18';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
@@ -1949,15 +1949,18 @@ function forecast(){
       if(sk[subKey(t)] || t.category==='أقساط تابي وتمارا' || t.category==='إيجار') o.fixed+=a; else if(a>=600) o.big+=a; });
     o.vary = Math.max(0, o.all-o.fixed-o.big); return o; }
   var cur = split(inRange(mr)), daily = cur.vary/elapsed;
-  var pr = range('month',-1), prevDays = Math.max(1, Math.round((pr.e-pr.s)/864e5)), prv = split(inRange(pr)), prevDaily = prv.vary/prevDays;
-  var w = Math.min(1, elapsed/14), blend = prv.all ? w*daily + (1-w)*prevDaily : daily;
+  // المعتاد: الوسيط بتاع آخر 6 شهور (شهر عالي زي الشهر اللي فات مش بيشد الرقم كله)
+  var hist = [];
+  for(var k=1;k<=6;k++){ var pr = range('month',-k), pdays = Math.max(1, Math.round((pr.e-pr.s)/864e5)), pv = split(inRange(pr)); if(pv.all>0) hist.push(pv.vary/pdays); }
+  var prevDaily = median(hist), prevAll = hist.length;
+  var w = prevAll ? Math.min(0.5, elapsed/28) : 1, blend = w*daily + (1-w)*prevDaily; // الشهر الحالي بياخد وزن أكتر كل ما يعدي، لحد النص
   var up = [];
   (D.installments||[]).forEach(function(i){ if(instPaid(i)) return; var d=pd(i.dueDate); if(d>=today && d<mr.e) up.push({name:enName(i.provider)+(i.merchant?' · '+enName(i.merchant):''), amount:Number(i.amount)||0, date:d, kind:'inst', cat:'أقساط تابي وتمارا', text:i.provider}); });
   subs.forEach(function(x){ if(x.next>=today && x.next<mr.e) up.push({name:x.name, amount:x.amount, date:x.next, kind:'sub', cat:x.cat, text:x.merchant}); });
   up.sort(function(a,b){return a.date-b.date;});
   var upSum = up.reduce(function(a,x){return a+x.amount;},0), projVar = blend*daysLeft;
   var spent = sum(inRange(mr),'expense'), budget = budgetFor(mr), s = S();
-  return {mr:mr, daysLeft:daysLeft, elapsed:elapsed, spent:spent, daily:daily, prevDaily:prevDaily, blend:blend, up:up, upSum:upSum, projVar:projVar,
+  return {mr:mr, daysLeft:daysLeft, elapsed:elapsed, spent:spent, daily:daily, prevDaily:prevDaily, histN:prevAll, blend:blend, up:up, upSum:upSum, projVar:projVar,
     total: spent+upSum+projVar, bankEnd: (Number(s.bankBalance)||0)-upSum-projVar, budget:budget,
     safeDaily: budget ? (budget-spent-upSum)/Math.max(1,daysLeft) : null};
 }
@@ -1978,14 +1981,14 @@ function openForecast(){
   openSheet('<h2>🔮 '+L('توقّع آخر الشهر','End-of-month forecast')+'</h2>'+
     '<div class="row"><span class="muted">'+L('صرفت لحد النهارده','Spent so far')+'</span><b>'+sar(f.spent)+'</b></div>'+
     '<div class="row" style="margin-top:6px"><span class="muted">'+L('المصروف اليومي (من غير الثابت والحاجات الكبيرة)','Day-to-day spending (no bills or big one-offs)')+'</span><b>'+money(f.daily)+L(' / يوم',' / day')+'</b></div>'+
-    (f.prevDaily ? '<div class="row" style="margin-top:6px"><span class="muted">'+L('الشهر اللي فات','Last cycle')+'</span><b>'+money(f.prevDaily)+L(' / يوم',' / day')+'</b></div>' : '')+
+    (f.prevDaily ? '<div class="row" style="margin-top:6px"><span class="muted">'+L('المعتاد (آخر '+f.histN+' شهور)','Usual (last '+f.histN+' months)')+'</span><b>'+money(f.prevDaily)+L(' / يوم',' / day')+'</b></div>' : '')+
     '<div class="row" style="margin-top:6px"><span class="muted">'+L('باقي للمرتب','Days to payday')+'</span><b>'+f.daysLeft+L(' يوم',' days')+'</b></div>'+
     '<div class="section-title">'+L('جاي قبل المرتب','Due before payday')+' · '+money(f.upSum)+'</div><div class="card" style="padding:4px 14px">'+
     (f.up.length ? f.up.map(function(x){ return '<div class="tx" style="cursor:default">'+catIc(x.cat,x.text)+'<div class="mid"><b>'+esc(x.name)+'</b><span>'+(x.kind==='inst'?L('قسط','Installment'):L('اشتراك','Subscription'))+' · '+dayLabel(x.date)+'</span></div><div class="amt"><span class="num">'+fmtN(x.amount,2)+'</span></div></div>'; }).join('')
       : '<div class="empty">'+L('مفيش أقساط ولا اشتراكات جاية قبل المرتب','No bills due before payday')+'</div>')+'</div>'+
     '<div class="row" style="margin-top:12px"><span class="muted">'+L('المصروف اليومي لحد المرتب','Day-to-day until payday')+'</span><b>'+money(f.projVar)+'</b></div>'+
     '<div class="row" style="margin-top:6px"><span>'+L('هيفضل في البنك يوم المرتب','Bank balance on payday')+'</span><b class="'+(f.bankEnd<0?'bad':'good')+'">'+sar(f.bankEnd)+'</b></div>'+
-    '<div class="dim" style="font-size:11.5px;margin-top:12px">'+L('الحسبة: سرعة صرفك اليومي (أول أسبوعين بنخلطها بالشهر اللي فات)، والأقساط والاشتراكات اللي ميعادها قبل المرتب. الحاجات الكبيرة اللي مرة واحدة (600 ريال أو أكتر) مش بتتحسب يومي.','How it works: your daily pace (mixed with last cycle in the first two weeks), plus installments and subscriptions due before payday. One-off purchases of 600 SAR or more aren’t treated as daily.')+'</div>');
+    '<div class="dim" style="font-size:11.5px;margin-top:12px">'+L('الحسبة: مصروفك اليومي المعتاد من آخر 6 شهور (الوسيط، فشهر عالي واحد مبيشدش الرقم)، مخلوط بصرفك الشهر ده كل ما يعدي منه، وفوقهم الأقساط والاشتراكات اللي ميعادها قبل المرتب. الحاجات الكبيرة اللي مرة واحدة (600 ريال أو أكتر) والإيجار والاشتراكات مش بتتحسب في اليومي.','How it works: your usual daily spending over the last 6 months (the median, so one heavy month doesn’t skew it), blended with this cycle as it goes, plus installments and subscriptions due before payday. One-offs of 600 SAR or more, rent and subscriptions aren’t counted as daily.')+'</div>');
 }
 function subsCard(){
   var list = detectSubs().filter(function(x){return !x.hidden;}); if(!list.length) return '';
