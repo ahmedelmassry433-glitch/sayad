@@ -313,6 +313,11 @@ body.locked{overflow:hidden}
   -webkit-backdrop-filter:blur(28px) saturate(160%);backdrop-filter:blur(28px) saturate(160%);transition:opacity .35s}
 .lock.out{opacity:0;pointer-events:none}
 .lockIn{text-align:center;padding:24px;width:min(340px,90vw)}
+.lockTap{cursor:pointer;min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.faceBig{width:96px;height:96px;border-radius:50%;margin:26px auto 12px;display:grid;place-items:center;color:var(--accent);background:rgba(94,234,212,.1);border:1px solid rgba(94,234,212,.35);animation:pulse 2s ease-in-out infinite}
+.faceBig svg{width:48px;height:48px}
+.lockHint{font-size:13px;color:var(--dim)}
+.pinLink{margin-top:34px;font-size:13px;color:var(--muted);text-decoration:underline;background:none;border:0}
 .lockLogo{width:92px;height:92px;margin:0 auto 12px;border-radius:28px;display:grid;place-items:center;
   background:radial-gradient(circle at 35% 30%,#fff,#e6eef6 70%);box-shadow:0 18px 40px -12px rgba(143,168,196,.6)}
 .lockLogo svg{width:72px;height:72px}
@@ -909,7 +914,7 @@ function saveProfile(){
    الإعداد متخزن على الموبايل ده بس (localStorage). ده قفل للشاشة على الجهاز،
    والبيانات نفسها متأمنة أصلًا بتسجيل دخول جوجل. */
 var Lock = (function(){
-  var KEY='sayad-lock', lastHidden=0, open=false, pinBuf='';
+  var KEY='sayad-lock', lastHidden=0, open=false, pinBuf='', pinMode=false;
   function cfg(){ try{ return JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ return {}; } }
   function save(c){ try{ localStorage.setItem(KEY, JSON.stringify(c)); }catch(e){} }
   function b64(buf){ return btoa(String.fromCharCode.apply(null,new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
@@ -940,21 +945,32 @@ var Lock = (function(){
   }
   function draw(msg){
     var c=cfg(), el=overlay();
+    // Face ID: لازم يتطلب من لمسة، وإلا iOS بيطلّع شباك «Use Passkey» الأول
+    if(c.cred && !pinMode){
+      el.innerHTML='<div class="lockIn lockTap" onclick="Lock.tryFace()">'+
+        '<div class="lockLogo">'+SHARK+'</div>'+
+        '<div class="lockName">'+L('صياد القرش','Sayad Elarsh')+'</div>'+
+        '<div class="lockMsg" id="lockMsg">'+(msg||L('مقفول','Locked'))+'</div>'+
+        '<button class="faceBig" aria-label="Face ID">'+FACEID_SVG+'</button>'+
+        '<div class="lockHint">'+L('دوس في أي حتة وبص للموبايل','Tap anywhere and look at your phone')+'</div>'+
+        '<button class="pinLink" onclick="event.stopPropagation();Lock.usePin()">'+L('استخدم الرقم السري','Use PIN')+'</button>'+
+      '</div>';
+      return;
+    }
     el.innerHTML='<div class="lockIn">'+
       '<div class="lockLogo">'+SHARK+'</div>'+
       '<div class="lockName">'+L('صياد القرش','Sayad Elarsh')+'</div>'+
       '<div class="lockMsg" id="lockMsg">'+(msg||L('مقفول','Locked'))+'</div>'+
       '<div class="pinDots" id="pinDots">'+[0,1,2,3].map(function(i){return '<i class="'+(i<pinBuf.length?'on':'')+'"></i>';}).join('')+'</div>'+
       '<div class="keypad">'+[1,2,3,4,5,6,7,8,9].map(function(n){return '<button onclick="Lock.key('+n+')">'+n+'</button>';}).join('')+
-        (c.cred?'<button class="fid" onclick="Lock.tryFace()" aria-label="Face ID">'+FACEID_SVG+'</button>':'<span></span>')+
+        (c.cred?'<button class="fid" onclick="Lock.useFace()" aria-label="Face ID">'+FACEID_SVG+'</button>':'<span></span>')+
         '<button onclick="Lock.key(0)">0</button>'+
         '<button class="del" onclick="Lock.del()" aria-label="'+L('مسح','Delete')+'">⌫</button></div>'+
     '</div>';
   }
   function show(){
     var c=cfg(); if(!c.on) return;
-    open=true; pinBuf=''; draw(); document.body.classList.add('locked');
-    if(c.cred) setTimeout(tryFace, 250);
+    open=true; pinBuf=''; pinMode=false; draw(); document.body.classList.add('locked');
   }
   function unlock(){
     open=false; pinBuf='';
@@ -965,7 +981,7 @@ var Lock = (function(){
   function tryFace(){
     verifyFaceId().then(unlock).catch(function(e){
       var m=document.getElementById('lockMsg');
-      if(m) m.textContent = L('Face ID مش متاح هنا، اكتب الرقم السري','Face ID isn’t available here — enter your PIN');
+      if(m) m.textContent = (e && e.name==='NotAllowedError') ? L('ملحقش يشوفك، دوس تاني','Didn’t catch that — tap again') : L('Face ID مش متاح هنا، اكتب الرقم السري','Face ID isn’t available here — enter your PIN');
     });
   }
   function key(n){
@@ -981,14 +997,15 @@ var Lock = (function(){
   }
   function del(){ pinBuf=pinBuf.slice(0,-1); draw(); }
 
-  // لو سبت الأبلكيشن أكتر من دقيقة، يتقفل تاني
+  // لو سبت الأبلكيشن أكتر من 3 دقايق، يتقفل تاني
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState==='hidden') lastHidden=Date.now();
-    else if(cfg().on && !open && lastHidden && Date.now()-lastHidden>60000) show();
+    else if(cfg().on && !open && lastHidden && Date.now()-lastHidden>3*60000) show(); // 3 دقايق
   });
 
   return {
     cfg:cfg, show:show, key:key, del:del, tryFace:tryFace, hasWebAuthn:hasWebAuthn,
+    usePin:function(){ pinMode=true; pinBuf=''; draw(); }, useFace:function(){ pinMode=false; draw(); tryFace(); },
     enable:function(pin){ return hashPin(pin).then(function(h){ var c=cfg(); c.on=true; c.pin=h; save(c); }); },
     enrollFaceId:enrollFaceId,
     disable:function(){ save({}); }
