@@ -1,5 +1,5 @@
 // صياد القرش — كاش بسيط عشان الأبلكيشن يفتح بسرعة (والبيانات نفسها مبتتخزنش هنا)
-const CACHE = 'sayad-v16';
+const CACHE = 'sayad-v17';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -38,7 +38,9 @@ async function showPushes() {
     }
   } catch (e) {}
   if (!notes.length) notes = [{ title: 'صياد القرش', body: 'فيه حاجة جديدة، افتح الأبلكيشن' }];
-  await Promise.all(notes.map(n => self.registration.showNotification(n.title || 'صياد القرش', {
+  // الآيفون بيكتب «from صياد القرش» لوحده، فالعنوان ميبقاش اسم الأبلكيشن تاني
+  notes = notes.map(n => /^\s*صياد القرش/.test(n.title || '') || !n.title ? { ...n, title: n.body || 'فيه حاجة جديدة', body: '' } : n);
+  await Promise.all(notes.map(n => self.registration.showNotification(n.title, {
     body: n.body || '', tag: n.tag || undefined, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', lang: 'ar', dir: 'rtl', data: { url: './' } })));
 }
 self.addEventListener('push', e => e.waitUntil(showPushes()));

@@ -147,6 +147,7 @@ html[dir=ltr] .greet{letter-spacing:-.4px}
 .tx .amt.dim{color:var(--dim)}
 .rchips{flex-basis:100%;display:flex;flex-wrap:nowrap;gap:6px;margin-top:8px;align-items:center;overflow-x:auto;scrollbar-width:none;padding-inline-start:56px;padding-bottom:2px}
 .rchips::-webkit-scrollbar{display:none}
+.rchips{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 34px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 34px),transparent);padding-inline-end:28px}
 .rchips button{flex:none;white-space:nowrap}
 .rchips em{flex:none;white-space:nowrap;font-style:normal;font-size:11.5px;color:var(--dim);margin-inline-end:2px}
 .rchips button{display:inline-flex;align-items:center;gap:4px;font:inherit;font-size:12px;color:var(--text);padding:5px 10px;border-radius:999px;
@@ -658,7 +659,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
-var APP_VER = 'v16';
+var APP_VER = 'v17';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
@@ -1133,7 +1134,7 @@ function vHome(){
   var alerts = budgetAlerts(monthTx, elapsed/daysTotal);
   if(alerts) h += '<div class="section-title">'+L('تنبيهات','Alerts')+'</div>'+alerts;
 
-  h += vReview(3);
+  h += vReview(2);
   h += donutCard(monthTx, mr, spentM, L('صرفك الشهر ده راح فين','Where this month’s money went'));
   h += vInstallments(true);
   h += subsSection();
@@ -1681,6 +1682,7 @@ function vGold(){
         '<div class="mid"><b>'+esc(gName(x))+'</b><span>'+L('دفعت ','Paid ')+gMoney(pdd)+(x.currency==='SAR'?' ('+L('بالريال','in SAR')+')':'')+(x.date?' · '+dShort(pd(x.date)):'')+(x.note?' · '+esc(x.note):'')+'</span></div>'+
         '<div style="text-align:end"><div class="amt">'+(p?gMoney(v):'—')+'</div>'+(p?'<span class="chg '+plClass(pl)+'">'+arrow(pl)+' '+gSigned(pl)+' <span class="num">('+(pc>=0?'+':'')+pc.toFixed(1)+'%)</span></span>':'')+'</div></div>';
     }).join('') : '<div class="empty"><span>🪙</span>'+L('لسه مسجلتش دهب','No gold added yet')+'</div>')+'</div>';
+  h += zakatCard();
   return h;
 }
 UI.wCur = (function(){ try{ return localStorage.getItem('sayad-wcur') || 'SAR'; }catch(e){ return 'SAR'; } })();
@@ -2003,6 +2005,17 @@ function zakatCalc(){
   var base = bank + cash + gold + (incRecv?recv:0) - (decDebts?debts:0), nisab = 85*g24;
   return {g24:g24, nisab:nisab, gold:gold, pure:t.pure, bank:bank, cash:cash, recv:recv, debts:debts, incRecv:incRecv, decDebts:decDebts,
     base:base, due: base>=nisab && nisab>0, zakat: base>=nisab ? base*0.025 : 0, goldZakatG: t.pure*0.025};
+}
+function zakatCard(){
+  var z = zakatCalc(), money2 = z.base - z.gold, nd = zakatNext(), today = sod(new Date());
+  var gz = z.due ? z.gold*0.025 : 0, mz = z.due ? Math.max(0,money2)*0.025 : 0;
+  return '<div class="card" onclick="go(\'zakat\')" style="cursor:pointer"><h3>🕌 '+L('الزكاة','Zakat')+' <span class="muted">'+FWD()+'</span></h3>'+
+    (z.due ? '<div class="row"><span class="muted">'+L('زكاة الدهب','Gold zakat')+'</span><b>'+sar(gz)+'</b></div>'+
+      '<div class="dim" style="font-size:12px;margin:-2px 0 6px">'+L('أو تخرجها دهب: حوالي <span class="num">'+fmtN(z.goldZakatG,2)+'</span> جرام عيار 24','Or in gold: about <span class="num">'+fmtN(z.goldZakatG,2)+'</span> g of 24k')+'</div>'+
+      '<div class="row"><span class="muted">'+L('زكاة الفلوس (بنك وكاش)','Cash zakat (bank & cash)')+'</span><b>'+sar(mz)+'</b></div>'+
+      '<div class="row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--brd)"><span>'+L('الإجمالي','Total')+'</span><b class="good">'+sar(z.zakat)+'</b></div>'
+    : '<div class="dim" style="font-size:13px">'+L('مالك لسه تحت النصاب ('+money(z.nisab)+' ريال)','Below nisab ('+money(z.nisab)+' SAR)')+'</div>')+
+    '<div class="dim" style="font-size:11.5px;margin-top:8px">'+(nd ? L('يوم زكاتك: ','Zakat day: ')+dShort(nd)+' · '+hijri(nd) : L('دوس هنا وحدد يوم زكاتك عشان أفكرك بيه','Tap to set your zakat day for a reminder'))+'</div></div>';
 }
 function zakatNext(){ var s=S(); if(!s.zakatDate) return null; var d=sod(pd(s.zakatDate)); return d; }
 function vZakat(){
