@@ -250,8 +250,7 @@ html[dir=ltr] .greet{letter-spacing:-.4px}
   background:rgba(255,255,255,.08);color:#fff;font-size:20px;line-height:1;display:grid;place-items:center;cursor:pointer}
 .sheet.dragging{transition:none}
 /* سحب يمين وشمال بين التابات */
-@keyframes swIn{from{opacity:.25;transform:translateX(var(--swx,0))}to{opacity:1;transform:none}}
-#app.swIn{animation:swIn .32s cubic-bezier(.22,1,.36,1)}
+
 .sheet h2{font-size:19px;margin:0 0 14px;font-weight:600}
 .field{margin-bottom:12px}
 .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
@@ -455,9 +454,11 @@ var Motion = (function(){
   }
   function fmt(v){ return Math.round(v).toLocaleString('en-US'); }
 
+  var quiet = false;
   function after(key){
     var isNew = key !== lastKey; lastKey = key;
     Waves.mount();
+    if(quiet){ quiet = false; return; } // جاي من سحب يمين/شمال: من غير حركة دخول تقيلة
     if(!has || reduced || !isNew) return;
     var root = document.getElementById('app');
 
@@ -511,7 +512,7 @@ var Motion = (function(){
   function toTop(){ if(lenis) lenis.scrollTo(0, {immediate:true}); window.scrollTo(0,0); }
   function lock(on){ if(lenis){ on ? lenis.stop() : lenis.start(); } }
 
-  return { start:startLenis, before:before, after:after, toTop:toTop, lock:lock, isReduced:function(){ return reduced; }, reset:function(){ lastKey=null; },
+  return { quiet:function(){ quiet = true; }, start:startLenis, before:before, after:after, toTop:toTop, lock:lock, isReduced:function(){ return reduced; }, reset:function(){ lastKey=null; },
     _setReduced:function(r){ onChange({matches:r}); lastKey=null; } }; // للاختبار بس
 })();
 
@@ -662,7 +663,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
-var APP_VER = 'v23';
+var APP_VER = 'v24';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
@@ -2202,23 +2203,44 @@ function kv(k,v,on,sub){ return '<div class="kv" onclick="'+on+'"><div><span>'+k
 function openSheet(html){ var s=document.getElementById('sheet'); s.innerHTML='<div class="grabZone"><div class="grab"></div><button class="sheetX" onclick="closeSheet()" aria-label="'+L('اقفل','Close')+'">×</button></div>'+html; s.scrollTop=0; document.getElementById('sheetBg').style.display='block'; Motion.lock(true); s._open=true; requestAnimationFrame(function(){ if(s._open) s.classList.add('open');}); }
 function closeSheet(){ var s=document.getElementById('sheet'); s._open=false; s.classList.remove('dragging'); s.style.transform=''; s.classList.remove('open'); document.getElementById('sheetBg').style.display='none'; Motion.lock(false); }
 document.getElementById('sheetBg').onclick = closeSheet;
-// اسحب يمين/شمال في أي حتة فاضية عشان تروح للتاب اللي جنبك (زي ترتيب الأيقونات تحت)
+// اسحب يمين/شمال عشان تروح للتاب اللي جنبك: الصفحة بتمشي مع صباعك، وبعدين التانية بتدخل
 (function(){
-  var TABS = ['home','tx','report','income','gold','wealth'], x0=0, y0=0, t0=0, on=false;
-  function blocked(el){ return el.closest && el.closest('.rchips,.seg,.chips,.chart,canvas,input,textarea,select,.sheet,.donut,[data-noswipe],.scrollx'); }
-  var app = document.getElementById('app');
-  app.addEventListener('touchstart', function(e){ if(e.touches.length>1 || document.getElementById('sheet')._open || blocked(e.target)) { on=false; return; }
-    x0=e.touches[0].clientX; y0=e.touches[0].clientY; t0=Date.now(); on=true; }, {passive:true});
-  app.addEventListener('touchend', function(e){ if(!on) return; on=false;
-    var t=e.changedTouches[0], dx=t.clientX-x0, dy=t.clientY-y0, dt=Date.now()-t0;
-    if(Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy)*1.8 || dt > 700) return;
-    var cur = ({inst:'wealth',zakat:'wealth',subs:'home',settings:'home'})[UI.tab] || UI.tab, i = TABS.indexOf(cur); if(i<0) return;
-    var rtl = document.documentElement.dir !== 'ltr', next = i + ((dx<0) === rtl ? 1 : -1);
-    if(rtl && dx>0) next = i-1; if(rtl && dx<0) next = i+1; if(!rtl && dx<0) next = i+1; if(!rtl && dx>0) next = i-1;
-    if(next<0 || next>=TABS.length) return;
-    go(TABS[next]);
-    app.style.setProperty('--swx', (dx<0?'40px':'-40px')); app.classList.remove('swIn'); void app.offsetWidth; app.classList.add('swIn');
+  var TABS = ['home','tx','report','income','gold','wealth'], app = document.getElementById('app');
+  var x0=0, y0=0, t0=0, dx=0, mode='', raf=0, busySw=false;
+  function blocked(el){ return el.closest && el.closest('.rchips,.seg,.chips,.chart,canvas,input,textarea,select,[data-noswipe],.scrollx'); }
+  function cur(){ return ({inst:'wealth',zakat:'wealth',subs:'home',settings:'home'})[UI.tab] || UI.tab; }
+  function nextTab(d){ var i = TABS.indexOf(cur()); if(i<0) return null; var n = i + (d<0 ? 1 : -1); return n>=0 && n<TABS.length ? TABS[n] : null; }
+  function setX(x, op){ app.style.transform = x ? 'translate3d('+x+'px,0,0)' : ''; app.style.opacity = op==null ? '' : op; }
+  app.addEventListener('touchstart', function(e){
+    if(busySw || e.touches.length>1 || document.getElementById('sheet')._open || blocked(e.target)){ mode='off'; return; }
+    x0=e.touches[0].clientX; y0=e.touches[0].clientY; t0=Date.now(); dx=0; mode='';
   }, {passive:true});
+  app.addEventListener('touchmove', function(e){
+    if(mode==='off' || mode==='v') return;
+    var x=e.touches[0].clientX-x0, y=e.touches[0].clientY-y0;
+    if(!mode){ if(Math.abs(x)<10 && Math.abs(y)<10) return; mode = Math.abs(x) > Math.abs(y)*1.2 ? 'h' : 'v'; if(mode==='v') return;
+      app.style.willChange='transform'; app.style.transition='none'; }
+    if(e.cancelable) e.preventDefault();
+    dx = x; var edge = !nextTab(dx), w = window.innerWidth, vx = edge ? dx*0.25 : dx;
+    cancelAnimationFrame(raf); raf = requestAnimationFrame(function(){ setX(vx, edge ? 1 : 1-Math.min(0.35, Math.abs(vx)/w*0.5)); });
+  }, {passive:false});
+  function settle(){ app.style.transition='transform .22s cubic-bezier(.22,1,.36,1), opacity .22s'; setX(0); setTimeout(function(){ app.style.transition=''; app.style.willChange=''; }, 240); }
+  function end(){
+    if(mode!=='h'){ mode=''; return; } mode='';
+    cancelAnimationFrame(raf);
+    var dt = Math.max(1, Date.now()-t0), fast = Math.abs(dx)/dt > 0.45 && Math.abs(dx) > 30, nt = nextTab(dx), w = window.innerWidth;
+    if(!nt || !(Math.abs(dx) > w*0.22 || fast)) return settle();
+    busySw = true;
+    var out = dx<0 ? -w : w;
+    app.style.transition='transform .16s ease-in, opacity .16s ease-in'; setX(out*0.6, 0);
+    setTimeout(function(){
+      Motion.quiet(); UI.tab = nt; if(nt!=='tx') UI.txFilter='all'; Motion.toTop(); render();
+      app.style.transition='none'; setX(-out*0.35, 0); void app.offsetWidth;
+      app.style.transition='transform .26s cubic-bezier(.22,1,.36,1), opacity .2s ease-out'; setX(0, 1);
+      setTimeout(function(){ app.style.transition=''; app.style.willChange=''; app.style.opacity=''; busySw=false; }, 280);
+    }, 160);
+  }
+  app.addEventListener('touchend', end, {passive:true}); app.addEventListener('touchcancel', function(){ if(mode==='h'){ mode=''; settle(); } }, {passive:true});
 })();
 // اسحب الشيت لتحت عشان تقفله (من فوق، أو من أي حتة لو إنت في أول الصفحة)
 (function(){
