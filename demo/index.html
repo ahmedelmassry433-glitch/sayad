@@ -658,6 +658,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
+var APP_VER = 'v13';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
@@ -1977,6 +1978,7 @@ function idbKV(){ return new Promise(function(res,rej){ var r=indexedDB.open('sa
 function idbPut(k,v){ return idbKV().then(function(db){ return new Promise(function(res){ var tx=db.transaction('kv','readwrite'); tx.objectStore('kv').put(v,k); tx.oncomplete=function(){ res(); }; tx.onerror=function(){ res(); }; }); }).catch(function(){}); }
 function b64uBytes(s){ s=s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; var b=atob(s), a=new Uint8Array(b.length); for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return a; }
 function editNotify(){
+  if(HOSTED) pushDbg('open');
   var p = S().notify||{}, on = pushOn();
   var standalone = navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
   var can = HOSTED && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
@@ -1985,24 +1987,31 @@ function editNotify(){
     : on ? '<div class="row" style="margin-bottom:12px"><span class="good">✓ '+L('التنبيهات شغالة على الموبايل ده','Notifications are on for this phone')+'</span><button class="btn ghost" style="width:auto;padding:8px 14px;margin:0" onclick="testNotify()">'+L('جرّب','Test')+'</button></div>'
     : '<div class="dim" style="font-size:13px;margin-bottom:10px">'+L('هيوصلك تنبيه زي أي أبلكيشن لما المرتب ينزل، أو قسط قرّب، أو صرفت حاجة كبيرة.','Get alerts like any app: when your salary lands, an installment is due, or you spend something big.')+'</div>'+
       '<div class="btns" style="margin-top:0"><button class="btn" onclick="enablePush()">🔔 '+L('شغّل التنبيهات','Turn on notifications')+'</button></div>';
-  openSheet('<h2>🔔 '+L('التنبيهات','Notifications')+'</h2>'+head+
+  openSheet('<h2>🔔 '+L('التنبيهات','Notifications')+'</h2>'+head+'<div id="pushErr" class="bad" style="font-size:12px;margin:6px 0"></div>'+'<div class="dim" style="font-size:11px">'+APP_VER+'</div>'+
     '<div class="section-title">'+L('ابعتلي لما','Notify me about')+'</div><div class="card">'+NOTIFY_KINDS.map(function(k){
       return kv(k[1]+' '+L(k[2],k[3]), p[k[0]]===false ? '<span class="muted">'+L('مقفول','Off')+'</span>' : '<span class="good">'+L('شغال','On')+'</span>', "toggleNotify('"+k[0]+"')"); }).join('')+'</div>');
 }
 function toggleNotify(k){ var p = Object.assign({}, S().notify||{}); p[k] = (p[k]===false); D.settings.notify = p; editNotify(); call('saveSettings',{notify:p}).then(function(d){ D=d; }).catch(function(){}); }
+function pushDbg(step, err){
+  var d = {step:step, err:String(err&&err.message||err||''), perm:('Notification' in window)?Notification.permission:'none',
+    sa:!!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches)), pm:'PushManager' in window,
+    sw:!!(navigator.serviceWorker && navigator.serviceWorker.controller), v:APP_VER, at:iso(new Date())};
+  call('saveSettings',{pushDbg:d}).catch(function(){});
+}
 function enablePush(){
-  var perm;
-  try{ perm = Notification.requestPermission(); }catch(e){ return toast(L('الموبايل ده مش بيدعم التنبيهات','This phone doesn’t support notifications')); }
+  var perm, step='perm';
+  try{ perm = Notification.requestPermission(); }catch(e){ pushDbg('perm',e); return toast(L('الموبايل ده مش بيدعم التنبيهات','This phone doesn’t support notifications')); }
   toast(L('ثواني…','One moment…'));
+  function withTimeout(p, ms, name){ return Promise.race([p, new Promise(function(_,rej){ setTimeout(function(){ rej(new Error(name+' timeout')); }, ms); })]); }
   Promise.resolve(perm).then(function(p){ if(p!=='granted') throw new Error(L('محتاج تسمح بالتنبيهات (Allow). لو رفضتها، فعّلها من إعدادات الآيفون ← Notifications ← صياد القرش','Please tap Allow. If you declined, enable it in iPhone Settings ← Notifications'));
-      return navigator.serviceWorker.ready; })
-    .then(function(reg){ return call('getPushKey').then(function(k){
+      step='sw'; return withTimeout(navigator.serviceWorker.getRegistration().then(function(r){ return r || navigator.serviceWorker.register('sw.js'); }).then(function(){ return navigator.serviceWorker.ready; }), 15000, 'sw'); })
+    .then(function(reg){ step='key'; return call('getPushKey').then(function(k){ step='sub';
       return reg.pushManager.getSubscription().then(function(old){ return old ? old.unsubscribe() : null; })
-        .then(function(){ return reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64uBytes(k.publicKey)}); }); }); })
-    .then(function(sub){ return idbPut('cfg',{api:API_URL, key:appKey(), last:Date.now()-1000}).then(function(){ return call('savePushSub', JSON.parse(JSON.stringify(sub))); }); })
-    .then(function(){ try{ localStorage.setItem('sayad-push','1'); }catch(e){} return call('testPush'); })
-    .then(function(r){ editNotify(); render(); toast(r && r.sent ? L('اشتغلت ✓ هيوصلك تنبيه تجربة دلوقتي','Done ✓ a test notification is on its way') : L('اتفعّلت، بس التجربة موصلتش. جرّب تاني بعد شوية','Turned on, but the test didn’t arrive yet')); })
-    .catch(function(e){ toast(String(e && e.message || e)); });
+        .then(function(){ return withTimeout(reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64uBytes(k.publicKey)}), 20000, 'subscribe'); }); }); })
+    .then(function(sub){ step='save'; return idbPut('cfg',{api:API_URL, key:appKey(), last:Date.now()-1000}).then(function(){ return call('savePushSub', JSON.parse(JSON.stringify(sub))); }); })
+    .then(function(){ step='test'; try{ localStorage.setItem('sayad-push','1'); }catch(e){} return call('testPush'); })
+    .then(function(r){ pushDbg('done', JSON.stringify(r||{})); editNotify(); render(); toast(r && r.sent ? L('اشتغلت ✓ هيوصلك تنبيه تجربة دلوقتي','Done ✓ a test notification is on its way') : L('اتفعّلت، بس التجربة موصلتش. جرّب تاني بعد شوية','Turned on, but the test didn’t arrive yet')); })
+    .catch(function(e){ pushDbg(step, e); var el=document.getElementById('pushErr'); if(el) el.textContent=L('وقف عند: ','Stopped at: ')+step+' · '+(e&&e.message||e); toast(String(e && e.message || e)); });
 }
 function testNotify(){ call('testPush').then(function(r){ toast(r && r.sent ? L('اتبعت ✓','Sent ✓') : L('موصلش، دوس «شغّل التنبيهات» تاني','Didn’t arrive — turn notifications on again')); if(!(r&&r.sent)){ try{ localStorage.removeItem('sayad-push'); }catch(e){} editNotify(); } }).catch(function(e){ toast(String(e&&e.message||e)); }); }
 // كل فتحة: نخلي المفتاح اللي الـ service worker بيستخدمه متحدث
