@@ -251,6 +251,8 @@ html[dir=ltr] .greet{letter-spacing:-.4px}
 .sheet.dragging{transition:none}
 .swGhost{position:fixed;left:0;right:0;top:0;height:100vh;overflow:hidden;z-index:2;pointer-events:none;will-change:transform}
 .swGhost .heroBg{display:none}
+body.swiping .card,body.swiping .stat,body.swiping .glass,body.swiping .seg,body.swiping .chip,body.swiping .search input,body.swiping .demo,body.swiping .alert{-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+body.swiping .heroBg{visibility:hidden}
 /* سحب يمين وشمال بين التابات */
 
 .sheet h2{font-size:19px;margin:0 0 14px;font-weight:600}
@@ -665,7 +667,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
-var APP_VER = 'v25';
+var APP_VER = 'v26';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
@@ -874,8 +876,8 @@ function pageHtml(){
   html += pageHead() + body;
   return html;
 }
-function render(){
-  var html = pageHtml();
+function render(ready){
+  var html = (typeof ready==='string' && ready) || pageHtml();
   Motion.before();
   document.getElementById('app').innerHTML = html;
   // الحركة بتشتغل بس لما الشاشة نفسها تتغير (تاب/فترة/فلتر/لغة)، مش مع كل تحديث صغير
@@ -883,6 +885,7 @@ function render(){
   [].forEach.call(document.querySelectorAll('#tabs button'),function(b){ b.classList.toggle('on', b.dataset.t===(({inst:'wealth',zakat:'wealth',subs:'home'})[UI.tab]||UI.tab)); });
   document.getElementById('fab').style.display = (UI.tab==='home'||UI.tab==='tx'||UI.tab==='report')?'grid':'none';
   if(typeof TabBar!=='undefined') TabBar.update();
+  if(typeof Swipe!=='undefined') Swipe.prepare();
 }
 // اسم كل صفحة فوق، عشان تعرف إنت فين
 var PAGE_T = {tx:['العمليات','Transactions'], report:['التقارير','Reports'], income:['الدخل','Income'], gold:['الدهب','Gold'],
@@ -1408,12 +1411,13 @@ function renderList(){ render(); var inp=document.querySelector('.search input')
 function txGroups(list){
   if(!list.length) return '<div class="card">'+emptyTx()+'</div>';
   var groups = {}, order=[];
-  list.slice(0,400).forEach(function(t){ var k=t.date.slice(0,10); if(!groups[k]){groups[k]=[];order.push(k);} groups[k].push(t); });
+  var lim = UI.txLimit || 60;
+  list.slice(0,lim).forEach(function(t){ var k=t.date.slice(0,10); if(!groups[k]){groups[k]=[];order.push(k);} groups[k].push(t); });
   return order.map(function(k){
     var g = groups[k], out = sum(g,'expense'), inn = sum(g,'income');
     return '<div class="dayhead"><span>'+dayLabel(pd(k))+'</span><span>'+(out?L('صرفت ','Spent ')+money(out):'')+(inn?' <span class="good">+'+money(inn)+'</span>':'')+'</span></div>'+
       '<div class="card" style="padding:4px 16px">'+g.map(txRow).join('')+'</div>';
-  }).join('');
+  }).join('') + (list.length > lim ? '<button class="btn ghost" style="margin:6px 0 14px" onclick="UI.txLimit=(UI.txLimit||60)+100;render()">'+L('اعرض أقدم ('+(list.length-lim)+')','Show older ('+(list.length-lim)+')')+'</button>' : '');
 }
 
 /* ---------- دايرة الصرف (نسبة كل بند) + ليميت كل بند ---------- */
@@ -2210,25 +2214,30 @@ function openSheet(html){ var s=document.getElementById('sheet'); s.innerHTML='<
 function closeSheet(){ var s=document.getElementById('sheet'); s._open=false; s.classList.remove('dragging'); s.style.transform=''; s.classList.remove('open'); document.getElementById('sheetBg').style.display='none'; Motion.lock(false); }
 document.getElementById('sheetBg').onclick = closeSheet;
 // اسحب يمين/شمال: الصفحة اللي جنبك بتبان جنب اللي إنت فيها وبتمشي مع صباعك (زي صفحات الآيفون)
-(function(){
+var Swipe = (function(){
   var TABS = ['home','tx','report','income','gold','wealth'], app = document.getElementById('app');
-  var x0=0, y0=0, t0=0, dx=0, mode='', side=0, nt=null, ghost=null, W=0, raf=0, lock=false;
-  var EASE = 'cubic-bezier(.22,1,.36,1)';
+  var x0=0, y0=0, t0=0, dx=0, mode='', side=0, nt=null, ghost=null, W=0, raf=0, lock=false, pre={}, preT=0;
+  var EASE = 'cubic-bezier(.25,1,.5,1)';
   function blocked(el){ return el.closest && el.closest('.rchips,.seg,.chips,.chart,canvas,input,textarea,select,[data-noswipe],.scrollx'); }
   function cur(){ return ({inst:'wealth',zakat:'wealth',subs:'home',settings:'home'})[UI.tab] || UI.tab; }
-  // الترتيب زي الأيقونات تحت: في العربي التاب الجاي على الشمال (تسحب يمين)، وفي الإنجليزي على اليمين (تسحب شمال)
   function target(d){ var i = TABS.indexOf(cur()); if(i<0) return null; var rtl = document.documentElement.dir !== 'ltr', fwd = rtl ? d>0 : d<0, n = i + (fwd?1:-1); return n>=0 && n<TABS.length ? TABS[n] : null; }
-  function tf(el, x, ms){ el.style.transition = ms ? 'transform '+ms+'ms '+EASE : 'none'; el.style.transform = x ? 'translate3d('+x+'px,0,0)' : 'translate3d(0,0,0)'; }
-  function makeGhost(t){
-    var saved = UI.tab, sf = UI.txFilter, hx = HEAD_X, html = '';
-    UI.tab = t; if(t!=='tx') UI.txFilter = 'all';
+  function build(t){
+    var saved = UI.tab, sf = UI.txFilter, sl = UI.txLimit, hx = HEAD_X, html = '';
+    UI.tab = t; UI.txLimit = 0; if(t!=='tx') UI.txFilter = 'all';
     try{ html = pageHtml(); }catch(e){}
-    UI.tab = saved; UI.txFilter = sf; HEAD_X = hx;
+    UI.tab = saved; UI.txFilter = sf; UI.txLimit = sl; HEAD_X = hx;
+    return html;
+  }
+  // بعد كل render بنجهّز الصفحتين اللي جنبك في الخلفية، فالسحب يبدأ على طول
+  function prepare(){ clearTimeout(preT); pre = {}; preT = setTimeout(function(){ var i = TABS.indexOf(cur()); [i-1,i+1].forEach(function(n){ if(n>=0 && n<TABS.length) pre[TABS[n]] = build(TABS[n]); }); }, 700); }
+  function tf(el, x, ms){ el.style.transition = ms ? 'transform '+ms+'ms '+EASE : 'none'; el.style.transform = 'translate3d('+(x||0)+'px,0,0)'; }
+  function makeGhost(t){
+    var html = pre[t] || build(t);
     ghost = document.createElement('div'); ghost.className = 'swGhost';
-    ghost.innerHTML = '<div class="wrap">'+html+'</div>';
+    ghost.innerHTML = '<div class="wrap">'+html+'</div>'; ghost._html = html;
     document.body.appendChild(ghost);
   }
-  function cleanup(){ if(ghost){ ghost.remove(); ghost = null; } app.style.transition = ''; app.style.transform = ''; app.style.willChange = ''; lock = false; }
+  function cleanup(){ if(ghost){ ghost.remove(); ghost = null; } app.style.transition = ''; app.style.transform = ''; app.style.willChange = ''; document.body.classList.remove('swiping'); lock = false; }
   app.addEventListener('touchstart', function(e){
     if(lock || e.touches.length>1 || document.getElementById('sheet')._open || blocked(e.target)){ mode='off'; return; }
     x0=e.touches[0].clientX; y0=e.touches[0].clientY; t0=Date.now(); dx=0; mode=''; side=0; nt=null;
@@ -2240,25 +2249,25 @@ document.getElementById('sheetBg').onclick = closeSheet;
       if(Math.abs(x)<8 && Math.abs(y)<8) return;
       mode = Math.abs(x) > Math.abs(y)*1.15 ? 'h' : 'v'; if(mode==='v') return;
       W = window.innerWidth; side = x<0 ? 1 : -1; nt = target(x);
-      app.style.willChange = 'transform'; tf(app, 0);
+      document.body.classList.add('swiping'); app.style.willChange = 'transform'; tf(app, 0);
       if(nt){ makeGhost(nt); tf(ghost, side*W); }
     }
     if(e.cancelable) e.preventDefault();
-    dx = side>0 ? Math.min(0, x) : Math.max(0, x);              // ميعديش للناحية التانية
-    var vx = nt ? dx : dx*0.22;                                  // آخر تاب: مقاومة خفيفة
-    cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(function(){ tf(app, vx); if(ghost) tf(ghost, vx + side*W); });
+    dx = side>0 ? Math.min(0, x) : Math.max(0, x);
+    var vx = nt ? dx : dx*0.22;
+    if(!raf) raf = requestAnimationFrame(function(){ raf = 0; tf(app, vx); if(ghost) tf(ghost, vx + side*W); });
   }, {passive:false});
   function finish(commit){
-    lock = true; cancelAnimationFrame(raf);
-    var ms = 300;
+    lock = true; cancelAnimationFrame(raf); raf = 0;
+    var rest = Math.abs(side*W + dx), ms = Math.round(Math.max(180, Math.min(320, rest*0.9)));
     if(commit){
       tf(app, -side*W, ms); tf(ghost, 0, ms);
       setTimeout(function(){
-        Motion.quiet(); UI.tab = nt; if(nt!=='tx') UI.txFilter='all';
-        tf(app, 0); Motion.toTop(); render();
-        requestAnimationFrame(function(){ cleanup(); });
-      }, ms+10);
+        // نحط نفس الصفحة اللي كانت ظاهرة في الـ ghost جوه الأبلكيشن (من غير ما نبنيها تاني)
+        Motion.quiet(); UI.tab = nt; UI.txLimit = 0; if(nt!=='tx') UI.txFilter='all';
+        window.scrollTo(0,0); Motion.toTop(); tf(app, 0); render(ghost && ghost._html);
+        requestAnimationFrame(cleanup);
+      }, ms+16);
     } else {
       tf(app, 0, 220); if(ghost) tf(ghost, side*W, 220);
       setTimeout(cleanup, 240);
@@ -2267,11 +2276,12 @@ document.getElementById('sheetBg').onclick = closeSheet;
   function end(){
     if(mode!=='h'){ mode=''; return; } mode='';
     var dt = Math.max(1, Date.now()-t0), v = Math.abs(dx)/dt;
-    finish(!!nt && (Math.abs(dx) > W*0.28 || (v > 0.45 && Math.abs(dx) > 30)));
+    finish(!!nt && (Math.abs(dx) > W*0.25 || (v > 0.4 && Math.abs(dx) > 30)));
   }
   app.addEventListener('touchend', end, {passive:true});
   app.addEventListener('touchcancel', function(){ if(mode==='h'){ mode=''; finish(false); } }, {passive:true});
   window.addEventListener('pageshow', cleanup);
+  return {prepare:prepare};
 })();
 // اسحب الشيت لتحت عشان تقفله (من فوق، أو من أي حتة لو إنت في أول الصفحة)
 (function(){
@@ -2430,7 +2440,7 @@ function busy(promise,msg){
   return promise.then(function(d){ D=d; closeSheet(); render(); if(msg) toast(msg); }).catch(function(e){ toast(L('حصلت مشكلة: ','Something went wrong: ')+(e&&e.message||e)); });
 }
 function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(function(){t.classList.remove('show');},2200); }
-function go(t){ UI.tab=t; if(t!=='tx'){UI.txFilter='all';} Motion.toTop(); render(); }
+function go(t){ UI.tab=t; UI.txLimit=0; if(t!=='tx'){UI.txFilter='all';} Motion.toTop(); render(); }
 function sync(quiet){
   if(UI.syncing) return; UI.syncing=true; render();
   call('syncNow').then(function(r){ UI.syncing=false; D=r.data; render();
