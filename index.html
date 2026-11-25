@@ -658,7 +658,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
-var APP_VER = 'v13';
+var APP_VER = 'v14';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
@@ -863,7 +863,7 @@ function render(){
   else if(!LIVE && !HOSTED) html += '<div class="demo">👀 '+L('دي بيانات تجريبية للعرض بس. أول ما ترفع الأبلكيشن على Google Apps Script، هيقرا رسايل الراجحي الحقيقية.',
     'This is demo data. Once the app is on Google Apps Script, it reads your real Al Rajhi messages.')+'</div>';
   HEAD_X = '';
-  var body = ({home:vHome, tx:vTx, report:vReport, income:vIncome, gold:vGold, wealth:vWealth, inst:vInstPage, settings:vSettings, subs:vSubs, zakat:vZakat})[UI.tab]();
+  var body = ({home:vHome, tx:vTx, report:function(){ return vReport() + (UI.period==='month' && !UI.offset ? subsSection() : ''); }, income:vIncome, gold:vGold, wealth:vWealth, inst:vInstPage, settings:vSettings, subs:vSubs, zakat:vZakat})[UI.tab]();
   html += pageHead() + body;
   Motion.before();
   document.getElementById('app').innerHTML = html;
@@ -1136,7 +1136,7 @@ function vHome(){
   h += vReview(3);
   h += donutCard(monthTx, mr, spentM, L('صرفك الشهر ده راح فين','Where this month’s money went'));
   h += vInstallments(true);
-  h += subsCard();
+  h += subsSection();
 
   var last = D.tx.slice().sort(function(a,b){return pd(b.date)-pd(a.date);}).slice(0,6);
   h += '<div class="card"><h3>'+L('آخر العمليات','Recent transactions')+' <a onclick="go(\'tx\')">'+L('الكل','See all')+' '+FWD()+'</a></h3>'+(last.length? last.map(txRow).join('') : emptyTx())+'</div>';
@@ -1775,42 +1775,72 @@ function vWealth(){
     '</div>';
   return h;
 }
-/* ============ الاشتراكات: أي حاجة بتتخصم كل شهر بنفس المبلغ تقريباً ============ */
+/* ============ الاشتراكات: أي حاجة بتتخصم كل شهر (بتتلقط لوحدها، وتقدر تضيف بإيدك) ============ */
 var SUB_SKIP = {'أكل':1,'حوالة شخصية':1,'مش فلوسي':1,'سداد كريدت':1,'أقساط تابي وتمارا':1,'رسوم بنكية':1};
 var SUB_CATS = {'اشتراكات وأدوات شغل':1,'موبايل وإنترنت':1,'إيجار':1};
-function subKey(t){ return String(t.merchant||'').toUpperCase().replace(/\d+/g,' ').replace(/[^A-Z\u0600-\u06FF]+/g,' ').trim().split(/\s+/).slice(0,2).join(' ')+'|'+t.category; }
+var SUB_KNOWN = /SUBSCRIPTION|اشتراك|SPOTIFY|NETFLIX|SHAHID|APPLE\.COM|ICLOUD|GOOGLE\W*(GOOGLE\W*)?ONE|YOUTUBE|OPENAI|CHATGPT|ANTHROPIC|CLAUDE|ADOBE|CANVA|HIGGSFIELD|CAPCUT|ARTLIST|MIDJOURNEY|RUNWAY|ELEVENLABS|DROPBOX|\bOSN\b|STARZ|PRIME VIDEO|NOON ONE|DISNEY|ANGHAMI|DEEZER|PLAYSTATION PLUS|XBOX|WETRANSFER|EPIDEMIC|FRAME\.IO|NOTION|FIGMA/i;
+var SUB_NAMES = [[/APPLE\.COM|ITUNES|ICLOUD/i,'Apple'],[/GOOGLE\W*(GOOGLE\W*)?ONE/i,'Google One'],[/YOUTUBE/i,'YouTube'],[/SPOTIFY/i,'Spotify'],[/NETFLIX/i,'Netflix'],
+  [/SHAHID/i,'Shahid'],[/NOON ONE/i,'Noon One'],[/HIGGSFIELD/i,'Higgsfield'],[/OPENAI|CHATGPT/i,'ChatGPT'],[/ANTHROPIC|CLAUDE/i,'Claude'],[/ADOBE/i,'Adobe'],
+  [/CANVA/i,'Canva'],[/CAPCUT/i,'CapCut'],[/ARTLIST/i,'Artlist'],[/MIDJOURNEY/i,'Midjourney'],[/RUNWAY/i,'Runway'],[/ELEVENLABS/i,'ElevenLabs'],[/DROPBOX/i,'Dropbox'],
+  [/MOBILY|موبايلي/i,'Mobily'],[/\bSTC\b/i,'STC'],[/\bZAIN\b|زين/i,'Zain'],[/DISNEY/i,'Disney+'],[/ANGHAMI/i,'Anghami'],[/PLAYSTATION/i,'PlayStation']];
+function subName(m, cat){ for(var i=0;i<SUB_NAMES.length;i++) if(SUB_NAMES[i][0].test(m||'')) return SUB_NAMES[i][1]; return enName(m)||catName(cat); }
+function merKey(t){ return String(t.merchant||'').toUpperCase().replace(/\d+/g,' ').replace(/[^A-Z\u0600-\u06FF]+/g,' ').trim().split(/\s+/).slice(0,2).join(' '); }
+function subKey(t){ return merKey(t)+'|'+t.category; }
 function median(a){ var b=a.slice().sort(function(x,y){return x-y;}), m=Math.floor(b.length/2); return !b.length?0:b.length%2?b[m]:(b[m-1]+b[m])/2; }
+function nextAfter(d, today){ var n = addMon(sod(d),1), k = 1; while(n < today && k < 24){ k++; n = addMon(sod(d),k); } return n; }
 var _subsMemo = null;
 function detectSubs(){
-  var hid = (S().subsHidden||[]), sig = D.tx.length+'|'+hid.join(',')+'|'+(D.lastSync||'');
+  var s = S(), hid = (s.subsHidden||[]), man = (s.subsManual||[]);
+  var sig = D.tx.length+'|'+hid.join(',')+'|'+JSON.stringify(man)+'|'+(D.lastSync||'');
   if(_subsMemo && _subsMemo.sig===sig) return _subsMemo.v;
   var today = sod(new Date()), since = addD(today,-215), g = {};
   D.tx.forEach(function(t){
-    if(t.type!=='expense' || !(Number(t.amount)>0) || SUB_SKIP[t.category]) return;
+    if(t.type!=='expense' || !(Number(t.amount)>=3) || SUB_SKIP[t.category]) return;
     var d = pd(t.date); if(!(d>=since)) return;
-    var k = subKey(t); if(k.split('|')[0].length<2) return;
-    (g[k]=g[k]||[]).push({d:d, a:Number(t.amount), t:t});
+    var mk = merKey(t); if(mk.length<2) return;
+    var k = mk+'|'+t.category; (g[k]=g[k]||[]).push({d:d, a:Number(t.amount), t:t});
   });
   var out = [];
-  Object.keys(g).forEach(function(k){
-    var it = g[k].sort(function(a,b){return a.d-b.d;}), months = {};
-    it.forEach(function(x){ months[monthKey(x.d)] = 1; });
-    var nm = Object.keys(months).length;
-    if(nm<2 || it.length/nm>1.5) return;                       // أقل من شهرين، أو بيتكرر كتير في الشهر (ده مش اشتراك)
-    if(nm<3 && !SUB_CATS[it[0].t.category]) return;
-    var amts = it.map(function(x){return x.a;}), med = median(amts);
-    if(amts.filter(function(a){return Math.abs(a-med)<=Math.max(2,med*0.2);}).length/amts.length < 0.7) return; // المبلغ مش ثابت
+  function test(it, loose){ // it: مترتب بالتاريخ
+    var months = {}; it.forEach(function(x){ months[monthKey(x.d)] = 1; });
+    var nm = Object.keys(months).length, last = it[it.length-1], ago = (today-sod(last.d))/864e5, t = last.t;
+    var known = SUB_KNOWN.test(t.merchant||'') || t.category==='اشتراكات وأدوات شغل';
+    if(nm===1) return known && it.length===1 && ago<=35 ? {gap:30, single:true} : null;           // اشتراك معروف اتخصم مرة واحدة لسه
+    if(it.length/nm > (loose ? 1.15 : 1.3)) return null;                                                              // بيتكرر كتير في الشهر = مش اشتراك
+    if(nm<3 && !SUB_CATS[t.category] && !known) return null;
     var gaps = []; for(var i=1;i<it.length;i++) gaps.push((it[i].d-it[i-1].d)/864e5);
-    var gap = median(gaps); if(gap<20 || gap>40) return;
-    var last = it[it.length-1], ago = (today-sod(last.d))/864e5;
-    if(ago > gap+15) return;                                     // اتلغى أو وقف
-    var next = addMon(sod(last.d),1); if(next<today) next = today;
-    var prev = it.length>1 ? it[it.length-2].a : last.a;
-    out.push({key:k, name:enName(last.t.merchant)||catName(last.t.category), merchant:last.t.merchant, cat:last.t.category,
-      amount:last.a, monthly:med, next:next, last:last.d, items:it, hidden:hid.indexOf(k)>=0,
-      up: last.a-prev > Math.max(1,prev*0.05) ? last.a-prev : 0, isNew: it[0].d >= addD(today,-70)});
+    var gap = median(gaps); if(gap<20 || gap>40) return null;
+    if(ago > gap+15) return null;                                                                   // وقف أو اتلغى
+    var amts = it.map(function(x){return x.a;}), med = median(amts);
+    if(loose){ var l3 = amts.slice(-3), lm = median(l3); if(l3.some(function(a){ return Math.abs(a-lm) > lm*0.6; })) return null; }
+    else if(amts.filter(function(a){return Math.abs(a-med)<=Math.max(2,med*0.15);}).length/amts.length < 0.7) return null;
+    return {gap:gap};
+  }
+  function push(k, it, r){
+    var last = it[it.length-1], t = last.t, prev = it.length>1 ? it[it.length-2].a : last.a;
+    var known = SUB_KNOWN.test(t.merchant||'') || t.category==='اشتراكات وأدوات شغل';
+    out.push({key:k, mkey:subKey(t), name:subName(t.merchant,t.category), merchant:t.merchant, cat:t.category, kind: known ? 'sub' : 'bill',
+      amount:last.a, monthly:last.a, next:nextAfter(last.d,today), last:last.d, items:it, hidden:hid.indexOf(k)>=0,
+      up: last.a-prev > Math.max(1,prev*0.05) ? last.a-prev : 0, isNew: r.single || it[0].d >= addD(today,-70)});
+  }
+  Object.keys(g).forEach(function(k){
+    var it = g[k].sort(function(a,b){return a.d-b.d;});
+    var whole = test(it, true);                         // نفس المكان مرة في الشهر، حتى لو السعر اتغيّر (زي Google One)
+    if(whole && !whole.single){ push(k, it, whole); return; }
+    var byAmt = it.slice().sort(function(a,b){return a.a-b.a;}), cl = [];  // نفس المكان بأكتر من اشتراك (زي Apple)
+    byAmt.forEach(function(x){ var c = cl[cl.length-1], m = c ? median(c.map(function(y){return y.a;})) : 0;
+      if(c && Math.abs(x.a-m) <= Math.max(2,m*0.12)) c.push(x); else cl.push([x]); });
+    var names = {};
+    cl.forEach(function(c){ c.sort(function(a,b){return a.d-b.d;}); var r = test(c, false); if(r) { push(k+'#'+Math.round(median(c.map(function(y){return y.a;}))), c, r); names[out[out.length-1].name] = (names[out[out.length-1].name]||0)+1; } });
+    out.forEach(function(x){ if(names[x.name]>1 && x.key.indexOf(k+'#')===0) x.name += ' · '+fmtN(x.amount,2); });
   });
-  out.sort(function(a,b){return b.monthly-a.monthly;});
+  man.forEach(function(m){                              // اللي إنت ضفته بإيدك
+    var day = Math.min(28, Math.max(1, Number(m.day)||1)), n = new Date(today.getFullYear(), today.getMonth(), day); if(n<today) n = addMon(n,1);
+    var a = Number(m.amount)||0;
+    out.push({key:'m:'+m.id, mkey:'', name:m.name, merchant:m.name, cat:'اشتراكات وأدوات شغل', kind:'sub', amount:a, monthly: m.cycle==='yearly' ? a/12 : a,
+      next:n, last:null, items:[], hidden:false, up:0, isNew:false, manual:m});
+  });
+  out.sort(function(a,b){ return a.next-b.next; });
   _subsMemo = {sig:sig, v:out};
   saveSubsCache(out);
   return out;
@@ -1818,41 +1848,55 @@ function detectSubs(){
 // السيرفر محتاج يعرف مواعيد الاشتراكات عشان يبعتلك تنبيه قبلها بيوم
 function saveSubsCache(list){
   if(!(LIVE||HOSTED)) return;
-  var c = list.filter(function(x){return !x.hidden;}).map(function(x){ return {key:x.key.replace(/[^A-Z\u0600-\u06FF]+/g,'-').slice(0,30), name:x.name, amount:Math.round(x.amount*100)/100, next:iso(x.next).slice(0,10)}; });
+  var c = list.filter(function(x){return !x.hidden;}).map(function(x){ return {key:x.key.replace(/[^A-Za-z0-9\u0600-\u06FF]+/g,'-').slice(0,30), name:x.name, amount:Math.round(x.amount*100)/100, next:iso(x.next).slice(0,10)}; });
   var js = JSON.stringify(c); if(js===JSON.stringify(S().subsCache||[]) || saveSubsCache._last===js) return;
   saveSubsCache._last = js;
   setTimeout(function(){ call('saveSettings',{subsCache:c}).then(function(d){ if(d&&d.settings) D.settings.subsCache=d.settings.subsCache; }).catch(function(){}); }, 1500);
 }
-function subsMonthly(){ return detectSubs().filter(function(x){return !x.hidden;}).reduce(function(a,x){return a+x.monthly;},0); }
+function subsOf(kind){ return detectSubs().filter(function(x){ return !x.hidden && (!kind || x.kind===kind); }); }
+function subsMonthly(kind){ return subsOf(kind).reduce(function(a,x){return a+x.monthly;},0); }
 function subRow(x){
   var tag = x.isNew ? ' <span class="pill" style="padding:1px 7px;font-size:10.5px">'+L('جديد','New')+'</span>' : x.up ? ' <span class="pill warn" style="padding:1px 7px;font-size:10.5px">▲ '+money(x.up)+'</span>' : '';
-  return '<div class="tx" onclick="openSub(\''+esc(x.key).replace(/'/g,"\\'")+'\')">'+catIc(x.cat,x.merchant)+
-    '<div class="mid"><b>'+esc(x.name)+tag+'</b><span>'+L('كل شهر · الجاي ','Monthly · next ')+dayLabel(x.next)+'</span></div>'+
-    '<div class="amt"><span class="num">'+fmtN(x.amount,2)+'</span></div></div>';
+  var soon = (x.next - sod(new Date()))/864e5 <= 3;
+  return '<div class="tx" onclick="openSub(\''+esc(x.key).replace(/'/g,"\\'")+'\')">'+catIc(x.cat,x.name+' '+(x.merchant||''))+
+    '<div class="mid"><b>'+esc(x.name)+tag+'</b><span>'+(x.manual&&x.manual.cycle==='yearly'?L('كل سنة','Yearly'):L('كل شهر','Monthly'))+(x.manual?' · '+L('ضفته بإيدك','added by you'):'')+'</span></div>'+
+    '<div style="text-align:end"><div class="amt">'+money(x.amount,2)+'</div><span class="chg '+(soon?'down':'flat')+'">'+dayLabel(x.next)+'</span></div></div>';
+}
+// كارت الاشتراكات في الرئيسية والتقارير: زي الأقساط، تحت بعض باللوجو والميعاد
+function subsSection(){
+  var subs = subsOf('sub');
+  if(!subs.length) return '<div class="card"><h3>🔁 '+L('اشتراكاتك','Your subscriptions')+' <a onclick="addSub()">+ '+L('ضيف','Add')+'</a></h3><div class="empty" style="padding:8px 0">'+L('لسه ملقتش اشتراكات. لو عندك اشتراك، ضيفه بإيدك.','No subscriptions found yet. Add one yourself.')+'</div></div>';
+  return '<div class="card"><h3>🔁 '+L('اشتراكاتك','Your subscriptions')+' <a onclick="go(\'subs\')">'+L('الكل','See all')+' '+FWD()+'</a></h3>'+
+    '<div class="row" style="margin:-4px 0 6px"><span class="muted" style="font-size:13px">'+L('كل شهر','Every month')+' · '+subs.length+L(' اشتراك',' subscriptions')+'</span><b class="num">'+fmtN(subsMonthly('sub'),2)+' '+CUR()+'</b></div>'+
+    subs.map(subRow).join('')+
+    '<div style="text-align:center;margin-top:6px"><a class="muted" style="font-size:13px;cursor:pointer" onclick="addSub()">+ '+L('ضيف اشتراك ناسيه','Add one I missed')+'</a></div></div>';
 }
 function vSubs(){
-  var all = detectSubs(), list = all.filter(function(x){return !x.hidden;}), hid = all.filter(function(x){return x.hidden;});
-  var m = subsMonthly(), h = '';
-  h += '<div class="card hero sky"><canvas class="heroBg" aria-hidden="true"></canvas><div class="label">'+L('بتدفع كل شهر حوالي','You pay about this every month')+'</div>'+
+  var all = detectSubs(), subs = subsOf('sub'), bills = subsOf('bill'), hid = all.filter(function(x){return x.hidden;});
+  var m = subsMonthly('sub'), mb = subsMonthly('bill'), h = '';
+  HEAD_X = '<button class="iconbtn" onclick="addSub()" aria-label="'+L('ضيف اشتراك','Add subscription')+'" style="font-size:20px">+</button>';
+  h += '<div class="card hero sky"><canvas class="heroBg" aria-hidden="true"></canvas><div class="label">'+L('اشتراكاتك كل شهر','Your subscriptions each month')+'</div>'+
     '<div class="big">'+countNum(m)+'<small>'+CUR()+'</small></div>'+
-    '<div class="dim" style="font-size:12.5px">'+L('يعني ','That’s ')+money(m*12)+L(' ريال في السنة · '+list.length+' حاجة ثابتة',' SAR a year · '+list.length+' recurring')+'</div></div>';
-  var news = list.filter(function(x){return x.isNew;}), ups = list.filter(function(x){return x.up;});
-  news.forEach(function(x){ h += '<div class="alert amber">'+catSvg(x.cat)+'<div><b>'+esc(x.name)+'</b> '+L('اشتراك جديد ظهر: '+money(x.amount)+' ريال كل شهر','is a new subscription: '+money(x.amount)+' SAR a month')+'</div></div>'; });
-  ups.forEach(function(x){ h += '<div class="alert">'+catSvg(x.cat)+'<div><b>'+esc(x.name)+'</b> '+L('سعره زاد '+money(x.up)+' ريال آخر مرة','went up by '+money(x.up)+' SAR last time')+'</div></div>'; });
-  h += '<div class="card">'+(list.length ? list.map(subRow).join('') : '<div class="empty">'+L('لسه ملقتش حاجة بتتخصم كل شهر. محتاج شهرين على الأقل من العمليات.','Nothing recurring found yet. It needs at least two months of transactions.')+'</div>')+'</div>';
-  if(hid.length) h += '<div class="section-title">'+L('شيلتها من الاشتراكات','Hidden')+'</div><div class="card">'+hid.map(subRow).join('')+'</div>';
-  h += '<div class="dim" style="font-size:12px;padding:0 6px 10px">'+L('بيلقطها لوحده: نفس المكان، نفس المبلغ تقريباً، كل شهر. دوس على أي واحدة تشوف تاريخها أو تشيلها لو مش اشتراك.','Found automatically: same place, about the same amount, every month. Tap one to see its history or hide it.')+'</div>';
+    '<div class="dim" style="font-size:12.5px">'+L('يعني ','That’s ')+money(m*12)+L(' ريال في السنة · '+subs.length+' اشتراك',' SAR a year · '+subs.length+' subscriptions')+'</div></div>';
+  subs.filter(function(x){return x.isNew;}).forEach(function(x){ h += '<div class="alert amber">'+catSvg(x.cat)+'<div><b>'+esc(x.name)+'</b> '+L('اشتراك جديد: '+money(x.amount)+' ريال كل شهر','is new: '+money(x.amount)+' SAR a month')+'</div></div>'; });
+  subs.filter(function(x){return x.up;}).forEach(function(x){ h += '<div class="alert">'+catSvg(x.cat)+'<div><b>'+esc(x.name)+'</b> '+L('سعره زاد '+money(x.up)+' ريال آخر مرة','went up by '+money(x.up)+' SAR last time')+'</div></div>'; });
+  h += '<div class="section-title">'+L('الاشتراكات','Subscriptions')+'</div><div class="card">'+(subs.length ? subs.map(subRow).join('') : '<div class="empty">'+L('لسه ملقتش اشتراكات','None found yet')+'</div>')+
+    '<div style="text-align:center;margin-top:6px"><a class="muted" style="font-size:13px;cursor:pointer" onclick="addSub()">+ '+L('ضيف اشتراك ناسيه','Add one I missed')+'</a></div></div>';
+  if(bills.length) h += '<div class="section-title">'+L('حاجات تانية بتتكرر كل شهر','Other monthly bills')+' · '+money(mb)+'</div><div class="card">'+bills.map(subRow).join('')+'</div>';
+  if(hid.length) h += '<div class="section-title">'+L('شيلتها','Hidden')+'</div><div class="card">'+hid.map(subRow).join('')+'</div>';
+  h += '<div class="dim" style="font-size:12px;padding:0 6px 10px">'+L('بتتلقط لوحدها من رسايل البنك: نفس المكان، كل شهر. لو فيه اشتراك على كارت تاني أو بيتدفع كل سنة، ضيفه بإيدك من +.','Found automatically from bank messages: same place, every month. Add ones on another card or paid yearly with +.')+'</div>';
   return h;
 }
 function openSub(key){
   var x = detectSubs().filter(function(s){return s.key===key;})[0]; if(!x) return;
+  if(x.manual) return addSub(x.manual);
   openSheet('<h2>'+esc(x.name)+'</h2>'+
-    '<div class="row"><span class="muted">'+L('في الشهر','Monthly')+'</span><b>'+sar(x.monthly)+'</b></div>'+
-    '<div class="row" style="margin-top:6px"><span class="muted">'+L('في السنة','Yearly')+'</span><b>'+sar(x.monthly*12)+'</b></div>'+
-    '<div class="row" style="margin-top:6px"><span class="muted">'+L('الجاي','Next')+'</span><b>'+dayLabel(x.next)+'</b></div>'+
+    '<div class="row"><span class="muted">'+L('في الشهر','Monthly')+'</span><b>'+sar(x.amount)+'</b></div>'+
+    '<div class="row" style="margin-top:6px"><span class="muted">'+L('في السنة','Yearly')+'</span><b>'+sar(x.amount*12)+'</b></div>'+
+    '<div class="row" style="margin-top:6px"><span class="muted">'+L('الجاي','Next')+'</span><b>'+dayLabel(x.next)+' · '+dShort(x.next)+'</b></div>'+
     '<div class="section-title">'+L('آخر مرات اتخصم','Recent charges')+'</div><div class="card" style="padding:4px 14px">'+
     x.items.slice().reverse().slice(0,8).map(function(i){ return '<div class="row" style="padding:8px 0"><span class="muted">'+dShort(i.d)+' '+i.d.getFullYear()+'</span><span class="num">'+fmtN(i.a,2)+'</span></div>'; }).join('')+'</div>'+
-    '<div class="btns"><button class="btn ghost" onclick="toggleSub(\''+esc(x.key).replace(/'/g,"\\'")+'\')">'+(x.hidden?L('رجّعها للاشتراكات','Show it again'):L('دي مش اشتراك، شيلها','Not a subscription, hide it'))+'</button></div>');
+    '<div class="btns"><button class="btn ghost" onclick="toggleSub(\''+esc(x.key).replace(/'/g,"\\'")+'\')">'+(x.hidden?L('رجّعها','Show it again'):L('دي مش اشتراك، شيلها','Not a subscription, hide it'))+'</button></div>');
 }
 function toggleSub(key){
   var h = (S().subsHidden||[]).slice(), i = h.indexOf(key);
@@ -1860,13 +1904,31 @@ function toggleSub(key){
   D.settings.subsHidden = h; _subsMemo = null; closeSheet(); render();
   call('saveSettings',{subsHidden:h}).then(function(d){ D=d; _subsMemo=null; render(); }).catch(function(){});
 }
+function addSub(m){
+  m = m || {};
+  openSheet('<h2>🔁 '+(m.id?L('تعديل الاشتراك','Edit subscription'):L('ضيف اشتراك','Add a subscription'))+'</h2>'+
+    '<div class="field"><label>'+L('الاسم','Name')+'</label><input id="sbN" value="'+esc(m.name||'')+'" placeholder="Netflix, iCloud, ChatGPT…"></div>'+
+    '<div class="field"><label>'+L('المبلغ','Amount')+'</label><input id="sbA" inputmode="decimal" value="'+esc(m.amount||'')+'"></div>'+
+    '<div class="field"><label>'+L('بيتخصم يوم كام في الشهر؟','Day of the month it’s charged')+'</label><input id="sbD" inputmode="numeric" value="'+esc(m.day||'')+'" placeholder="1 – 28"></div>'+
+    '<div class="field"><label class="check"><input type="checkbox" id="sbY"'+(m.cycle==='yearly'?' checked':'')+'> '+L('بيتدفع مرة في السنة','Paid once a year')+'</label></div>'+
+    '<div class="btns"><button class="btn" onclick="saveSub(\''+(m.id||'')+'\')">'+L('حفظ','Save')+'</button>'+
+    (m.id?'<button class="btn danger" style="margin-top:10px" onclick="delSub(\''+m.id+'\')">'+L('امسحه','Delete')+'</button>':'')+'</div>');
+}
+function saveSub(id){
+  var n=(document.getElementById('sbN').value||'').trim(), a=parseAmt(document.getElementById('sbA').value), d=parseInt(document.getElementById('sbD').value,10)||1;
+  if(!n) return toast(L('اكتب الاسم','Enter a name')); if(!(a>0)) return toast(L('اكتب المبلغ','Enter an amount'));
+  var list=(S().subsManual||[]).filter(function(x){return x.id!==id;});
+  list.push({id:id||('s'+Date.now()), name:n, amount:a, day:d, cycle:document.getElementById('sbY').checked?'yearly':'monthly'});
+  _subsMemo=null; busy(call('saveSettings',{subsManual:list}), L('اتحفظ ✓','Saved ✓'));
+}
+function delSub(id){ var list=(S().subsManual||[]).filter(function(x){return x.id!==id;}); _subsMemo=null; busy(call('saveSettings',{subsManual:list}), L('اتمسح','Deleted')); }
 
 /* ============ توقّع آخر الشهر (لحد المرتب الجاي) ============ */
 function forecast(){
   var mr = range('month',0), today = sod(new Date());
   var daysLeft = Math.max(0, Math.round((mr.e-today)/864e5)), elapsed = Math.max(1, Math.round((today-mr.s)/864e5)+1);
   var subs = detectSubs().filter(function(x){return !x.hidden;}), sk = {};
-  subs.forEach(function(x){ sk[x.key]=1; });
+  subs.forEach(function(x){ if(x.mkey) sk[x.mkey]=1; });
   function split(list){ var o={all:0, fixed:0, big:0};
     list.forEach(function(t){ if(t.type!=='expense' || t.category===NOT_MINE) return; var a=Number(t.amount)||0; o.all+=a;
       if(sk[subKey(t)] || t.category==='أقساط تابي وتمارا' || t.category==='إيجار') o.fixed+=a; else if(a>=600) o.big+=a; });
@@ -2411,7 +2473,13 @@ function saveSetup(){
   try{ localStorage.setItem('sayad-key',k); }catch(e){}
   call('getData').then(function(d){ D=d; var el=document.getElementById('setup'); if(el) el.remove(); render(); toast(L('اتربط ✓','Connected ✓')); }).catch(function(){});
 }
-if(HOSTED && 'serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}); }
+if(HOSTED && 'serviceWorker' in navigator){
+  var hadSW = !!navigator.serviceWorker.controller, swReloaded = false;
+  navigator.serviceWorker.register('sw.js').then(function(r){ r.update().catch(function(){}); }).catch(function(){});
+  // نسخة جديدة اشتغلت؟ نعيد فتح الأبلكيشن مرة واحدة عشان تشوفها على طول
+  navigator.serviceWorker.addEventListener('controllerchange', function(){ if(hadSW && !swReloaded){ swReloaded = true; location.reload(); } });
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') navigator.serviceWorker.getRegistration().then(function(r){ if(r) r.update(); }).catch(function(){}); });
+}
 
 /* ============ يلا ============ */
 Lock.show();
