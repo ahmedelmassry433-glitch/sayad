@@ -952,7 +952,7 @@ var Lock = (function(){
         '<div class="lockName">'+L('صياد القرش','Sayad Elarsh')+'</div>'+
         '<div class="lockMsg" id="lockMsg">'+(msg||L('مقفول','Locked'))+'</div>'+
         '<button class="faceBig" aria-label="Face ID">'+FACEID_SVG+'</button>'+
-        '<div class="lockHint">'+L('دوس في أي حتة وبص للموبايل','Tap anywhere and look at your phone')+'</div>'+
+        '<div class="lockHint">'+L('دوس «Use Passkey» · أو دوس هنا لو الشباك اتقفل','Tap “Use Passkey” · or tap here if it closed')+'</div>'+
         '<button class="pinLink" onclick="event.stopPropagation();Lock.usePin()">'+L('استخدم الرقم السري','Use PIN')+'</button>'+
       '</div>';
       return;
@@ -971,6 +971,7 @@ var Lock = (function(){
   function show(){
     var c=cfg(); if(!c.on) return;
     open=true; pinBuf=''; pinMode=false; draw(); document.body.classList.add('locked');
+    if(c.cred) setTimeout(tryFace, 300); // iOS بيطلّع شباك «Use Passkey» على طول، دوسة واحدة وتفتح
   }
   function unlock(){
     open=false; pinBuf='';
