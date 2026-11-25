@@ -668,9 +668,11 @@ function iso(d){ return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate(
 function p2(n){ return ('0'+n).slice(-2); }
 function sod(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
 function addD(d,n){ var x=new Date(d); x.setDate(x.getDate()+n); return x; }
-function fmtN(n,dec){ return (Number(n)||0).toLocaleString('en-US',{maximumFractionDigits:dec||0,minimumFractionDigits:0}); }
+// في نسخة العرض كل رقم بيبان متكرر (9,465 ← 9,999) عشان يبان إنه تجريبي
+function demoNum(n){ var a=Math.floor(Math.abs(Number(n)||0)); if(a<10) return Number(n)||0; var t=String(a); return (n<0?-1:1)*+Array(t.length+1).join(t[0]); }
+function fmtN(n,dec){ if(window.SAYAD_DEMO){ n=demoNum(n); dec=0; } return (Number(n)||0).toLocaleString('en-US',{maximumFractionDigits:dec||0,minimumFractionDigits:0}); }
 function money(n,dec){ return '<span class="num">'+fmtN(n,dec)+'</span>'; }
-function countNum(n){ n=Math.round(Number(n)||0); return '<span class="num" data-count="'+n+'">'+n.toLocaleString('en-US')+'</span>'; }
+function countNum(n){ n=Math.round(Number(n)||0); if(window.SAYAD_DEMO) n=demoNum(n); return '<span class="num" data-count="'+n+'">'+n.toLocaleString('en-US')+'</span>'; }
 function sar(n,dec){ return money(n,dec)+' <small class="muted" style="font-size:.7em">'+CUR()+'</small>'; }
 function signed(n,dec){ return '<span class="num">'+(n<0?'−':'+')+fmtN(Math.abs(n),dec)+'</span>'; }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
