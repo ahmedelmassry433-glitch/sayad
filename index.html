@@ -1584,7 +1584,7 @@ function vGold(){
       '<div><span>'+L('دفعت','You paid')+'</span><b>'+gMoney(t.paid)+'</b></div>'+
       
       (p&&prevPound?'<div><span>'+L('النهارده','Today')+'</span><b class="'+plClass(dayChgValue)+'">'+arrow(dayChgValue)+' '+gSigned(dayChgValue)+'</b></div>':'')+
-    '<div class="wide"><span>'+L('عندك','You hold')+'</span><b><span class="num">'+fmtN(t.pounds,2)+'</span> '+L('جنيه دهب','gold pounds')+(t.grams?' + <span class="num">'+fmtN(t.grams,2)+'</span> '+L('جم سبايك','g of bars'):'')+' · '+L('يعني ','≈ ')+'<span class="num">'+fmtN(t.pure,1)+'</span> '+L('جم دهب صافي (عيار 24)','g of pure gold (24k)')+'</b></div>'+
+    '<div class="wide"><span>'+L('عندك','You hold')+'</span><b><span class="num">'+fmtN(t.pounds,2)+'</span> '+L('جنيه دهب','gold pounds')+' ('+'<span class="num">'+fmtN(t.pounds*8,1)+'</span> '+L('جم عيار 21','g · 21k')+')'+(t.grams?' + <span class="num">'+fmtN(t.grams,2)+'</span> '+L('جم سبايك عيار 24','g bars · 24k'):'')+'</b></div>'+
     '</div></div>';
 
   // سعر السوق
