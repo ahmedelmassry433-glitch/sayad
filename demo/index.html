@@ -667,7 +667,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
-var APP_VER = 'v27';
+var APP_VER = 'v28';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
@@ -2229,10 +2229,13 @@ var Swipe = (function(){
     return html;
   }
   // بعد كل render بنجهّز الصفحتين اللي جنبك في الخلفية، فالسحب يبدأ على طول
-  function prepare(){ clearTimeout(preT); pre = {}; preT = setTimeout(function(){ var i = TABS.indexOf(cur()); [i-1,i+1].forEach(function(n){ if(n>=0 && n<TABS.length) pre[TABS[n]] = build(TABS[n]); }); }, 700); }
+  function sig(){ return [D.tx.length, D.lastSync, LANG, UI.goldCur, UI.wCur, UI.txFilter, UI.q, UI.period, UI.offset, JSON.stringify(D.settings||{}).length, (D.installments||[]).length, (D.gold||[]).length, sod(new Date()).getTime()].join('|'); }
+  function prepare(){ clearTimeout(preT); var g = sig(); if(pre._sig !== g) pre = {_sig:g};
+    var i = TABS.indexOf(cur()), todo = [i+1, i-1].filter(function(n){ return n>=0 && n<TABS.length && !pre[TABS[n]]; });
+    (function next(){ if(!todo.length) return; preT = setTimeout(function(){ if(mode || lock) return next(); var t = TABS[todo.shift()]; pre[t] = build(t); next(); }, 450); })(); }
   function tf(el, x, ms){ el.style.transition = ms ? 'transform '+ms+'ms '+EASE : 'none'; el.style.transform = 'translate3d('+(x||0)+'px,0,0)'; }
   function makeGhost(t){
-    var html = pre[t] || build(t);
+    var html = (pre._sig===sig() && pre[t]) || build(t);
     ghost = document.createElement('div'); ghost.className = 'swGhost';
     ghost.innerHTML = '<div class="wrap">'+html+'</div>'; ghost._html = html;
     document.body.appendChild(ghost);
@@ -2506,11 +2509,17 @@ var TabBar = (function(){
   }
   // السحب بين الصفحات: الدايرة بتمشي مع صباعك بين الأيقونتين، وبعدين تكمل مع الصفحة
   function btn(t){ return btns.filter(function(x){return x.dataset.t===t;})[0]; }
-  function track(from, to, p){ var a=btn(from), b=btn(to); if(!a||!b) return; var x = center(a) + (center(b)-center(a))*Math.max(0,Math.min(1,p));
-    var tx = x - bub.offsetWidth/2; if(G) gsap.set(bub,{x:tx, scaleX:1+Math.sin(Math.PI*p)*0.12, scaleY:1-Math.sin(Math.PI*p)*0.06}); else bub.style.transform='translateX('+tx+'px)';
-    btns.forEach(function(x){ x.classList.toggle('near', x===(p>0.5?b:a)); }); }
-  function settle(t, ms){ var b=btn(t); btns.forEach(function(x){ x.classList.remove('near'); }); if(!b) return;
-    var tx = center(b) - bub.offsetWidth/2; if(G) gsap.to(bub,{x:tx, scaleX:1, scaleY:1, duration:(ms||300)/1000, ease:'power3.out', overwrite:'auto'}); else bub.style.transform='translateX('+tx+'px)'; }
+  var tk = null; // القياسات بتتاخد مرة واحدة أول السحبة
+  function track(from, to, p){
+    if(!tk || tk.from!==from || tk.to!==to){ var a=btn(from), b=btn(to); if(!a||!b) return; tk = {from:from, to:to, a:a, b:b, xa:center(a), xb:center(b), w:bub.offsetWidth, near:null}; if(G) gsap.killTweensOf(bub); }
+    p = Math.max(0, Math.min(1, p));
+    var tx = tk.xa + (tk.xb-tk.xa)*p - tk.w/2, k = Math.sin(Math.PI*p);
+    bub.style.transform = 'translate3d('+tx+'px,0,0) scale('+(1+k*0.1)+','+(1-k*0.05)+')';
+    var n = p>0.5 ? tk.b : tk.a; if(n!==tk.near){ if(tk.near) tk.near.classList.remove('near'); n.classList.add('near'); tk.near = n; } }
+  function settle(t, ms){ var b=btn(t); if(tk && tk.near) tk.near.classList.remove('near'); if(!b){ tk=null; return; }
+    var tx = (tk && (t===tk.to||t===tk.from) ? (t===tk.to?tk.xb:tk.xa) : center(b)) - (tk?tk.w:bub.offsetWidth)/2; tk = null;
+    bub.style.transition = 'transform '+(ms||300)+'ms cubic-bezier(.25,1,.5,1)'; bub.style.transform = 'translate3d('+tx+'px,0,0)';
+    setTimeout(function(){ bub.style.transition=''; if(G){ bub.style.transform=''; gsap.set(bub,{x:tx, scaleX:1, scaleY:1}); } }, (ms||300)+30); }
   return { update:update, track:track, settle:settle };
 })();
 document.getElementById('fab').onclick = addTx;
