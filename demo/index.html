@@ -659,7 +659,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
-var APP_VER = 'v21';
+var APP_VER = 'v22';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
@@ -2010,38 +2010,43 @@ function zakatCalc(){
   return {g24:g24, nisab:nisab, gold:gold, pure:t.pure, bank:bank, cash:cash, recv:recv, debts:debts, incRecv:incRecv, decDebts:decDebts,
     base:base, due: base>=nisab && nisab>0, zakat: base>=nisab ? base*0.025 : 0, goldZakatG: t.pure*0.025};
 }
+// الزكاة بتتعرض بنفس العملة اللي مختارها في الدهب (ريال أو جنيه)
+function zEgp(){ return UI.goldCur==='EGP'; }
+function zMoney(v,dec){ return zEgp() ? money(v*egpRate(),dec)+' <small class="muted" style="font-size:.7em">'+L('ج.م','EGP')+'</small>' : sar(v,dec); }
+function zCurSeg(){ return '<div class="seg mini" style="width:130px">'+[['SAR',L('ريال','SAR')],['EGP',L('جنيه','EGP')]].map(function(c){ return '<button class="'+(UI.goldCur===c[0]?'on':'')+'" onclick="setGoldCur(\''+c[0]+'\')">'+c[1]+'</button>'; }).join('')+'</div>'; }
 function zakatCard(){
   var z = zakatCalc(), money2 = z.base - z.gold, nd = zakatNext(), today = sod(new Date());
   var gz = z.due ? z.gold*0.025 : 0, mz = z.due ? Math.max(0,money2)*0.025 : 0;
   return '<div class="card" onclick="go(\'zakat\')" style="cursor:pointer"><h3>🕌 '+L('الزكاة','Zakat')+' <span class="muted">'+FWD()+'</span></h3>'+
-    (z.due ? '<div class="row"><span class="muted">'+L('زكاة الدهب','Gold zakat')+'</span><b>'+sar(gz)+'</b></div>'+
+    (z.due ? '<div class="row"><span class="muted">'+L('زكاة الدهب','Gold zakat')+'</span><b>'+zMoney(gz)+'</b></div>'+
       '<div class="dim" style="font-size:12px;margin:-2px 0 6px">'+L('أو تخرجها دهب: حوالي <span class="num">'+fmtN(z.goldZakatG,2)+'</span> جرام عيار 24','Or in gold: about <span class="num">'+fmtN(z.goldZakatG,2)+'</span> g of 24k')+'</div>'+
-      '<div class="row"><span class="muted">'+L('زكاة الفلوس (بنك وكاش)','Cash zakat (bank & cash)')+'</span><b>'+sar(mz)+'</b></div>'+
-      '<div class="row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--brd)"><span>'+L('الإجمالي','Total')+'</span><b class="good">'+sar(z.zakat)+'</b></div>'
-    : '<div class="dim" style="font-size:13px">'+L('مالك لسه تحت النصاب ('+money(z.nisab)+' ريال)','Below nisab ('+money(z.nisab)+' SAR)')+'</div>')+
+      '<div class="row"><span class="muted">'+L('زكاة الفلوس (بنك وكاش)','Cash zakat (bank & cash)')+'</span><b>'+zMoney(mz)+'</b></div>'+
+      '<div class="row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--brd)"><span>'+L('الإجمالي','Total')+'</span><b class="good">'+zMoney(z.zakat)+'</b></div>'
+    : '<div class="dim" style="font-size:13px">'+L('مالك لسه تحت النصاب ('+zMoney(z.nisab)+')','Below nisab ('+zMoney(z.nisab)+')')+'</div>')+
     '<div class="dim" style="font-size:11.5px;margin-top:8px">'+(nd ? L('يوم زكاتك: ','Zakat day: ')+dShort(nd)+' · '+hijri(nd) : L('دوس هنا وحدد يوم زكاتك عشان أفكرك بيه','Tap to set your zakat day for a reminder'))+'</div></div>';
 }
 function zakatNext(){ var s=S(); if(!s.zakatDate) return null; var d=sod(pd(s.zakatDate)); return d; }
 function vZakat(){
-  var z = zakatCalc(), s = S(), nd = zakatNext(), today = sod(new Date()), h = '';
+  var z = zakatCalc(), s = S(), nd = zakatNext(), today = sod(new Date()), h = '', fx = zEgp() ? egpRate() : 1;
+  HEAD_X = zCurSeg();
   h += '<div class="card hero mint"><canvas class="heroBg" aria-hidden="true"></canvas><div class="label">'+(z.due?L('عليك زكاة حوالي','Your zakat is about'):L('مالك لسه تحت النصاب','You’re below nisab'))+'</div>'+
-    '<div class="big">'+countNum(z.zakat)+'<small>'+CUR()+'</small></div>'+
-    '<div class="dim" style="font-size:12.5px">'+L('2.5% من ','2.5% of ')+money(z.base)+L(' ريال · النصاب ',' SAR · nisab ')+money(z.nisab)+'</div></div>';
+    '<div class="big">'+countNum(z.zakat*fx)+'<small>'+(zEgp()?L('ج.م','EGP'):CUR())+'</small></div>'+
+    '<div class="dim" style="font-size:12.5px">'+L('2.5% من ','2.5% of ')+zMoney(z.base)+L(' · النصاب ',' · nisab ')+zMoney(z.nisab)+'</div></div>';
   h += '<div class="card">'+
     kv('📅 '+L('يوم زكاتك','Your zakat day'), nd ? dShort(nd)+' '+nd.getFullYear() : L('حدده','Set it'), "editZakatDate()",
       nd ? (hijri(nd)+' · '+(nd<today?L('فات ميعادها','Overdue'):nd-today===0?L('النهارده','Today'):L('باقي '+Math.round((nd-today)/864e5)+' يوم',Math.round((nd-today)/864e5)+' days left'))) : L('اليوم اللي مالك عدّى فيه النصاب، وبعده كل سنة هجري','The day your wealth first passed nisab, then every lunar year'))+
     (z.due && nd ? kv('✅ '+L('دفعت الزكاة','I paid it'), '', "payZakat()", L('بنسجلها ونحط ميعاد السنة الجاية','Records it and sets next year’s date')) : '')+
     '</div>';
   h += '<div class="section-title">'+L('بيتحسب على إيه','What counts')+'</div><div class="card">'+
-    kv('🏦 '+L('البنك','Bank'), money(z.bank), "editNum('bankBalance')")+
-    kv('💵 '+L('الكاش','Cash'), money(z.cash), "editNum('cash')")+
-    kv('🪙 '+L('الدهب','Gold'), money(z.gold), "go('gold')", L('<span class="num">'+fmtN(z.pure,1)+'</span> جرام دهب صافي (عيار 24)','<span class="num">'+fmtN(z.pure,1)+'</span> g pure gold (24k)'))+
-    kv((z.incRecv?'☑️ ':'⬜️ ')+L('فريلانس ليك برّه','Freelance owed to you'), money(z.recv), "toggleZakat('recv')", L('دوس عشان تحسبه أو لأ','Tap to include or not'))+
-    kv((z.decDebts?'☑️ ':'⬜️ ')+L('اخصم الأقساط والكريدت','Subtract installments & credit'), '<span class="warn">−'+money(z.debts)+'</span>', "toggleZakat('debts')", L('دوس عشان تخصمها أو لأ','Tap to subtract or not'))+
-    '<div class="kv" style="cursor:default"><div><span><b>'+L('الإجمالي','Total')+'</b></span></div><b>'+money(z.base)+'</b></div></div>';
+    kv('🏦 '+L('البنك','Bank'), zMoney(z.bank), "editNum('bankBalance')")+
+    kv('💵 '+L('الكاش','Cash'), zMoney(z.cash), "editNum('cash')")+
+    kv('🪙 '+L('الدهب','Gold'), zMoney(z.gold), "go('gold')", L('<span class="num">'+fmtN(z.pure,1)+'</span> جرام دهب صافي (عيار 24)','<span class="num">'+fmtN(z.pure,1)+'</span> g pure gold (24k)'))+
+    kv((z.incRecv?'☑️ ':'⬜️ ')+L('فريلانس ليك برّه','Freelance owed to you'), zMoney(z.recv), "toggleZakat('recv')", L('دوس عشان تحسبه أو لأ','Tap to include or not'))+
+    kv((z.decDebts?'☑️ ':'⬜️ ')+L('اخصم الأقساط والكريدت','Subtract installments & credit'), '<span class="warn">−'+zMoney(z.debts)+'</span>', "toggleZakat('debts')", L('دوس عشان تخصمها أو لأ','Tap to subtract or not'))+
+    '<div class="kv" style="cursor:default"><div><span><b>'+L('الإجمالي','Total')+'</b></span></div><b>'+zMoney(z.base)+'</b></div></div>';
   if(z.pure>0) h += '<div class="dim" style="font-size:12.5px;padding:0 6px 10px">🪙 '+L('لو حابب تخرج زكاة الدهب دهب: حوالي <span class="num">'+fmtN(z.goldZakatG,2)+'</span> جرام عيار 24.','To pay the gold part in gold: about <span class="num">'+fmtN(z.goldZakatG,2)+'</span> g of 24k.')+'</div>';
   var paid = s.zakatPaid||[];
-  if(paid.length) h += '<div class="section-title">'+L('دفعت قبل كده','Paid before')+'</div><div class="card" style="padding:4px 14px">'+paid.slice().reverse().map(function(x){ return '<div class="row" style="padding:8px 0"><span class="muted">'+dShort(pd(x.date))+' '+pd(x.date).getFullYear()+'</span><span class="num">'+fmtN(x.amount,2)+'</span></div>'; }).join('')+'</div>';
+  if(paid.length) h += '<div class="section-title">'+L('دفعت قبل كده','Paid before')+'</div><div class="card" style="padding:4px 14px">'+paid.slice().reverse().map(function(x){ return '<div class="row" style="padding:8px 0"><span class="muted">'+dShort(pd(x.date))+' '+pd(x.date).getFullYear()+'</span><span class="num">'+(zEgp()?fmtN(x.amount*egpRate(),0):fmtN(x.amount,2))+'</span></div>'; }).join('')+'</div>';
   h += '<div class="dim" style="font-size:11.5px;padding:0 6px 14px">'+L('النصاب = 85 جرام دهب عيار 24 بسعر النهارده ('+money(z.g24,1)+' ريال للجرام). الحساب تقريبي على الطريقة المشهورة: 2.5% من مالك لو عدّى النصاب وعدّت عليه سنة هجري. لو عندك حالة خاصة اسأل حد متخصص.',
     'Nisab = 85 g of 24k gold at today’s price ('+money(z.g24,1)+' SAR/g). This is an estimate using the common method: 2.5% of your wealth once it passes nisab for a full lunar year. Ask a scholar for special cases.')+'</div>';
   return h;
