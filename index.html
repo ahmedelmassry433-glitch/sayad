@@ -757,7 +757,7 @@ var MERCHANT_LOGOS = [
   [/NAHDI/i,'nahdionline.com'], [/DAWAA/i,'al-dawaa.com'],
   [/FLYNAS/i,'flynas.com'], [/FLYADEAL/i,'flyadeal.com'], [/SAUDIA/i,'saudia.com'], [/EGYPTAIR/i,'egyptair.com'],
   [/BOOKING/i,'booking.com'], [/AIRBNB/i,'airbnb.com'], [/AGODA/i,'agoda.com'], [/ALMOSAFER/i,'almosafer.com'], [/EMIRATES/i,'emirates.com'],
-  [/TABBY|تابي/i,'tabby.ai'], [/TAMARA|تمارا/i,'tamara.co'], [/BODY MASTERS/i,'bodymasters.com.sa']
+  [/TABBY|تابي/i,'tabby.ai'], [/TAMARA|تمارا/i,'tamara.co'], [/BASITA|BASEETA|بسيطة/i,'baseeta.com'], [/كريدت الراجحي|بطاقة ائتمان|AL ?RAJHI/i,'alrajhibank.com.sa'], [/BODY MASTERS/i,'bodymasters.com.sa']
 ];
 function logoDomain(text){
   if(!text) return null;
@@ -1182,10 +1182,14 @@ function vInstallments(compact){
     '<div class="row" style="margin:-4px 0 6px"><span class="muted" style="font-size:13px">'+L('الشهر ده','This month')+'</span><b class="num">'+fmtN(thisMonth,2)+' '+CUR()+'</b></div>'+
     up.slice(0,3).map(instRow).join('')+'</div>';
 }
+// القسط بيتعرض باسم وشعار الأبلكيشن اللي عليه (تابي/تمارا/بسيطة/الكريدت)، والمحل جنبه
+function instIc(prov){ return catIc('أقساط تابي وتمارا', prov||''); }
+function instTitle(o){ return '<b>'+esc(o.provider)+'</b>'; }
+function instSub(o, extra){ return '<span>'+(o.merchant?esc(o.merchant)+(extra?' · ':''):'')+(extra||'')+'</span>'; }
 function instRow(i){
   var d=pd(i.dueDate), late=i.dueDate<todayStr();
-  return '<div class="tx" onclick="editInst(\''+i.id+'\')">'+catIc('أقساط تابي وتمارا', i.merchant+' '+i.provider)+
-    '<div class="mid"><b>'+esc(i.merchant)+'</b><span>'+esc(i.provider)+(instNumTxt(i)?' · '+instNumTxt(i):'')+'</span></div>'+
+  return '<div class="tx" onclick="editInst(\''+i.id+'\')">'+instIc(i.provider)+
+    '<div class="mid">'+instTitle(i)+instSub(i, instNumTxt(i))+'</div>'+
     '<div style="text-align:end"><div class="amt">'+money(i.amount,2)+'</div><span class="chg '+(late?'down':'flat')+'">'+(late?L('عدّى ميعاده · ','Overdue · '):'')+dShort(d)+'</span></div></div>';
 }
 function vInstPage(){
@@ -1207,8 +1211,8 @@ function vInstPage(){
   h+=plans.map(function(p){
     var pct=p.total? p.paidN/p.total*100 : 0, n=p.next;
     return '<div class="card plan" onclick="openPlan(\''+esc(p.id)+'\')">'+
-      '<div class="tx" style="border:0;padding:0 0 10px;cursor:pointer">'+catIc('أقساط تابي وتمارا', p.merchant+' '+p.provider)+
-        '<div class="mid"><b>'+esc(p.merchant)+'</b><span>'+esc(p.provider)+' · '+L('دفعت '+p.paidN+' من '+p.total,'Paid '+p.paidN+' of '+p.total)+'</span></div>'+
+      '<div class="tx" style="border:0;padding:0 0 10px;cursor:pointer">'+instIc(p.provider)+
+        '<div class="mid">'+instTitle(p)+instSub(p, L('دفعت '+p.paidN+' من '+p.total,'Paid '+p.paidN+' of '+p.total))+'</div>'+
         '<div style="text-align:end"><div class="amt">'+money(p.leftAmt,2)+'</div><span class="dim" style="font-size:11.5px">'+L('باقي','left')+'</span></div></div>'+
       '<div class="bar"><i style="width:'+pct+'%"></i></div>'+
       '<div class="row" style="margin-top:10px;font-size:13px"><span class="muted">'+L('القسط الجاي','Next')+(n.num?' ('+n.num+'/'+(n.total||p.total)+')':'')+'</span><span><b class="num">'+fmtN(n.amount,2)+'</b> · '+dayLabel(pd(n.dueDate))+'</span></div></div>';
@@ -1230,7 +1234,7 @@ function openPlan(id){
   var all=(D.installments||[]).filter(function(i){ return (i.planId||(i.provider+'|'+i.merchant))===id; }).sort(function(a,b){return a.dueDate<b.dueDate?-1:1;});
   if(!all.length) return;
   var f=all[0];
-  openSheet('<h2>'+esc(f.merchant)+' · '+esc(f.provider)+'</h2>'+
+  openSheet('<h2>'+esc(f.provider)+(f.merchant?' · '+esc(f.merchant):'')+'</h2>'+
     all.map(function(i){
       var paid=instPaid(i);
       return '<div class="kv" onclick="toggleInst(\''+i.id+'\')"><div><span>'+(instNumTxt(i)||dShort(pd(i.dueDate)))+'</span><div class="dim" style="font-size:11.5px">'+dayLabel(pd(i.dueDate))+'</div></div>'+
