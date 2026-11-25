@@ -658,7 +658,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
-var APP_VER = 'v14';
+var APP_VER = 'v15';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
@@ -1791,7 +1791,7 @@ function nextAfter(d, today){ var n = addMon(sod(d),1), k = 1; while(n < today &
 var _subsMemo = null;
 function detectSubs(){
   var s = S(), hid = (s.subsHidden||[]), man = (s.subsManual||[]);
-  var sig = D.tx.length+'|'+hid.join(',')+'|'+JSON.stringify(man)+'|'+(D.lastSync||'');
+  var sig = D.tx.length+'|'+hid.join(',')+'|'+JSON.stringify(man)+'|'+JSON.stringify(s.subsEmail||[])+'|'+(D.lastSync||'');
   if(_subsMemo && _subsMemo.sig===sig) return _subsMemo.v;
   var today = sod(new Date()), since = addD(today,-215), g = {};
   D.tx.forEach(function(t){
@@ -1840,6 +1840,16 @@ function detectSubs(){
     out.push({key:'m:'+m.id, mkey:'', name:m.name, merchant:m.name, cat:'اشتراكات وأدوات شغل', kind:'sub', amount:a, monthly: m.cycle==='yearly' ? a/12 : a,
       next:n, last:null, items:[], hidden:false, up:0, isNew:false, manual:m});
   });
+  (s.subsEmail||[]).forEach(function(e){            // اللي لقيناه في الإيميل (فواتير وإلغاء)
+    var nm = String(e.name||'').toLowerCase(), match = out.filter(function(x){ return x.name.toLowerCase()===nm || String(x.merchant||'').toLowerCase().indexOf(nm)>=0; });
+    if(e.status==='cancelled'){ var ce = pd(e.lastEvent); match.forEach(function(x){ if(!(x.last && x.last > ce)) x.cancelled = e.lastEvent; else x.email = e; }); if(match.length) return; }
+    if(match.length){ match.forEach(function(x){ x.email = e; }); return; }
+    if(e.status==='stale') return;
+    var amt = e.amount ? (e.currency==='USD' ? e.amount*3.75 : e.amount) : 0, lastD = pd(e.lastPaid||e.lastEvent);
+    out.push({key:'e:'+e.name, mkey:'', name:e.name, merchant:e.name, cat:'اشتراكات وأدوات شغل', kind:'sub', amount:amt, monthly: e.yearly ? amt/12 : amt,
+      next: e.yearly ? (function(){ var n=addMon(sod(lastD),12); while(n<today) n=addMon(n,12); return n; })() : nextAfter(lastD,today),
+      last:lastD, items:[], hidden:hid.indexOf('e:'+e.name)>=0, up:0, isNew:false, email:e, emailOnly:true, cancelled: e.status==='cancelled' ? e.lastEvent : ''});
+  });
   out.sort(function(a,b){ return a.next-b.next; });
   _subsMemo = {sig:sig, v:out};
   saveSubsCache(out);
@@ -1853,13 +1863,13 @@ function saveSubsCache(list){
   saveSubsCache._last = js;
   setTimeout(function(){ call('saveSettings',{subsCache:c}).then(function(d){ if(d&&d.settings) D.settings.subsCache=d.settings.subsCache; }).catch(function(){}); }, 1500);
 }
-function subsOf(kind){ return detectSubs().filter(function(x){ return !x.hidden && (!kind || x.kind===kind); }); }
+function subsOf(kind){ return detectSubs().filter(function(x){ return !x.hidden && !x.cancelled && (!kind || x.kind===kind); }); }
 function subsMonthly(kind){ return subsOf(kind).reduce(function(a,x){return a+x.monthly;},0); }
 function subRow(x){
   var tag = x.isNew ? ' <span class="pill" style="padding:1px 7px;font-size:10.5px">'+L('جديد','New')+'</span>' : x.up ? ' <span class="pill warn" style="padding:1px 7px;font-size:10.5px">▲ '+money(x.up)+'</span>' : '';
   var soon = (x.next - sod(new Date()))/864e5 <= 3;
   return '<div class="tx" onclick="openSub(\''+esc(x.key).replace(/'/g,"\\'")+'\')">'+catIc(x.cat,x.name+' '+(x.merchant||''))+
-    '<div class="mid"><b>'+esc(x.name)+tag+'</b><span>'+(x.manual&&x.manual.cycle==='yearly'?L('كل سنة','Yearly'):L('كل شهر','Monthly'))+(x.manual?' · '+L('ضفته بإيدك','added by you'):'')+'</span></div>'+
+    '<div class="mid"><b>'+esc(x.name)+tag+'</b><span>'+(x.manual&&x.manual.cycle==='yearly'?L('كل سنة','Yearly'):L('كل شهر','Monthly'))+(x.manual?' · '+L('ضفته بإيدك','added by you'):'')+(x.emailOnly?' · '+L('من الإيميل','from email'):'')+(x.cancelled?' · <span class="bad">'+L('اتلغى ','cancelled ')+dShort(pd(x.cancelled))+'</span>':'')+'</span></div>'+
     '<div style="text-align:end"><div class="amt">'+money(x.amount,2)+'</div><span class="chg '+(soon?'down':'flat')+'">'+dayLabel(x.next)+'</span></div></div>';
 }
 // كارت الاشتراكات في الرئيسية والتقارير: زي الأقساط، تحت بعض باللوجو والميعاد
@@ -1872,7 +1882,7 @@ function subsSection(){
     '<div style="text-align:center;margin-top:6px"><a class="muted" style="font-size:13px;cursor:pointer" onclick="addSub()">+ '+L('ضيف اشتراك ناسيه','Add one I missed')+'</a></div></div>';
 }
 function vSubs(){
-  var all = detectSubs(), subs = subsOf('sub'), bills = subsOf('bill'), hid = all.filter(function(x){return x.hidden;});
+  var all = detectSubs(), subs = subsOf('sub'), bills = subsOf('bill'), hid = all.filter(function(x){return x.hidden;}), canc = all.filter(function(x){return x.cancelled && !x.hidden;});
   var m = subsMonthly('sub'), mb = subsMonthly('bill'), h = '';
   HEAD_X = '<button class="iconbtn" onclick="addSub()" aria-label="'+L('ضيف اشتراك','Add subscription')+'" style="font-size:20px">+</button>';
   h += '<div class="card hero sky"><canvas class="heroBg" aria-hidden="true"></canvas><div class="label">'+L('اشتراكاتك كل شهر','Your subscriptions each month')+'</div>'+
@@ -1883,6 +1893,7 @@ function vSubs(){
   h += '<div class="section-title">'+L('الاشتراكات','Subscriptions')+'</div><div class="card">'+(subs.length ? subs.map(subRow).join('') : '<div class="empty">'+L('لسه ملقتش اشتراكات','None found yet')+'</div>')+
     '<div style="text-align:center;margin-top:6px"><a class="muted" style="font-size:13px;cursor:pointer" onclick="addSub()">+ '+L('ضيف اشتراك ناسيه','Add one I missed')+'</a></div></div>';
   if(bills.length) h += '<div class="section-title">'+L('حاجات تانية بتتكرر كل شهر','Other monthly bills')+' · '+money(mb)+'</div><div class="card">'+bills.map(subRow).join('')+'</div>';
+  if(canc.length) h += '<div class="section-title">'+L('اتلغت (مش محسوبة)','Cancelled (not counted)')+'</div><div class="card">'+canc.map(subRow).join('')+'</div>';
   if(hid.length) h += '<div class="section-title">'+L('شيلتها','Hidden')+'</div><div class="card">'+hid.map(subRow).join('')+'</div>';
   h += '<div class="dim" style="font-size:12px;padding:0 6px 10px">'+L('بتتلقط لوحدها من رسايل البنك: نفس المكان، كل شهر. لو فيه اشتراك على كارت تاني أو بيتدفع كل سنة، ضيفه بإيدك من +.','Found automatically from bank messages: same place, every month. Add ones on another card or paid yearly with +.')+'</div>';
   return h;
@@ -1895,6 +1906,7 @@ function openSub(key){
     '<div class="row" style="margin-top:6px"><span class="muted">'+L('في السنة','Yearly')+'</span><b>'+sar(x.amount*12)+'</b></div>'+
     '<div class="row" style="margin-top:6px"><span class="muted">'+L('الجاي','Next')+'</span><b>'+dayLabel(x.next)+' · '+dShort(x.next)+'</b></div>'+
     '<div class="section-title">'+L('آخر مرات اتخصم','Recent charges')+'</div><div class="card" style="padding:4px 14px">'+
+    (x.email ? '<div class="row" style="padding:8px 0"><span class="muted">'+L('آخر فاتورة في الإيميل','Last email receipt')+'</span><span>'+(x.email.lastPaid||x.email.lastEvent)+(x.email.amount?' · '+x.email.amount+' '+x.email.currency:'')+'</span></div>' : '')+
     x.items.slice().reverse().slice(0,8).map(function(i){ return '<div class="row" style="padding:8px 0"><span class="muted">'+dShort(i.d)+' '+i.d.getFullYear()+'</span><span class="num">'+fmtN(i.a,2)+'</span></div>'; }).join('')+'</div>'+
     '<div class="btns"><button class="btn ghost" onclick="toggleSub(\''+esc(x.key).replace(/'/g,"\\'")+'\')">'+(x.hidden?L('رجّعها','Show it again'):L('دي مش اشتراك، شيلها','Not a subscription, hide it'))+'</button></div>');
 }
