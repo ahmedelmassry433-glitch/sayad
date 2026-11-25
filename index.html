@@ -667,7 +667,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
-var APP_VER = 'v26';
+var APP_VER = 'v27';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
@@ -2255,13 +2255,13 @@ var Swipe = (function(){
     if(e.cancelable) e.preventDefault();
     dx = side>0 ? Math.min(0, x) : Math.max(0, x);
     var vx = nt ? dx : dx*0.22;
-    if(!raf) raf = requestAnimationFrame(function(){ raf = 0; tf(app, vx); if(ghost) tf(ghost, vx + side*W); });
+    if(!raf) raf = requestAnimationFrame(function(){ raf = 0; tf(app, vx); if(ghost) tf(ghost, vx + side*W); if(nt) TabBar.track(cur(), nt, Math.abs(dx)/W); });
   }, {passive:false});
   function finish(commit){
     lock = true; cancelAnimationFrame(raf); raf = 0;
     var rest = Math.abs(side*W + dx), ms = Math.round(Math.max(180, Math.min(320, rest*0.9)));
     if(commit){
-      tf(app, -side*W, ms); tf(ghost, 0, ms);
+      tf(app, -side*W, ms); tf(ghost, 0, ms); TabBar.settle(nt, ms);
       setTimeout(function(){
         // نحط نفس الصفحة اللي كانت ظاهرة في الـ ghost جوه الأبلكيشن (من غير ما نبنيها تاني)
         Motion.quiet(); UI.tab = nt; UI.txLimit = 0; if(nt!=='tx') UI.txFilter='all';
@@ -2269,7 +2269,7 @@ var Swipe = (function(){
         requestAnimationFrame(cleanup);
       }, ms+16);
     } else {
-      tf(app, 0, 220); if(ghost) tf(ghost, side*W, 220);
+      tf(app, 0, 220); if(ghost) tf(ghost, side*W, 220); TabBar.settle(cur(), 220);
       setTimeout(cleanup, 240);
     }
   }
@@ -2496,7 +2496,7 @@ var TabBar = (function(){
   window.addEventListener('resize', function(){ update(false,true); });
 
   function update(force, instant){
-    var tt = UI.tab==='inst'?'wealth':UI.tab;
+    var tt = ({inst:'wealth',zakat:'wealth',subs:'home',settings:'home'})[UI.tab] || UI.tab;
     var b = btns.filter(function(x){return x.dataset.t===tt;})[0] || btns[0];
     var changed = lastTab!==null && lastTab!==UI.tab;
     if(lastTab===null || instant) setX(center(b),'instant');
@@ -2504,7 +2504,14 @@ var TabBar = (function(){
     if(changed) pop(b);
     lastTab = UI.tab;
   }
-  return { update:update };
+  // السحب بين الصفحات: الدايرة بتمشي مع صباعك بين الأيقونتين، وبعدين تكمل مع الصفحة
+  function btn(t){ return btns.filter(function(x){return x.dataset.t===t;})[0]; }
+  function track(from, to, p){ var a=btn(from), b=btn(to); if(!a||!b) return; var x = center(a) + (center(b)-center(a))*Math.max(0,Math.min(1,p));
+    var tx = x - bub.offsetWidth/2; if(G) gsap.set(bub,{x:tx, scaleX:1+Math.sin(Math.PI*p)*0.12, scaleY:1-Math.sin(Math.PI*p)*0.06}); else bub.style.transform='translateX('+tx+'px)';
+    btns.forEach(function(x){ x.classList.toggle('near', x===(p>0.5?b:a)); }); }
+  function settle(t, ms){ var b=btn(t); btns.forEach(function(x){ x.classList.remove('near'); }); if(!b) return;
+    var tx = center(b) - bub.offsetWidth/2; if(G) gsap.to(bub,{x:tx, scaleX:1, scaleY:1, duration:(ms||300)/1000, ease:'power3.out', overwrite:'auto'}); else bub.style.transform='translateX('+tx+'px)'; }
+  return { update:update, track:track, settle:settle };
 })();
 document.getElementById('fab').onclick = addTx;
 document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') sync(true); });
