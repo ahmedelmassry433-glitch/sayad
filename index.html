@@ -659,7 +659,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
-var APP_VER = 'v18';
+var APP_VER = 'v19';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
@@ -2046,12 +2046,54 @@ function vZakat(){
   return h;
 }
 function toggleZakat(k){ var z = Object.assign({}, S().zakat||{}); z[k] = (z[k]===false); D.settings.zakat = z; render(); call('saveSettings',{zakat:z}).then(function(d){ D=d; render(); }).catch(function(){}); }
+// يوم الزكاة: بنرجع بالرصيد لورا عملية عملية، ونضيف الدهب من يوم ما اشتريته، ونشوف إمتى مالك عدّى النصاب وفضل فوقه
+function zakatEstimate(){
+  var s = S(), z = zakatCalc(), today = sod(new Date()), fx = egpRate();
+  var tx = D.tx.slice().sort(function(a,b){ return pd(b.date)-pd(a.date); });
+  if(!tx.length || !z.nisab) return null;
+  var first = sod(pd(tx[tx.length-1].date)), bal = Number(s.bankBalance)||0, cash = Number(s.cash)||0, i = 0, series = [];
+  function goldOn(d){ var v = 0, undated = false; (D.gold||[]).forEach(function(g){ if(!g.date){ undated = true; v += gValue(g)/fx; } else if(sod(pd(g.date)) <= d) v += gValue(g)/fx; }); return {v:v, undated:undated}; }
+  for(var d = today; d >= first; d = addD(d,-1)){
+    var dayEnd = addD(d,1);
+    while(i < tx.length && pd(tx[i].date) >= dayEnd){ var t = tx[i], a = Number(t.amount)||0;   // نلغي أثر العمليات اللي بعد اليوم ده
+      if(t.source==='cash' || /كريدت/.test(t.note||'')){ } else if(t.type==='income') bal -= a; else bal += a; i++; }
+    var g = goldOn(d); series.push({d:d, total: bal + cash + g.v - (z.decDebts ? z.debts : 0), undated:g.undated});
+  }
+  var above = series.filter(function(x){ return x.total >= z.nisab; }).length;
+  var lastBelow = null; for(var k=0;k<series.length;k++){ if(series[k].total < z.nisab){ lastBelow = series[k].d; break; } }
+  var undated = series.length && series[0].undated;
+  if(!lastBelow) return {since:null, first:first, undated:undated, nisab:z.nisab};       // فوق النصاب من أول ما البيانات بدأت
+  var cross = addD(lastBelow,1), due = addD(cross,354);
+  while(addD(due,354) <= today) due = addD(due,354);
+  return {since:cross, due:due, passed: due <= today, first:first, undated:undated, nisab:z.nisab};
+}
+function nextHijriDay(m, day){ // أقرب يوم بالهجري (مثلاً 1 رمضان)
+  try{ var f = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura',{day:'numeric',month:'numeric'}), d = sod(new Date());
+    for(var k=0;k<400;k++){ var p = f.formatToParts(d), mm = +p.filter(function(x){return x.type==='month';})[0].value, dd = +p.filter(function(x){return x.type==='day';})[0].value; if(mm===m && dd===day) return d; d = addD(d,1); }
+  }catch(e){} return null;
+}
 function editZakatDate(){
-  var d = zakatNext() || sod(new Date());
-  openSheet('<h2>📅 '+L('يوم زكاتك','Your zakat day')+'</h2><div class="dim" style="font-size:13px;margin-bottom:10px">'+L('حط اليوم اللي الزكاة بتطلع فيه كل سنة. هبعتلك تنبيه قبله بأسبوع ويومها.','Pick the day your zakat is due each year. You’ll get a reminder a week before and on the day.')+'</div>'+
+  var d = zakatNext() || sod(new Date()), r = zakatEstimate(), ram = nextHijriDay(9,1), today = sod(new Date());
+  var est = '';
+  if(r && r.since){
+    est = '<div class="card" style="padding:12px 14px"><div style="font-size:13.5px">'+L('مالك عدّى النصاب وفضل فوقه من يوم','Your wealth passed nisab and stayed above it from')+' <b>'+dShort(r.since)+' '+r.since.getFullYear()+'</b> <span class="dim">('+hijri(r.since)+')</span></div>'+
+      '<div class="dim" style="font-size:12.5px;margin-top:6px">'+(r.passed ? L('يعني سنة هجري عدّت، والزكاة كانت مستحقة. ادفعها دلوقتي، والسنة الجاية ميعادها ','A lunar year has passed, so zakat was due. Pay it now; next year it’s due ') : L('يعني يوم زكاتك ','So your zakat day is '))+'<b>'+dShort(r.due)+' '+r.due.getFullYear()+'</b></div>'+
+      '<button class="btn" style="margin-top:10px" onclick="setZakatDate(\''+iso(r.passed?addD(r.due,354):r.due).slice(0,10)+'\')">'+L('استخدم اليوم ده','Use this date')+'</button></div>';
+  } else if(r){
+    est = '<div class="card" style="padding:12px 14px"><div style="font-size:13.5px">'+L('مالك فوق النصاب من أول ما بياناتك بدأت (','Your wealth has been above nisab since your data starts (')+dShort(r.first)+' '+r.first.getFullYear()+L(')، يعني السنة غالباً عدّت والزكاة مستحقة دلوقتي.',') — so a year has most likely passed and zakat is due now.')+'</div>'+
+      (r.undated ? '<div class="dim" style="font-size:12px;margin-top:6px">'+L('لو حطيت تاريخ شرا كل دهب في صفحة الدهب، أقدر أحسب اليوم بالظبط.','Add a purchase date to each gold item on the Gold page and I can find the exact day.')+'</div>' : '')+
+      '<div class="dim" style="font-size:12px;margin-top:6px">'+L('لو مش فاكر، العلماء بيقولوا تختار يوم ثابت بأقرب تقدير وتخرج فيه كل سنة. أسهل اختيار: النهارده، أو أول رمضان.','If you can’t tell, scholars advise picking a fixed day by your best estimate and paying on it every year. Easiest picks: today, or 1 Ramadan.')+'</div>'+
+      '<div class="btns" style="margin-top:10px"><button class="btn" onclick="setZakatDate(\''+iso(today).slice(0,10)+'\')">'+L('النهارده','Today')+'</button>'+
+      (ram ? '<button class="btn ghost" style="margin-top:8px" onclick="setZakatDate(\''+iso(ram).slice(0,10)+'\')">'+L('أول رمضان · ','1 Ramadan · ')+dShort(ram)+' '+ram.getFullYear()+'</button>' : '')+'</div></div>';
+  }
+  openSheet('<h2>📅 '+L('يوم زكاتك','Your zakat day')+'</h2>'+
+    (est ? '<div class="section-title" style="margin-top:0">🧮 '+L('حسبتهولك','Worked out for you')+'</div>'+est : '')+
+    '<div class="section-title">'+L('أو اختار بنفسك','Or pick it yourself')+'</div>'+
+    '<div class="dim" style="font-size:12.5px;margin-bottom:8px">'+L('هبعتلك تنبيه قبله بأسبوع ويومها.','You’ll get a reminder a week before and on the day.')+'</div>'+
     '<input class="amountIn" id="fZd" type="date" value="'+iso(d).slice(0,10)+'" style="font-size:20px">'+
     '<div class="btns"><button class="btn" onclick="saveZakatDate()">'+L('حفظ','Save')+'</button></div>');
 }
+function setZakatDate(v){ busy(call('saveSettings',{zakatDate:v}), L('اتحفظ ✓ يوم زكاتك ','Saved ✓ zakat day ')+dShort(pd(v))); }
 function saveZakatDate(){ var v = document.getElementById('fZd').value; if(!v) return; busy(call('saveSettings',{zakatDate:v}), L('اتحفظ ✓','Saved ✓')); }
 function payZakat(){
   var z = zakatCalc(), nd = zakatNext() || sod(new Date());
