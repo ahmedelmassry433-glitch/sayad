@@ -1996,7 +1996,7 @@ applyLang();
 
 /* ============ وضع تجريبي (لما تفتحه برّه Apps Script) ============ */
 var Demo = (function(){
-  var KEY=window.SAYAD_DEMO?'sayad-showcase-v1':'sayad-demo-v2', db;
+  var KEY=window.SAYAD_DEMO?'sayad-showcase-v2':'sayad-demo-v2', db;
   function rnd(seed){ return function(){ seed=(seed*16807)%2147483647; return (seed-1)/2147483646; }; }
   function build(){
     var r = rnd(42), tx=[], id=0, now=new Date();
@@ -2054,18 +2054,19 @@ var Demo = (function(){
     return {xauUsd:3553.5,usdEgp:54.33,usdSar:3.75,egpPerSar:54.33/3.75,g24:Math.round(g24),g21:Math.round(g24*.875),g18:Math.round(g24*.75),pound:Math.round(g24*.875*8),adjust:adj,at:iso(new Date()),live:true}; }
   // نسخة العرض للأصحاب: نفس الشكل بأسماء وأرقام وهمية
   function anon(o){
-    var k=0.8, r2=function(x){ return Math.round(x*k*100)/100; };
+    // كل رقم بيتحول لرقم متكرر (237 ← 222، 1500 ← 1111) عشان يبان إنه تجريبي
+    var r2=function(x){ var a=Math.floor(Math.abs(x)); if(a<1) return 0; var t=String(a); return (x<0?-1:1)*+Array(t.length+1).join(t[0]); };
     var MER={'تحويل لصاحبي':'تحويل لصاحبي','تحويل لزميل':'تحويل لزميل','تحويل من صاحبي':'تحويل من صاحبي','تحويل لمصر':'تحويل للأهل',
       'شركة الأمل — راتب':'شركة الأمل — راتب','Studio Atlas':'Studio Atlas','Studio Atlas (الأحساء)':'Studio Atlas','Café Mosaic':'Café Mosaic',
       'Brandly':'Brandly','PIXEL CO':'Pixel Co','Remaining':'Brandly','HIGGSFIELD INC.':'CANVA PRO'};
     function m(x){ return MER[x] || (/[\u0600-\u06FF]/.test(x)||/^[A-Z ]/i.test(x) ? x : 'عميل'); }
     o.tx.forEach(function(t){ t.amount=r2(t.amount); t.merchant=m(t.merchant);
       t.raw=String(t.raw||'').replace(/\b(1234|5678|4321)\b/g,'1234').replace(/SAR [\d,]+\.\d{2}/,'SAR '+Math.abs(t.amount).toFixed(2)); });
-    o.freelance.forEach(function(f){ f.amount=Math.round(f.amount*k); f.client=m(f.client); f.note=''; });
+    o.freelance.forEach(function(f){ f.amount=r2(f.amount); f.client=m(f.client); f.note=''; });
     o.installments.forEach(function(i){ i.amount=r2(i.amount); });
-    o.gold=o.gold.slice(0,4).map(function(g){ g.paid=Math.round(g.paid*k); return g; });
-    var st=o.settings; Object.keys(st.budgets||{}).forEach(function(c){ st.budgets[c]=Math.round(st.budgets[c]*k/50)*50; });
-    Object.assign(st,{name:'ضيف',nameEn:'Guest',monthlyBudget:9000,expectedSalary:12000,freelanceTarget:6000,bankBalance:18450,cash:3200,goldPounds:10.5,
+    o.gold=o.gold.slice(0,4).map(function(g){ g.paid=r2(g.paid); return g; });
+    var st=o.settings; Object.keys(st.budgets||{}).forEach(function(c){ st.budgets[c]=r2(st.budgets[c]); });
+    Object.assign(st,{name:'ضيف',nameEn:'Guest',monthlyBudget:9999,expectedSalary:11111,freelanceTarget:5555,bankBalance:33333,cash:4444,goldPounds:7,
       salaryKeywords:'راتب|SALARY|PAYROLL|الأمل',freelanceKeywords:'STUDIO ATLAS|CAFE MOSAIC|BRANDLY|PIXEL CO',ccCards:'1234'});
     return o;
   }
