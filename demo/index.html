@@ -244,6 +244,10 @@ html[dir=ltr] .greet{letter-spacing:-.4px}
   box-shadow:0 -20px 60px -20px rgba(0,0,0,.8)}
 .sheet.open{transform:none}
 .sheet .grab{width:44px;height:5px;border-radius:9px;background:rgba(255,255,255,.25);margin:0 auto 14px}
+.sheet .grabZone{position:sticky;top:-10px;margin:-10px -18px 0;padding:10px 18px 0;z-index:3;touch-action:none;cursor:grab}
+.sheet .sheetX{position:absolute;top:6px;inset-inline-end:14px;width:34px;height:34px;border-radius:50%;border:1px solid var(--brd2);
+  background:rgba(255,255,255,.08);color:#fff;font-size:20px;line-height:1;display:grid;place-items:center;cursor:pointer}
+.sheet.dragging{transition:none}
 .sheet h2{font-size:19px;margin:0 0 14px;font-weight:600}
 .field{margin-bottom:12px}
 .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
@@ -1803,9 +1807,26 @@ function vSettings(){
 function kv(k,v,on,sub){ return '<div class="kv" onclick="'+on+'"><div><span>'+k+'</span>'+(sub?'<div class="dim" style="font-size:11.5px">'+sub+'</div>':'')+'</div><b>'+v+'</b></div>'; }
 
 /* ============ الشيتات (Bottom sheets) ============ */
-function openSheet(html){ var s=document.getElementById('sheet'); s.innerHTML='<div class="grab"></div>'+html; s.scrollTop=0; document.getElementById('sheetBg').style.display='block'; Motion.lock(true); s._open=true; requestAnimationFrame(function(){ if(s._open) s.classList.add('open');}); }
-function closeSheet(){ var s=document.getElementById('sheet'); s._open=false; s.classList.remove('open'); document.getElementById('sheetBg').style.display='none'; Motion.lock(false); }
+function openSheet(html){ var s=document.getElementById('sheet'); s.innerHTML='<div class="grabZone"><div class="grab"></div><button class="sheetX" onclick="closeSheet()" aria-label="'+L('اقفل','Close')+'">×</button></div>'+html; s.scrollTop=0; document.getElementById('sheetBg').style.display='block'; Motion.lock(true); s._open=true; requestAnimationFrame(function(){ if(s._open) s.classList.add('open');}); }
+function closeSheet(){ var s=document.getElementById('sheet'); s._open=false; s.classList.remove('dragging'); s.style.transform=''; s.classList.remove('open'); document.getElementById('sheetBg').style.display='none'; Motion.lock(false); }
 document.getElementById('sheetBg').onclick = closeSheet;
+// اسحب الشيت لتحت عشان تقفله (من فوق، أو من أي حتة لو إنت في أول الصفحة)
+(function(){
+  var s=document.getElementById('sheet'), y0=0, dy=0, t0=0, on=false, fromGrab=false;
+  s.addEventListener('touchstart',function(e){ if(!s._open||e.touches.length>1) return;
+    fromGrab = !!(e.target.closest && e.target.closest('.grabZone')) && !(e.target.closest && e.target.closest('.sheetX'));
+    if(!fromGrab && s.scrollTop>0) return;
+    y0=e.touches[0].clientY; dy=0; t0=Date.now(); on=true; },{passive:true});
+  s.addEventListener('touchmove',function(e){ if(!on) return; dy=e.touches[0].clientY-y0;
+    if(dy<=0 || (!fromGrab && s.scrollTop>0)){ if(dy<0 && !s.classList.contains('dragging')) on=false; s.style.transform=''; return; }
+    if(e.cancelable) e.preventDefault();
+    s.classList.add('dragging'); s.style.transform='translateY('+dy+'px)'; },{passive:false});
+  function end(){ if(!on) return; on=false; s.classList.remove('dragging');
+    var fast = dy>40 && dy/Math.max(1,Date.now()-t0) > 0.5;
+    if(dy>110 || fast){ closeSheet(); } else { s.style.transform=''; } dy=0; }
+  s.addEventListener('touchend',end); s.addEventListener('touchcancel',end);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape' && s._open) closeSheet(); });
+})();
 
 var draft = null;
 function catGrid(type, sel){
