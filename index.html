@@ -1,0 +1,2088 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#06080b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="صياد القرش">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<title>صياد القرش</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lenis@1.3.28/dist/lenis.css">
+<style>
+/* ================= صياد القرش — Dark Glass ================= */
+:root{
+  --bg:#06080b;
+  --glass:rgba(255,255,255,.055); --glass2:rgba(255,255,255,.09); --glass3:rgba(255,255,255,.14);
+  --brd:rgba(255,255,255,.10); --brd2:rgba(255,255,255,.18);
+  --line:rgba(255,255,255,.07);
+  --text:#f3f7f6; --muted:rgba(235,245,243,.62); --dim:rgba(235,245,243,.38);
+  --accent:#7ef0c6; --accent-ink:#052a1f;
+  --mint1:#9ff5d3; --mint2:#2fbf8f; --violet:#b48cff; --pink:#f59ac8; --sky:#8ec5ff; --gold:#f3d27a;
+  --good:#7ef0c6; --bad:#ff8a8a; --warn:#ffd27a;
+  --r:30px; --blur:saturate(170%) blur(22px);
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans Arabic",-apple-system,"SF Arabic","Segoe UI",Tahoma,sans-serif;font-size:15px;line-height:1.45}
+body{padding-bottom:calc(96px + var(--safe-b));min-height:100vh}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+input,select,textarea{font:inherit;color:var(--text);background:rgba(255,255,255,.06);border:1px solid var(--brd);border-radius:16px;padding:13px 15px;width:100%;outline:none}
+input:focus,select:focus,textarea:focus{border-color:rgba(126,240,198,.6);background:rgba(255,255,255,.09)}
+select option{background:#10161a}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;display:inline-block}
+
+/* الخلفية: ألوان ضبابية وراء الزجاج */
+.ambient{position:fixed;inset:-20vmax;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(42vmax 42vmax at 88% 10%, rgba(47,191,143,.55), transparent 62%),
+    radial-gradient(38vmax 38vmax at 6% 46%, rgba(160,110,255,.42), transparent 62%),
+    radial-gradient(34vmax 34vmax at 85% 86%, rgba(245,130,190,.34), transparent 62%),
+    radial-gradient(30vmax 30vmax at 25% 100%, rgba(120,180,255,.28), transparent 62%);
+  filter:blur(24px);animation:drift 38s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate3d(-3vmax,2vmax,0) rotate(6deg)}}
+.grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* الزجاج */
+.glass,.card,.stat,.seg,.search input,.chip,.nav button,.iconbtn,.tabs,.fab,.sheet,.toast,.demo{
+  -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+.card,.stat{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+  border:1px solid var(--brd);border-radius:var(--r);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 20px 40px -24px rgba(0,0,0,.7)}
+.card{padding:18px;margin-bottom:12px}
+.card h3{margin:0 0 12px;font-size:14px;color:var(--muted);font-weight:500;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card h3 a{color:var(--accent);font-size:13px;cursor:pointer}
+
+.wrap{max-width:560px;margin:0 auto;padding:calc(14px + var(--safe-t)) 16px 80px}
+
+/* الهيدر */
+header.top{display:flex;align-items:center;justify-content:space-between;margin:2px 0 16px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;overflow:hidden;
+  background:radial-gradient(circle at 35% 30%,#ffffff,#e6eef6 70%);border:1px solid rgba(255,255,255,.6);box-shadow:0 6px 18px -6px rgba(143,168,196,.6),inset 0 1px 0 #fff}
+.logo svg{width:36px;height:36px;margin-top:2px}
+.emptyShark{display:block;width:64px;height:64px;margin:0 auto 10px}
+.emptyShark svg{width:100%;height:100%}
+.sharkImg{width:100%;height:100%;display:block;border-radius:22%;object-fit:cover}
+.lockLogo .sharkImg{width:92px;height:92px}
+.brand h1{font-size:17px;margin:0;font-weight:600;letter-spacing:-.2px}
+.brand small{display:block;color:var(--dim);font-size:12px;font-weight:400}
+.iconbtn{width:44px;height:44px;border-radius:50%;background:var(--glass);display:grid;place-items:center;font-size:17px;border:1px solid var(--brd);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.iconbtn svg{width:19px;height:19px}
+.langbtn{font-size:13px;font-weight:600;letter-spacing:.3px}
+html[dir=ltr] .greet{letter-spacing:-.4px}
+.iconbtn.spin svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(-360deg)}}
+
+/* كروت الهيرو بالألوان */
+.hero{position:relative;overflow:hidden;isolation:isolate;padding:20px 20px 18px;border-color:rgba(255,255,255,.16)}
+.hero > :not(.heroBg){position:relative;z-index:1}
+.heroBg{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.9;mix-blend-mode:screen}
+.hero.mint{background:linear-gradient(170deg,rgba(255,255,255,.10) 0%,rgba(126,240,198,.30) 42%,rgba(40,190,140,.62) 100%)}
+.hero.violet{background:linear-gradient(170deg,rgba(170,120,255,.55) 0%,rgba(205,140,240,.42) 50%,rgba(245,140,195,.55) 100%)}
+.hero .label{color:rgba(240,255,250,.78);font-size:13px}
+.hero .big{font-size:52px;font-weight:300;letter-spacing:-1.5px;margin:0 0 8px;line-height:1.1}
+.hero .big small{font-size:15px;color:var(--muted);font-weight:500;margin-inline-start:6px;letter-spacing:0}
+.greet{font-size:21px;font-weight:600;margin:0 0 14px;line-height:1.35;letter-spacing:-.2px;max-width:80%}
+.greet .w{display:inline-block;will-change:transform,opacity}
+.arrowbtn{position:absolute !important;top:16px;inset-inline-end:16px;width:46px;height:46px;border-radius:50%;
+  display:grid;place-items:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);
+  -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+.arrowbtn svg{width:18px;height:18px}
+
+/* ميني كروت ملونة */
+.stat{padding:15px 16px;border-radius:26px;overflow:hidden}
+.stat .k{color:var(--muted);font-size:12.5px}
+.stat .v{font-size:24px;font-weight:400;margin-top:2px;letter-spacing:-.5px}
+.stat .s{font-size:12px;color:var(--dim);margin-top:3px}
+.stat.sky{background:linear-gradient(160deg,rgba(142,197,255,.30),rgba(142,197,255,.07))}
+.stat.mint{background:linear-gradient(160deg,rgba(126,240,198,.28),rgba(126,240,198,.06))}
+.stat.violet{background:linear-gradient(160deg,rgba(180,140,255,.30),rgba(180,140,255,.06))}
+.stat.gold{background:linear-gradient(160deg,rgba(243,210,122,.26),rgba(243,210,122,.05))}
+
+/* pills */
+.pill{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;font-size:13px;
+  background:rgba(255,255,255,.14);color:#effffa;border:1px solid rgba(255,255,255,.16);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+.pill.bad{background:rgba(255,138,138,.18);color:#ffd5d5;border-color:rgba(255,138,138,.3)}
+.pill.warn{background:rgba(255,210,122,.16);color:#ffe8b8;border-color:rgba(255,210,122,.28)}
+.pill.muted{background:rgba(255,255,255,.08);color:var(--muted)}
+
+/* bars */
+.bar{height:10px;border-radius:99px;background:rgba(255,255,255,.10);overflow:hidden;position:relative}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--mint1),var(--mint2))}
+.bar .mark{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fff;opacity:.8;border-radius:2px}
+.split{display:flex;height:12px;border-radius:99px;overflow:hidden;gap:3px;margin:10px 0 4px}
+.split i{display:block;height:100%;border-radius:99px}
+
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.muted{color:var(--muted)} .dim{color:var(--dim)} .good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)}
+
+/* العمليات */
+.tx{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.tx:last-child{border-bottom:0}
+.tx .ic{position:relative;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;overflow:hidden;
+  color:color-mix(in srgb,var(--c,#94a3b8) 55%,#fff);
+  background:radial-gradient(120% 120% at 30% 20%,color-mix(in srgb,var(--c,#94a3b8) 55%,transparent),color-mix(in srgb,var(--c,#94a3b8) 14%,transparent) 75%);
+  border:1px solid color-mix(in srgb,var(--c,#94a3b8) 40%,rgba(255,255,255,.12));box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
+.tx .ic svg{width:21px;height:21px}
+.tx .ic .logo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;padding:0;background:#fff;border-radius:50%;opacity:0;transition:opacity .25s}
+.tx .ic.hasLogo{border:0;background:none;box-shadow:0 4px 12px -5px rgba(0,0,0,.55)}
+.tx .ic.hasLogo svg{display:none}
+.tx .ic.hasLogo .logo{opacity:1}
+.cIco{display:inline-grid;place-items:center;width:20px;height:20px;vertical-align:-5px;font-style:normal}
+.cIco svg{width:18px;height:18px}
+.catgrid button span .cIco{width:24px;height:24px}
+.catgrid button span .cIco svg{width:22px;height:22px}
+.tx .mid{flex:1;min-width:0}
+.tx.review{flex-wrap:wrap;row-gap:0}
+.tx .amt.dim{color:var(--dim)}
+.rchips{flex-basis:100%;display:flex;flex-wrap:nowrap;gap:6px;margin-top:8px;align-items:center;overflow-x:auto;scrollbar-width:none;padding-inline-start:56px;padding-bottom:2px}
+.rchips::-webkit-scrollbar{display:none}
+.rchips button{flex:none;white-space:nowrap}
+.rchips em{flex:none;white-space:nowrap;font-style:normal;font-size:11.5px;color:var(--dim);margin-inline-end:2px}
+.rchips button{display:inline-flex;align-items:center;gap:4px;font:inherit;font-size:12px;color:var(--text);padding:5px 10px;border-radius:999px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);cursor:pointer}
+.rchips button:active{transform:scale(.95);background:rgba(255,255,255,.16)}
+.rchips .cIco{width:14px;height:14px}.rchips .cIco svg{width:14px;height:14px}
+.more summary{font-size:13px;color:var(--dim);cursor:pointer;padding:6px 0}
+.dwrap{display:flex;gap:16px;align-items:center}
+.donut{width:136px;height:136px;flex:none;overflow:visible}
+.donut .dseg{cursor:pointer;transition:stroke-width .2s}
+.donut .dseg:hover{stroke-width:15}
+.donut .dT{fill:var(--dim);font-size:7.5px}
+.donut .dB{fill:var(--text);font-size:12px;font-weight:500;font-variant-numeric:tabular-nums}
+.dlegend{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+.dl{display:grid;grid-template-columns:10px 1fr auto;gap:2px 8px;align-items:center;font-size:13px;cursor:pointer}
+.dl i{width:10px;height:10px;border-radius:50%}
+.dl span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dl em{grid-column:2/4;font-style:normal;font-size:11px;margin-top:-2px}
+@media (max-width:360px){.dwrap{flex-direction:column}.donut{width:150px;height:150px}}
+.tx .mid b{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:auto}
+.tx .mid span{font-size:12.5px;color:var(--dim)}
+.tx .amt{font-weight:500;white-space:nowrap}
+.tx .amt.in{color:var(--good)}
+.dayhead{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin:18px 6px 8px}
+
+/* segmented */
+.seg{display:flex;background:rgba(255,255,255,.06);border:1px solid var(--brd);border-radius:999px;padding:5px;gap:4px}
+.seg button{flex:1;padding:10px 0;border-radius:999px;color:var(--muted);font-weight:500;font-size:14px;transition:background .3s,color .3s}
+.seg button.on{background:#f4fbf8;color:#0b1512;box-shadow:0 6px 18px -6px rgba(0,0,0,.5)}
+.nav{display:flex;align-items:center;justify-content:space-between;margin:14px 0}
+.nav b{font-size:16px;font-weight:600}
+.nav button{width:42px;height:42px;border-radius:50%;background:var(--glass);border:1px solid var(--brd);font-size:17px}
+.nav button:disabled{opacity:.3}
+
+/* الرسم: أعمدة بيضا pill جوّه مسار شفاف */
+.chart{display:flex;align-items:flex-end;gap:5px;height:150px;padding-top:6px;position:relative}
+.chart .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;cursor:pointer;min-width:0}
+.chart .trk{flex:1;width:100%;max-width:28px;border-radius:99px;background:rgba(255,255,255,.12);display:flex;align-items:flex-end;overflow:hidden}
+.chart .col i{display:block;width:100%;border-radius:99px;background:rgba(255,255,255,.92);min-height:4px}
+.chart .col.hot i{background:linear-gradient(180deg,#fff,var(--mint1))}
+.chart .col.over i{background:linear-gradient(180deg,#ffd0d0,var(--bad))}
+.chart .col.future .trk{background:rgba(255,255,255,.05)}
+.chart .col small{font-size:10px;color:var(--dim);margin-top:6px;white-space:nowrap}
+.chart.dense{gap:2px}
+.chart.dense .trk{max-width:10px}
+.chartCard{background:linear-gradient(165deg,rgba(255,255,255,.07),rgba(47,191,143,.22)) !important}
+.chartTip{text-align:center;font-size:13px;color:var(--muted);height:22px;margin-bottom:6px}
+.avgline{font-size:12px;color:var(--dim);text-align:center;margin-top:8px}
+
+/* البنود */
+.cat{padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.cat:last-child{border-bottom:0}
+.cat .row b{font-weight:500}
+.cat .bar{height:7px;margin-top:8px}
+
+/* chips */
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:9px 14px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--brd);font-size:13px;color:var(--muted)}
+.chip.on{background:#f4fbf8;border-color:#f4fbf8;color:#0b1512}
+.catgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.catgrid button{background:rgba(255,255,255,.05);border:1px solid var(--brd);border-radius:20px;padding:11px 6px;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:4px;line-height:1.25;min-height:72px}
+.catgrid button span{font-size:20px}
+.catgrid button.on{border-color:rgba(126,240,198,.7);background:rgba(126,240,198,.16);color:var(--accent)}
+
+/* البار اللي تحت: كبسولة زجاج عايمة */
+.tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + var(--safe-b));width:min(92vw,420px);
+  background:rgba(18,24,28,.55);border:1px solid var(--brd2);border-radius:999px;display:flex;justify-content:space-between;
+  padding:7px;z-index:20;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 18px 40px -12px rgba(0,0,0,.8)}
+.tabs{touch-action:none;user-select:none;-webkit-user-select:none;isolation:isolate}
+.tabs button{position:relative;z-index:2;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;color:var(--muted);transition:color .3s}
+.tabs button svg{width:22px;height:22px;will-change:transform;transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.tabs button.on{color:var(--accent-ink)}
+.tabs button.near svg{transform:translateY(-5px) scale(1.18)}
+.tabs.dragging button.on:not(.near){color:var(--muted)}
+.tabs.dragging button.near{color:var(--accent-ink)}
+/* الكورة الزجاج اللي بتتحرك ورا الأيقونة */
+.tabBubble{position:absolute;z-index:1;top:7px;left:0;width:52px;height:52px;border-radius:50%;pointer-events:none;will-change:transform;
+  background:radial-gradient(120% 120% at 30% 20%,rgba(255,255,255,.95) 0%,rgba(200,255,235,.85) 22%,rgba(126,240,198,.78) 55%,rgba(60,200,150,.75) 100%);
+  border:1px solid rgba(255,255,255,.7);
+  box-shadow:inset 0 -6px 12px rgba(20,120,90,.35),inset 0 3px 6px rgba(255,255,255,.8),0 10px 26px -8px rgba(126,240,198,.8),0 0 0 6px rgba(126,240,198,.08);
+  -webkit-backdrop-filter:blur(6px) saturate(180%);backdrop-filter:blur(6px) saturate(180%)}
+.tabBubble:after{content:"";position:absolute;top:6px;left:12px;width:18px;height:9px;border-radius:50%;background:rgba(255,255,255,.75);filter:blur(1.5px);transform:rotate(-20deg)}
+.tabs.dragging .tabBubble{box-shadow:inset 0 -6px 12px rgba(20,120,90,.35),inset 0 3px 6px rgba(255,255,255,.8),0 16px 34px -6px rgba(126,240,198,.95),0 0 0 10px rgba(126,240,198,.12)}
+.fab{position:fixed;inset-inline-end:18px;bottom:calc(92px + var(--safe-b));width:58px;height:58px;border-radius:50%;
+  background:rgba(126,240,198,.22);border:1px solid rgba(126,240,198,.5);color:#eafff7;display:grid;place-items:center;z-index:21;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 14px 34px -10px rgba(47,191,143,.7)}
+.fab svg{width:24px;height:24px}
+
+/* الشيت */
+.sheetBg{position:fixed;inset:0;background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);z-index:40;display:none}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-height:92vh;overflow:auto;overscroll-behavior:contain;
+  background:linear-gradient(180deg,rgba(30,40,44,.78),rgba(14,19,22,.88));border-radius:32px 32px 0 0;border-top:1px solid var(--brd2);
+  padding:10px 18px calc(22px + var(--safe-b));z-index:41;transform:translateY(105%);transition:transform .42s cubic-bezier(.22,1,.36,1);
+  box-shadow:0 -20px 60px -20px rgba(0,0,0,.8)}
+.sheet.open{transform:none}
+.sheet .grab{width:44px;height:5px;border-radius:9px;background:rgba(255,255,255,.25);margin:0 auto 14px}
+.sheet h2{font-size:19px;margin:0 0 14px;font-weight:600}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+.amountIn{font-size:40px;font-weight:300;text-align:center;direction:ltr;background:transparent !important;border:0 !important;border-bottom:1px solid var(--brd2) !important;border-radius:0 !important;padding:6px}
+.btn{display:block;width:100%;padding:15px;border-radius:999px;background:linear-gradient(145deg,var(--mint1),#4fd7a6);color:var(--accent-ink);font-weight:700;font-size:16px;text-align:center;box-shadow:0 10px 26px -10px rgba(126,240,198,.7)}
+.btn.ghost{background:rgba(255,255,255,.07);color:var(--text);border:1px solid var(--brd);box-shadow:none}
+.btn.danger{background:rgba(255,138,138,.08);color:var(--bad);border:1px solid rgba(255,138,138,.35);box-shadow:none}
+.btns{display:flex;gap:10px;margin-top:14px}
+.raw{font-size:12px;color:var(--dim);background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:16px;padding:10px 12px;white-space:pre-wrap;direction:rtl;max-height:120px;overflow:auto}
+.check{display:flex;align-items:center;gap:10px;font-size:14px;padding:6px 0}
+.check input{width:20px;height:20px;accent-color:var(--accent)}
+
+.toast{position:fixed;top:calc(14px + var(--safe-t));left:50%;transform:translate(-50%,-160%);background:rgba(20,40,34,.7);color:#dffff3;border:1px solid rgba(126,240,198,.35);padding:11px 18px;border-radius:999px;z-index:60;transition:transform .35s cubic-bezier(.22,1,.36,1);font-size:14px;max-width:90vw}
+.toast.show{transform:translate(-50%,0)}
+.demo{background:rgba(255,210,122,.08);border:1px solid rgba(255,210,122,.25);color:#ffe3a8;font-size:12.5px;padding:9px 14px;border-radius:18px;margin-bottom:12px}
+.empty{text-align:center;color:var(--muted);padding:26px 10px}
+.empty span{font-size:34px;display:block;margin-bottom:6px}
+.status{font-size:12px;padding:5px 11px;border-radius:99px;cursor:pointer;white-space:nowrap;border:1px solid transparent}
+.status.paid{background:rgba(126,240,198,.14);color:var(--good);border-color:rgba(126,240,198,.25)}
+.status.pend{background:rgba(255,210,122,.13);color:var(--warn);border-color:rgba(255,210,122,.25)}
+.kv{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.kv:last-child{border-bottom:0}
+.kv span{color:var(--muted)}
+.kv b{font-weight:500}
+.section-title{font-size:13px;color:var(--dim);margin:22px 8px 8px}
+.pageHead{display:flex;align-items:center;gap:10px;margin:0 4px 14px}
+.pageHead h2{font-size:26px;font-weight:600;margin:0;letter-spacing:-.2px}
+.pageHead .back{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:inherit;flex:none}
+.pageHead .back svg{width:18px;height:18px}
+[dir=ltr] .pageHead .back svg{transform:scaleX(-1)}
+.iconbtn.on{background:rgba(94,234,212,.18);color:var(--accent)}
+.search{position:relative;margin-bottom:10px}
+.search input{padding-inline-start:44px;border-radius:999px;background:rgba(255,255,255,.06)}
+.search svg{position:absolute;inset-inline-start:16px;top:14px;width:18px;height:18px;color:var(--dim)}
+.alert{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;padding:12px 14px;border-radius:22px;background:rgba(255,138,138,.08);border:1px solid rgba(255,138,138,.22);margin-bottom:8px;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+.alert.amber{background:rgba(255,210,122,.07);border-color:rgba(255,210,122,.25)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-inline-end:5px;vertical-align:middle}
+
+/* هدف الشهر + الأقساط + مؤشر الدهب */
+.tgtBtn{font-size:13px;text-decoration:underline dotted rgba(255,255,255,.35);text-underline-offset:4px}
+.plan{cursor:pointer}
+.gauge{margin:6px 0 10px}
+.gTrack{position:relative;height:10px;border-radius:99px;background:linear-gradient(90deg,#4ade80,#facc15 55%,#fb923c)}
+html[dir=rtl] .gTrack{background:linear-gradient(270deg,#4ade80,#facc15 55%,#fb923c)}
+.gTrack i{position:absolute;top:50%;width:18px;height:18px;margin-inline-start:-9px;transform:translateY(-50%);border-radius:50%;background:#fff;border:3px solid #0b1512;box-shadow:0 2px 8px rgba(0,0,0,.6)}
+
+/* البروفايل فوق */
+.profile{display:flex;align-items:center;gap:12px;text-align:start;min-width:0}
+.avatar{width:46px;height:46px;border-radius:50%;overflow:hidden;flex:none;display:grid;place-items:center;
+  background:linear-gradient(145deg,rgba(159,245,211,.55),rgba(160,110,255,.45));border:1.5px solid rgba(255,255,255,.55);
+  box-shadow:0 6px 18px -6px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.4)}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.avatar span{font-size:19px;font-weight:600;color:#fff}
+.avatar.big{width:96px;height:96px;margin:0 auto 12px}
+.avatar.big span{font-size:38px}
+.pname small{display:block;color:var(--muted);font-size:12.5px}
+.pname h1{font-size:19px;margin:0;font-weight:600;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52vw}
+.pname h1 .w{display:inline-block}
+.syncLine{font-size:11.5px;color:var(--dim);margin:-8px 4px 12px;display:flex;align-items:center;gap:6px}
+.syncLine .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.3}}
+.profEdit{text-align:center;margin-bottom:16px}
+/* شاشة القفل */
+body.locked{overflow:hidden}
+.lock{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:rgba(6,8,11,.72);
+  -webkit-backdrop-filter:blur(28px) saturate(160%);backdrop-filter:blur(28px) saturate(160%);transition:opacity .35s}
+.lock.out{opacity:0;pointer-events:none}
+.lockIn{text-align:center;padding:24px;width:min(340px,90vw)}
+.lockLogo{width:92px;height:92px;margin:0 auto 12px;border-radius:28px;display:grid;place-items:center;
+  background:radial-gradient(circle at 35% 30%,#fff,#e6eef6 70%);box-shadow:0 18px 40px -12px rgba(143,168,196,.6)}
+.lockLogo svg{width:72px;height:72px}
+.lockName{font-size:20px;font-weight:600}
+.lockMsg{font-size:13px;color:var(--muted);margin:6px 0 18px;min-height:18px}
+.pinDots{display:flex;gap:14px;justify-content:center;margin-bottom:22px}
+.pinDots i{width:13px;height:13px;border-radius:50%;border:1.5px solid rgba(255,255,255,.6)}
+.pinDots i.on{background:#fff}
+.keypad{display:grid;grid-template-columns:repeat(3,72px);gap:16px;justify-content:center;direction:ltr}
+.keypad button,.keypad span{width:72px;height:72px;border-radius:50%;font-size:26px;font-weight:400}
+.keypad button{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+.keypad button:active{background:rgba(255,255,255,.25)}
+.keypad .fid,.keypad .del{background:none;border:0}
+.keypad .fid svg{width:34px;height:34px;color:var(--accent)}
+
+/* الدهب */
+.pageTitle{font-size:22px;font-weight:600;margin:0}
+.seg.mini{padding:4px}
+.seg.mini button{padding:7px 0;font-size:13px}
+.hero.goldHero{background:linear-gradient(165deg,rgba(255,236,170,.30) 0%,rgba(243,190,80,.30) 45%,rgba(176,120,30,.45) 100%);border-color:rgba(255,220,140,.3)}
+.plBig{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;font-size:17px;font-weight:600;
+  -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid}
+.plBig small{font-size:12px;font-weight:500;opacity:.8}
+.plBig .pct{font-size:13px;opacity:.9}
+.plBig.up{background:rgba(74,222,128,.16);color:#9ff5c4;border-color:rgba(74,222,128,.35)}
+.plBig.down{background:rgba(255,100,100,.16);color:#ffb4b4;border-color:rgba(255,120,120,.38)}
+.plBig.flat{background:rgba(255,255,255,.1);color:var(--text);border-color:var(--brd2)}
+.plCaption{font-size:12.5px;color:rgba(255,245,220,.75);margin-top:6px}
+.goldMeta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.goldMeta .wide{grid-column:1/-1;white-space:normal}
+.goldMeta div{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:9px 12px}
+.goldMeta > div > span{display:block;font-size:11.5px;color:rgba(255,245,220,.7)}
+.goldMeta b{font-size:13.5px;font-weight:600}
+.up{color:var(--good)} .down{color:var(--bad)} .flat{color:var(--muted)}
+.goldMeta b.up{color:#9ff5c4} .goldMeta b.down{color:#ffb4b4}
+.chg{font-size:12.5px;white-space:nowrap}
+.mkt{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.mkt b{font-weight:500;display:block}
+.mkt span{font-size:12px;color:var(--dim)}
+.mktR{text-align:end}
+.mktR b{font-size:17px;font-weight:500}
+.mktR small{font-size:11px;color:var(--dim)}
+.liveDot{font-size:11.5px;color:var(--dim);display:inline-flex;align-items:center;gap:6px}
+.liveDot:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.liveDot.on:before{background:var(--good);box-shadow:0 0 0 4px rgba(126,240,198,.18)}
+.sparkWrap{margin-top:14px}
+.spark{width:100%;height:70px;display:block}
+.goldIc{background:radial-gradient(circle at 30% 25%,rgba(255,220,130,.5),rgba(200,140,40,.15) 70%) !important}
+.gPrev{background:rgba(0,0,0,.22);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:4px 0 6px;font-size:14px}
+.gPrev:empty{display:none}
+.tabs button{width:48px;height:48px}
+.tabBubble{width:48px;height:48px}
+
+/* لو الجهاز مش بيدعم الزجاج */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .card,.stat,.tabs,.sheet{background-color:#11181b}
+}
+/* تقليل الحركة */
+@media (prefers-reduced-motion: reduce){
+  .ambient{animation:none}
+  .sheet,.toast,.seg button,.tabs button{transition:none !important}
+  .iconbtn.spin svg{animation:none !important}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<div class="ambient" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
+<nav class="tabs" id="tabs">
+  <button data-t="home" class="on" aria-label="الرئيسية"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg></button>
+  <button data-t="tx" aria-label="العمليات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10a1 1 0 0 1 1 1v15l-3-2-3 2-3-2-3 2V5a1 1 0 0 1 1-1z"/><path d="M9 9h6M9 13h4"/></svg></button>
+  <button data-t="report" aria-label="التقارير"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M10 20V5M15 20v-7M20 20V8"/></svg></button>
+  <button data-t="income" aria-label="الدخل"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7" width="17" height="12.5" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3.5 12.5h17"/></svg></button>
+  <button data-t="gold" aria-label="الدهب"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 10h9l3 7h-15z"/><path d="M9 10l1.2-3.5h3.6L15 10"/><path d="M12 13.5v1"/></svg></button>
+  <button data-t="wealth" aria-label="فلوسي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><rect x="4" y="8" width="16" height="11" rx="2.5"/><circle cx="16" cy="13.5" r="1.2" fill="currentColor"/></svg></button>
+</nav>
+<button class="fab" id="fab" aria-label="ضيف عملية"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>
+
+<div class="sheetBg" id="sheetBg"></div>
+<div class="sheet" id="sheet" data-lenis-prevent></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.1/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.1/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.1/dist/SplitText.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.3.28/dist/lenis.min.js"></script>
+<script>
+/* =====================================================================
+   الحركة: GSAP + ScrollTrigger + Lenis + SplitText + خلفية موج للهيرو
+   - هادية: مدد 0.6–0.9 ثانية، ease ناعم، مسافات حركة صغيرة
+   - بتحترم prefers-reduced-motion (حتى لو اتغير الإعداد والأبلكيشن مفتوح)
+   - لو المكتبات متحملتش (نت ضعيف)، الأبلكيشن بيشتغل عادي من غير حركة
+   ===================================================================== */
+var Motion = (function(){
+  var has = typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined';
+  var mq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : {matches:false};
+  var reduced = !!mq.matches, lenis = null, splits = [], lastKey = null;
+  if(has){
+    gsap.registerPlugin(ScrollTrigger);
+    if(typeof SplitText !== 'undefined') gsap.registerPlugin(SplitText);
+    gsap.defaults({ease:'power3.out', duration:0.7});
+  }
+  function tick(t){ if(lenis) lenis.raf(t*1000); }
+  function startLenis(){
+    if(lenis || reduced || !has || typeof Lenis === 'undefined') return;
+    lenis = new Lenis({ duration:1.1, easing:function(t){ return Math.min(1, 1.001 - Math.pow(2, -10*t)); },
+      smoothWheel:true, syncTouch:false }); // اللمس على الآيفون يفضل native (أنعم وأريح)
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add(tick); gsap.ticker.lagSmoothing(0);
+  }
+  function stopLenis(){ if(!lenis) return; gsap.ticker.remove(tick); lenis.destroy(); lenis = null; }
+  function onChange(e){
+    reduced = e.matches;
+    if(reduced){ stopLenis(); if(has){ gsap.globalTimeline.getChildren().forEach(function(t){ t.progress(1); }); } }
+    else startLenis();
+    Waves.setReduced(reduced);
+  }
+  if(mq.addEventListener) mq.addEventListener('change', onChange); else if(mq.addListener) mq.addListener(onChange);
+
+  function before(){
+    if(!has) return;
+    ScrollTrigger.getAll().forEach(function(t){ t.kill(); });
+    splits.forEach(function(s){ try{ s.revert(); }catch(e){} }); splits = [];
+  }
+  function fmt(v){ return Math.round(v).toLocaleString('en-US'); }
+
+  function after(key){
+    var isNew = key !== lastKey; lastKey = key;
+    Waves.mount();
+    if(!has || reduced || !isNew) return;
+    var root = document.getElementById('app');
+
+    // 1) العنوان: SplitText بالكلمات (العربي لو اتقسم حروف بيتفك)
+    if(typeof SplitText !== 'undefined'){
+      [].forEach.call(root.querySelectorAll('[data-split]'), function(el){
+        var s = SplitText.create(el, {type:'words', wordsClass:'w', aria:'auto'});
+        splits.push(s);
+        gsap.from(s.words, {opacity:0, y:'0.45em', duration:0.9, stagger:0.07, delay:0.05, ease:'power3.out'});
+      });
+    }
+
+    // 2) الأرقام الكبيرة تعدّ لحد قيمتها
+    [].forEach.call(root.querySelectorAll('[data-count]'), function(el){
+      var to = Number(el.getAttribute('data-count')) || 0, o = {v:0};
+      if(to <= 0) return;
+      el.textContent = '0';
+      gsap.to(o, {v:to, duration:1.1, ease:'power2.out', delay:0.15, onUpdate:function(){ el.textContent = fmt(o.v); }});
+    });
+
+    // 3) الكروت بتظهر بهدوء وإنت بتنزل (اللي على الشاشة بيظهر على طول)
+    var blocks = root.querySelectorAll('.card, .stat, .dayhead, .section-title, .seg, .nav, .search, .chips, .alert, .demo');
+    if(blocks.length){
+      gsap.set(blocks, {opacity:0, y:16});
+      ScrollTrigger.batch(blocks, {
+        start:'top 94%', once:true,
+        onEnter:function(b){ gsap.to(b, {opacity:1, y:0, duration:0.6, stagger:0.06, overwrite:true, clearProps:'transform,opacity'}); }
+      });
+    }
+
+    // 4) شرايط التقدّم والرسوم بتتملي
+    [].forEach.call(root.querySelectorAll('.bar > i'), function(el){
+      gsap.from(el, {width:0, duration:0.9, ease:'power2.out', scrollTrigger:{trigger:el, start:'top 96%', once:true}});
+    });
+    [].forEach.call(root.querySelectorAll('.split'), function(el){
+      gsap.from(el.children, {scaleX:0, transformOrigin:(document.documentElement.dir==='rtl'?'100% 50%':'0% 50%'), duration:0.8, stagger:0.08, ease:'power2.out', scrollTrigger:{trigger:el, start:'top 96%', once:true}});
+    });
+    [].forEach.call(root.querySelectorAll('.chart'), function(el){
+      gsap.from(el.querySelectorAll('.col i'), {scaleY:0, transformOrigin:'50% 100%', duration:0.7, stagger:{each:0.018, from:'start'}, ease:'power2.out',
+        scrollTrigger:{trigger:el, start:'top 92%', once:true}});
+    });
+
+    ScrollTrigger.refresh();
+    clearTimeout(after._safe);
+    after._safe = setTimeout(function(){
+      [].forEach.call(blocks, function(el){ var r = el.getBoundingClientRect();
+        if(r.top < innerHeight && +getComputedStyle(el).opacity < 0.05) gsap.set(el, {clearProps:'opacity,transform'}); });
+    }, 3000);
+  }
+
+  function toTop(){ if(lenis) lenis.scrollTo(0, {immediate:true}); window.scrollTo(0,0); }
+  function lock(on){ if(lenis){ on ? lenis.stop() : lenis.start(); } }
+
+  return { start:startLenis, before:before, after:after, toTop:toTop, lock:lock, isReduced:function(){ return reduced; }, reset:function(){ lastKey=null; },
+    _setReduced:function(r){ onChange({matches:r}); lastKey=null; } }; // للاختبار بس
+})();
+
+/* ===== خلفية الهيرو: موج هادي (نسخة canvas خفيفة على طريقة Waves من React Bits) ===== */
+var Waves = (function(){
+  var cvs = [], raf = 0, last = 0, reduced = false, t0 = performance.now();
+  var ptr = {x:-1e4, y:-1e4, sx:-1e4, sy:-1e4};
+  // Perlin noise 2D
+  var P = new Uint8Array(512);
+  (function(){ var p=[], i, s=7; for(i=0;i<256;i++) p[i]=i; for(i=255;i>0;i--){ s=(s*16807)%2147483647; var j=s%(i+1), t=p[i]; p[i]=p[j]; p[j]=t; } for(i=0;i<512;i++) P[i]=p[i&255]; })();
+  function fade(t){ return t*t*t*(t*(t*6-15)+10); }
+  function grad(h,x,y){ switch(h&3){ case 0:return x+y; case 1:return -x+y; case 2:return x-y; default:return -x-y; } }
+  function noise(x,y){
+    var X=Math.floor(x)&255, Y=Math.floor(y)&255; x-=Math.floor(x); y-=Math.floor(y);
+    var u=fade(x), v=fade(y), a=P[X]+Y, b=P[X+1]+Y;
+    return (1-v)*((1-u)*grad(P[a],x,y)+u*grad(P[b],x-1,y)) + v*((1-u)*grad(P[a+1],x,y-1)+u*grad(P[b+1],x-1,y-1));
+  }
+  function size(c){
+    var r = c.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio||1);
+    var w = Math.max(1, Math.round(r.width*d)), h = Math.max(1, Math.round(r.height*d));
+    if(c.width!==w || c.height!==h){ c.width=w; c.height=h; }
+    c._d = d; c._r = r;
+  }
+  function draw(c, time){
+    var ctx = c.getContext('2d'), w = c.width, h = c.height, d = c._d || 1;
+    ctx.clearRect(0,0,w,h);
+    var gap = 13*d, step = 9*d, amp = 22*d, t = time*0.00006;
+    var px = (ptr.sx - c._r.left)*d, py = (ptr.sy - c._r.top)*d, rad = 110*d;
+    ctx.lineWidth = 1*d;
+    for(var y0=-gap*2, li=0; y0<h+gap*2; y0+=gap, li++){
+      var a = 0.05 + 0.16*Math.max(0, Math.min(1, y0/h)); // أوضح تحت، أخف فوق
+      ctx.strokeStyle = 'rgba(45,212,191,'+a.toFixed(3)+')';
+      ctx.beginPath();
+      for(var x=-step; x<=w+step; x+=step){
+        var n = noise(x/(260*d) + t*3, y0/(180*d) + t*1.6);
+        var y = y0 + n*amp + Math.sin(x/(120*d) + t*40 + li*0.35)*3*d;
+        var dx = x-px, dy = y-py, dist = Math.sqrt(dx*dx+dy*dy);
+        if(dist < rad){ var f = 1-dist/rad; y += (dy/(dist||1))*f*f*16*d; }
+        x===-step ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+    }
+  }
+  function frame(now){
+    raf = 0;
+    cvs = cvs.filter(function(c){ return c.isConnected; });
+    if(!cvs.length || reduced || document.hidden) return;
+    raf = requestAnimationFrame(frame);
+    if(now - last < 33) return; // ~30fps كفاية وبيوفّر بطارية
+    last = now;
+    ptr.sx += (ptr.x-ptr.sx)*0.12; ptr.sy += (ptr.y-ptr.sy)*0.12;
+    cvs.forEach(function(c){ c._r = c.getBoundingClientRect(); if(c._r.bottom>0 && c._r.top<innerHeight) draw(c, now-t0); });
+  }
+  function kick(){ if(!raf && !reduced) raf = requestAnimationFrame(frame); }
+  function mount(){
+    cvs = [].slice.call(document.querySelectorAll('canvas.heroBg'));
+    cvs.forEach(size);
+    if(reduced) cvs.forEach(function(c){ draw(c, 0); }); // صورة ثابتة من غير حركة
+    else kick();
+  }
+  function setReduced(r){ reduced = r; mount(); }
+  function setPtr(e){ var p = e.touches ? e.touches[0] : e; ptr.x = p.clientX; ptr.y = p.clientY; }
+  function clearPtr(){ ptr.x = ptr.y = -1e4; }
+  window.addEventListener('pointermove', setPtr, {passive:true});
+  window.addEventListener('touchmove', setPtr, {passive:true});
+  window.addEventListener('pointerleave', clearPtr); window.addEventListener('touchend', clearPtr);
+  window.addEventListener('resize', function(){ cvs.forEach(size); if(reduced) cvs.forEach(function(c){ draw(c,0); }); });
+  document.addEventListener('visibilitychange', kick);
+  reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  return { mount:mount, setReduced:setReduced };
+})();
+</script>
+<script>
+/* ============ ثوابت ============ */
+var CATS = {
+  'أكل':['🍔','#f59e0b'], 'إيجار':['🏠','#a78bfa'], 'أقساط تابي وتمارا':['💳','#f472b6'], 'شوبينج':['🛍️','#fb7185'],
+  'معدات تصوير':['📷','#22d3ee'], 'مصاريف شغل':['🎬','#a3e635'], 'سفر':['✈️','#60a5fa'],
+  'حوالة شخصية':['🔁','#94a3b8'], 'مساعدة البيت (مصر)':['🇪🇬','#facc15'], 'اشتراكات وأدوات شغل':['🧾','#818cf8'],
+  'عربية':['🚗','#2dd4bf'], 'موبايل وإنترنت':['📱','#38bdf8'], 'عناية شخصية وصيدلية':['💊','#e879f9'],
+  'رسوم بنكية':['🏦','#64748b'], 'متفرقات':['📦','#a8a29e'], 'ادخار':['🐷','#86efac'], 'سداد كريدت':['💳','#93c5fd'],
+  'مرتب':['💼','#4ade80'], 'فريلانس':['🎬','#34d399'], 'دخل تاني':['💰','#bef264']
+};
+var EXP = ['أكل','إيجار','أقساط تابي وتمارا','شوبينج','معدات تصوير','مصاريف شغل','سفر','مساعدة البيت (مصر)','اشتراكات وأدوات شغل','عربية','موبايل وإنترنت','عناية شخصية وصيدلية','رسوم بنكية','متفرقات','حوالة شخصية'];
+// اختيارات سريعة للحوالات اللي مش معروف راحت في إيه
+var REVIEW_CATS = ['أكل','مصاريف شغل','مساعدة البيت (مصر)','شوبينج','عربية','إيجار','متفرقات'];
+var INC = ['مرتب','فريلانس','دخل تاني'];
+
+/* ============ اللغة: عربي / English ============
+   البيانات نفسها (البنود، حالة الفاتورة) متخزنة بالعربي زي ما هي،
+   والعرض بس هو اللي بيتغير. كده الشيت والكود والقواعد يفضلوا واحد. */
+var LANG = (function(){ try{ return localStorage.getItem('sayad-lang') || 'ar'; }catch(e){ return 'ar'; } })();
+function L(ar, en){ return LANG==='en' ? en : ar; }
+var CAT_EN = {
+  'أكل':'Food', 'إيجار':'Rent', 'أقساط تابي وتمارا':'Tabby & Tamara', 'شوبينج':'Shopping', 'معدات تصوير':'Camera gear',
+  'مصاريف شغل':'Work expenses', 'سفر':'Travel', 'حوالة شخصية':'Personal transfer', 'ادخار':'Savings', 'سداد كريدت':'Credit card payment',
+  'مساعدة البيت (مصر)':'Family support (Egypt)', 'اشتراكات وأدوات شغل':'Subscriptions & tools', 'عربية':'Car & transport',
+  'موبايل وإنترنت':'Mobile & internet', 'عناية شخصية وصيدلية':'Personal care & pharmacy', 'رسوم بنكية':'Bank fees', 'متفرقات':'Other',
+  'مرتب':'Salary', 'فريلانس':'Freelance', 'دخل تاني':'Other income'
+};
+function catName(c){ return LANG==='en' ? (CAT_EN[c]||c) : c; }
+function stName(s){ return s==='اتقبض' ? L('اتقبض','Paid') : L('لسه','Pending'); }
+var MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+var MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var DAYS_AR = ['الأحد','الاتنين','التلات','الأربع','الخميس','الجمعة','السبت'];
+var DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+function MON(i){ return (LANG==='en'?MONTHS_EN:MONTHS_AR)[i]; }
+function MON3(i){ return LANG==='en' ? MONTHS_EN[i].slice(0,3) : MONTHS_AR[i].slice(0,3); }
+function DAY(i){ return (LANG==='en'?DAYS_EN:DAYS_AR)[i]; }
+function DAY3(i){ return LANG==='en' ? DAYS_EN[i].slice(0,3) : DAYS_AR[i].replace('ال',''); }
+var CUR = function(){ return L('ريال','SAR'); };
+var BACK = function(){ return L('→','←'); }, FWD = function(){ return L('←','→'); };
+function userName(){ var s=S(); return LANG==='en' ? (s.nameEn||'Ahmed') : (s.name||'أحمد'); }
+
+function applyLang(){
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG==='en' ? 'ltr' : 'rtl';
+  document.title = L('صياد القرش','Sayad Elarsh');
+  var labels = {home:L('الرئيسية','Home'), tx:L('العمليات','Transactions'), report:L('التقارير','Reports'), income:L('الدخل','Income'), gold:L('الدهب','Gold'), wealth:L('فلوسي','My money')};
+  [].forEach.call(document.querySelectorAll('#tabs button'), function(b){ b.setAttribute('aria-label', labels[b.dataset.t]); });
+  document.getElementById('fab').setAttribute('aria-label', L('ضيف عملية','Add transaction'));
+}
+function setLang(l){
+  if(l===LANG) return;
+  LANG = l;
+  try{ localStorage.setItem('sayad-lang', l); }catch(e){}
+  applyLang(); Motion.reset(); render(); if(typeof TabBar!=='undefined') TabBar.update(false,true);
+  call('saveSettings', {lang:l}).then(function(d){ D=d; }).catch(function(){});
+}
+
+/* ============ API (جوجل أو وضع تجريبي) ============ */
+var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
+// الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
+var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
+var HOSTED = !LIVE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
+function call(fn){
+  var args = [].slice.call(arguments,1);
+  if (LIVE) return new Promise(function(res,rej){ var r = google.script.run.withSuccessHandler(res).withFailureHandler(rej); r[fn].apply(r,args); });
+  if (HOSTED) return fetch(API_URL,{method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({key:appKey(), action:fn, args:args})})
+    .then(function(r){ return r.json(); })
+    .then(function(j){ if(!j.ok){ if(j.error==='unauthorized'){ try{localStorage.removeItem('sayad-key');}catch(e){} showSetup(L('المفتاح مش صح','That key isn’t right')); } throw new Error(j.error); } return j.data; });
+  return new Promise(function(res){ setTimeout(function(){ res(Demo[fn].apply(null,args)); }, 120); });
+}
+
+/* ============ الحالة ============ */
+var D = {tx:[],freelance:[],rules:[],installments:[],settings:{},lastSync:''};
+var UI = {tab:'home', period:'month', offset:0, txFilter:'all', q:'', syncing:false, tip:''};
+
+function S(){ return D.settings || {}; }
+function pd(s){ // 'YYYY-MM-DDTHH:mm' → Date محلي
+  if(!s) return new Date(NaN);
+  var m = String(s).match(/(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/);
+  return m ? new Date(+m[1],m[2]-1,+m[3],+(m[4]||0),+(m[5]||0)) : new Date(s);
+}
+function iso(d){ return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+'T'+p2(d.getHours())+':'+p2(d.getMinutes()); }
+function p2(n){ return ('0'+n).slice(-2); }
+function sod(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
+function addD(d,n){ var x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function fmtN(n,dec){ return (Number(n)||0).toLocaleString('en-US',{maximumFractionDigits:dec||0,minimumFractionDigits:0}); }
+function money(n,dec){ return '<span class="num">'+fmtN(n,dec)+'</span>'; }
+function countNum(n){ n=Math.round(Number(n)||0); return '<span class="num" data-count="'+n+'">'+n.toLocaleString('en-US')+'</span>'; }
+function sar(n,dec){ return money(n,dec)+' <small class="muted" style="font-size:.7em">'+CUR()+'</small>'; }
+function signed(n,dec){ return '<span class="num">'+(n<0?'−':'+')+fmtN(Math.abs(n),dec)+'</span>'; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function dShort(d){ return LANG==='en' ? MONTHS_EN[d.getMonth()].slice(0,3)+' '+d.getDate() : d.getDate()+' '+MON(d.getMonth()); }
+function dayLabel(d){
+  var t=sod(new Date()), x=sod(d), diff=Math.round((t-x)/864e5);
+  if(diff===0) return L('النهارده','Today'); if(diff===1) return L('امبارح','Yesterday');
+  if(diff===-1) return L('بكرة','Tomorrow');
+  if(diff<7 && diff>0) return DAY(x.getDay());
+  return (LANG==='en'? DAY3(x.getDay())+', ' : DAY(x.getDay())+' ')+dShort(x)+(x.getFullYear()!==t.getFullYear()?' '+x.getFullYear():'');
+}
+function hhmm(d){ var h=d.getHours(), m=p2(d.getMinutes()); var ap = h<12?L('ص','AM'):L('م','PM'); h = h%12||12; return h+':'+m+' '+ap; }
+
+function range(period, offset){
+  var now = new Date(), s, e, label;
+  if(period==='day'){ s=addD(sod(now),offset); e=addD(s,1); label = offset===0?L('النهارده','Today'):offset===-1?L('امبارح','Yesterday'):dayLabel(s); }
+  else if(period==='week'){
+    var ws = Number(S().weekStartDay)||0; s=sod(now); s=addD(s,-((s.getDay()-ws+7)%7)+7*offset); e=addD(s,7);
+    label = offset===0?L('الأسبوع ده','This week'):offset===-1?L('الأسبوع اللي فات','Last week'):dShort(s)+' – '+dShort(addD(e,-1));
+  } else if(period==='month' && S().monthMode!=='day' && salaryStarts().length){
+    return salaryRange(offset);
+  } else if(period==='month'){
+    var msd = Number(S().monthStartDay)||1, y=now.getFullYear(), m=now.getMonth();
+    if(now.getDate()<msd) m--; m+=offset; s=new Date(y,m,msd); e=new Date(y,m+1,msd);
+    label = msd===1 ? MON(s.getMonth())+' '+s.getFullYear() : dShort(s)+' – '+dShort(addD(e,-1));
+  } else { s=new Date(now.getFullYear()+offset,0,1); e=new Date(s.getFullYear()+1,0,1); label=String(s.getFullYear()); }
+  return {s:s,e:e,label:label,period:period};
+}
+/* الشهر بتاعك = من مرتب للمرتب اللي بعده (مش من أول الشهر)
+   لحد ما المرتب الجاي ينزل، إنت لسه بتصرف من الشهر اللي فات */
+function isSalary(t){ return t.type==='income' && (Number(t.amount)||0)>=3000 && (t.category==='مرتب' || /PAYROLL|راتب|رواتب/i.test(t.merchant||'')); }
+var _salC = {n:-1, v:[]};
+function salaryStarts(){
+  var tx = D.tx||[]; if(_salC.n===tx.length && _salC.src===tx) return _salC.v;
+  var ds = tx.filter(isSalary).map(function(t){ return sod(pd(t.date)); }).sort(function(a,b){return a-b;}), out=[];
+  ds.forEach(function(d){ if(!out.length || d-out[out.length-1] > 10*864e5) out.push(d); }); // مرتبين في خلال 10 أيام = نفس الشهر
+  _salC = {n:tx.length, src:tx, v:out}; return out;
+}
+function addMon(d,n){ return new Date(d.getFullYear(), d.getMonth()+n, d.getDate()); }
+function salaryRange(offset){
+  var st = salaryStarts(), now = new Date(), today = sod(now), cur = -1;
+  st.forEach(function(d,i){ if(d<=today) cur=i; });
+  var last = st[st.length-1];
+  // لو آخر مرتب قديم جداً (البيانات ناقصة)، نكمّل من عنده شهر بشهر
+  if(cur>=0 && cur===st.length-1 && addMon(last,2)<=today){ var k=0; while(addMon(last,k+1)<=today) k++; st = st.concat([]); for(var j=1;j<=k;j++) st.push(addMon(last,j)); cur = st.length-1; }
+  var idx = cur + offset, s, e;
+  if(cur<0) idx = offset - 1;
+  if(idx<0) s = addMon(st[0], idx); else if(idx>=st.length) s = addMon(st[st.length-1], idx-st.length+1); else s = st[idx];
+  if(idx+1>=0 && idx+1<st.length) e = st[idx+1]; else e = addMon(s,1);
+  var open = idx===cur; // الشهر الحالي: لو المرتب اتأخر، الشهر بيمتد لحد ما ينزل
+  if(open && e<=today) e = addD(today,1);
+  var label = dShort(s)+' – '+(open?L('لحد المرتب الجاي','until next salary'):dShort(addD(e,-1)));
+  return {s:s, e:e, label:label, period:'month', salary:true, open:open, late: open && addMon(s,1)<=today};
+}
+function inRange(r){ return D.tx.filter(function(t){ var d=pd(t.date); return d>=r.s && d<r.e; }); }
+// الفترة اللي قبلها، بس لحد نفس النقطة (عشان المقارنة تبقى عادلة لو الفترة الحالية لسه مخلصتش)
+function prevTx(period, offset){
+  var cur = range(period, offset), p = range(period, offset-1), now = new Date();
+  if(now < cur.e){ var e = new Date(p.s.getTime() + (now - cur.s)); p = {s:p.s, e:e<p.e?e:p.e}; }
+  return inRange(p);
+}
+function sum(list,type){ return list.reduce(function(a,t){ return a + (t.type===type? Number(t.amount)||0 : 0); },0); }
+function byCat(list,type){
+  var o={}; list.forEach(function(t){ if(t.type===type){ o[t.category]=(o[t.category]||0)+(Number(t.amount)||0); } });
+  return Object.keys(o).map(function(k){return {cat:k,v:o[k]};}).sort(function(a,b){return b.v-a.v;});
+}
+function goldSar(){ if(D.goldPrice && (D.gold||[]).length) return gTotals().value/egpRate(); var s=S(); return (Number(s.goldPounds)||0)*(Number(s.goldPoundPriceEgp)||0)/(Number(s.egpPerSar)||1); }
+function wealth(){ var s=S(); return (Number(s.bankBalance)||0)+(Number(s.cash)||0)+goldSar(); }
+function pendingFreelance(){ return D.freelance.filter(function(f){return f.status==='لسه';}).reduce(function(a,f){return a+(Number(f.amount)||0);},0); }
+/* ============ الأيقونات: لوجو المحل لو معروف، وإلا أيقونة البند ============ */
+// المحلات المعروفة ← الدومين بتاعها (اللوجو بيتجاب من Google favicons)
+var MERCHANT_LOGOS = [
+  [/STARBUCKS/i,'starbucks.com'], [/SPOTIFY/i,'spotify.com'], [/NETFLIX/i,'netflix.com'], [/SHAHID/i,'shahid.mbc.net'],
+  [/APPLE\.COM|ITUNES|APPLE\s*STORE/i,'apple.com'], [/YOUTUBE/i,'youtube.com'], [/GOOGLE/i,'google.com'],
+  [/OPENAI|CHATGPT/i,'openai.com'], [/ANTHROPIC|CLAUDE/i,'claude.ai'], [/ADOBE/i,'adobe.com'], [/CANVA/i,'canva.com'],
+  [/HIGGSFIELD/i,'higgsfield.ai'], [/WETRANSFER/i,'wetransfer.com'], [/DROPBOX/i,'dropbox.com'], [/CAPCUT/i,'capcut.com'],
+  [/ARTLIST/i,'artlist.io'], [/MIDJOURNEY/i,'midjourney.com'], [/RUNWAY/i,'runwayml.com'], [/ELEVENLABS/i,'elevenlabs.io'],
+  [/PLAYSTATION|SONY INTERACTIVE/i,'playstation.com'],
+  [/ZARA/i,'zara.com'], [/H&M|\bH M\b/i,'hm.com'], [/ADIDAS/i,'adidas.com'], [/NIKE/i,'nike.com'], [/IKEA/i,'ikea.com'],
+  [/AMAZON/i,'amazon.sa'], [/\bNOON\b/i,'noon.com'], [/SHEIN/i,'shein.com'], [/ALIEXPRESS/i,'aliexpress.com'],
+  [/JARIR/i,'jarir.com'], [/\bEXTRA\b/i,'extra.com'], [/CENTREPOINT/i,'centrepointstores.com'], [/NAMSHI/i,'namshi.com'],
+  [/DECATHLON/i,'decathlon.sa'], [/SEPHORA/i,'sephora.com'], [/HOME\s*:?\s*BOX/i,'homeboxstores.com'], [/MAX FASHION/i,'maxfashion.com'],
+  [/PANDA/i,'panda.com.sa'], [/TAMIMI/i,'tamimimarkets.com'], [/DANUBE/i,'danube.sa'], [/OTHAIM/i,'othaimmarkets.com'],
+  [/LULU/i,'lulugroupinternational.com'], [/CARREFOUR/i,'carrefourksa.com'],
+  [/HUNGER\s*STATION/i,'hungerstation.com'], [/JAHEZ/i,'jahez.com'], [/KEETA/i,'keeta.com'], [/TALABAT/i,'talabat.com'],
+  [/MARSOOL/i,'marsool.com'], [/TOYOU/i,'toyou.io'], [/MCDONALD/i,'mcdonalds.com'], [/KFC/i,'kfc.com'], [/BURGER KING/i,'burgerking.com'],
+  [/HARDEE/i,'hardees.com'], [/ALBAIK|AL BAIK/i,'albaik.com'], [/KUDU/i,'www.kudu.com.sa'], [/DUNKIN/i,'www.dunkindonuts.com'],
+  [/TIM HORTONS/i,'timhortons.com'], [/DR\.?\s*CAFE/i,'drcafe.com'], [/BARNS/i,'barns.com.sa'], [/PIZZA HUT/i,'pizzahut.com'],
+  [/DOMINO/i,'dominos.com'], [/SHAWARMER/i,'www.shawarmer.com'],
+  [/UBER/i,'uber.com'], [/CAREEM/i,'careem.com'], [/BOLT/i,'bolt.eu'], [/ALDREES/i,'aldrees.com'], [/PETROMIN/i,'petromin.com'],
+  [/MOBILY|موبايلي/i,'mobily.com.sa'], [/\bSTC\b/i,'stc.com.sa'], [/\bZAIN\b|زين/i,'sa.zain.com'],
+  [/NAHDI/i,'nahdionline.com'], [/DAWAA/i,'al-dawaa.com'],
+  [/FLYNAS/i,'flynas.com'], [/FLYADEAL/i,'flyadeal.com'], [/SAUDIA/i,'saudia.com'], [/EGYPTAIR/i,'egyptair.com'],
+  [/BOOKING/i,'booking.com'], [/AIRBNB/i,'airbnb.com'], [/AGODA/i,'agoda.com'], [/ALMOSAFER/i,'almosafer.com'], [/EMIRATES/i,'emirates.com'],
+  [/TABBY|تابي/i,'tabby.ai'], [/TAMARA|تمارا/i,'tamara.co'], [/BODY MASTERS/i,'bodymasters.com.sa']
+];
+function logoDomain(text){
+  if(!text) return null;
+  for(var i=0;i<MERCHANT_LOGOS.length;i++){ if(MERCHANT_LOGOS[i][0].test(text)) return MERCHANT_LOGOS[i][1]; }
+  return null;
+}
+// خطوط الأيقونات (نفس ستايل البار اللي تحت)
+var IC_PATH = {
+  food:'<path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10"/><path d="M17 3c-2 1.5-2.5 4-2.5 7H17v11"/>',
+  coffee:'<path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8 3c-.8 1 .8 2 0 3M12 3c-.8 1 .8 2 0 3"/>',
+  cart:'<path d="M3 4h2.2l2.2 11h10.4l2.2-8H6.3"/><circle cx="9.5" cy="19" r="1.4"/><circle cx="16.5" cy="19" r="1.4"/>',
+  home:'<path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/>',
+  card:'<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/>',
+  bag:'<path d="M5.5 8h13l-1 12.5h-11z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/>',
+  camera:'<path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.5-2.5h6L16.5 7h2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.5"/>',
+  family:'<circle cx="8.5" cy="8" r="3"/><circle cx="16.5" cy="9.5" r="2.4"/><path d="M3 19.5a5.5 5.5 0 0 1 11 0M14 19.5a4 4 0 0 1 7.5-2"/>',
+  plane:'<path d="M10.5 13.5 4 11l1.5-1.5 7 1L17 6a2 2 0 0 1 3 3l-4.5 4.5 1 7L15 22l-2.5-6.5-3 3V21l-1.5 1-1.5-3.5L3 17l1-1.5h2.5z"/>',
+  swap:'<path d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>',
+  heart:'<path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.7-7 10-7 10z"/>',
+  repeat:'<path d="M17 3l3 3-3 3"/><path d="M4 11V9a3 3 0 0 1 3-3h13M7 21l-3-3 3-3"/><path d="M20 13v2a3 3 0 0 1-3 3H4"/>',
+  car:'<path d="M5 16.5V12l2-5h10l2 5v4.5"/><path d="M3.5 12h17v4.5h-17z"/><circle cx="7.5" cy="16.5" r="1.6"/><circle cx="16.5" cy="16.5" r="1.6"/>',
+  fuel:'<path d="M5 20V5a1.5 1.5 0 0 1 1.5-1.5h6A1.5 1.5 0 0 1 14 5v15M3.5 20h12M5 10h9"/><path d="M14 8.5l3 2.5v6a1.5 1.5 0 0 0 3 0V9l-2.5-2.5"/>',
+  phone:'<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/>',
+  pill:'<rect x="3.5" y="8.5" width="17" height="7" rx="3.5" transform="rotate(-40 12 12)"/><path d="M9.5 9.5l5 5"/>',
+  bank:'<path d="M3 9.5 12 4l9 5.5M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3.5 20h17"/>',
+  box:'<path d="M4 8l8-4 8 4v8.5l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8.5"/>',
+  brief:'<rect x="3.5" y="7" width="17" height="12.5" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3.5 12.5h17"/>',
+  film:'<rect x="3.5" y="9" width="17" height="11" rx="2"/><path d="M3.5 9 19 4.5l1 3.2L4.5 12.2"/><path d="M8.5 6.8l2 3M13.5 5.4l2 3"/>',
+  coins:'<ellipse cx="9" cy="7" rx="5.5" ry="2.5"/><path d="M3.5 7v4c0 1.4 2.5 2.5 5.5 2.5s5.5-1.1 5.5-2.5V7"/><path d="M9.5 15.6c.6 1.1 2.8 1.9 5 1.9 3 0 5.5-1.1 5.5-2.5v-4c0-1.2-1.9-2.2-4.4-2.4"/>'
+};
+var CAT_ICON = {
+  'أكل':'food', 'إيجار':'home', 'أقساط تابي وتمارا':'card', 'شوبينج':'bag', 'معدات تصوير':'camera', 'مصاريف شغل':'film',
+  'سفر':'plane', 'حوالة شخصية':'swap', 'ادخار':'coins', 'سداد كريدت':'card', 'مساعدة البيت (مصر)':'heart', 'اشتراكات وأدوات شغل':'repeat', 'عربية':'car',
+  'موبايل وإنترنت':'phone', 'عناية شخصية وصيدلية':'pill', 'رسوم بنكية':'bank', 'متفرقات':'box',
+  'مرتب':'brief', 'فريلانس':'film', 'دخل تاني':'coins'
+};
+// أيقونة أدق حسب نوع المحل
+function smartIcon(cat, text){
+  var t = String(text||'').toUpperCase();
+  if(cat==='أكل'){
+    if(/COFFEE|CAFE|COFE|KAFE|SHAY|CHAI|DUNKIN|STARBUCKS|TIM HORTONS|BARNS|قهوة|كافيه|مقهى/.test(t)) return 'coffee';
+    if(/PANDA|TAMIMI|DANUBE|OTHAIM|LULU|CARREFOUR|BAQALA|بقالة|KEEMART|MARKET|SUPERMARKET|HYPER/.test(t)) return 'cart';
+  }
+  if(cat==='عربية' && /ALDREES|SASCO|PETROMIN|NAFT|PETROL|FUEL|بنزين|محطة/.test(t)) return 'fuel';
+  return CAT_ICON[cat] || 'box';
+}
+function svgIcon(name){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+(IC_PATH[name]||IC_PATH.box)+'</svg>'; }
+function logoUrl(d){ return 'https://www.google.com/s2/favicons?domain='+encodeURIComponent(d)+'&sz=128'; }
+// لو اللوجو طلع الكرة الأرضية الصغيرة (16px) أو مفتحش، نرجع لأيقونة البند
+function logoOk(img){ if(img.naturalWidth && img.naturalWidth<=16){ logoBad(img); } else { img.parentNode.classList.add('hasLogo'); } }
+function logoBad(img){ var p=img.parentNode; if(p) p.classList.remove('hasLogo'); img.remove(); }
+function catIc(c, text){
+  var x = CATS[c]||['','#94a3b8'], col = x[1], dom = logoDomain(text);
+  return '<div class="ic" style="--c:'+col+'">'+svgIcon(smartIcon(c,text))+
+    (dom?'<img class="logo" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" src="'+logoUrl(dom)+'" onload="logoOk(this)" onerror="logoBad(this)">':'')+'</div>';
+}
+function catSvg(c){ var col=(CATS[c]||['','#94a3b8'])[1]; return '<i class="cIco" style="color:'+col+'">'+svgIcon(CAT_ICON[c]||'box')+'</i>'; }
+
+function catLabel(c){ return catSvg(c)+' '+esc(catName(c)); }
+
+/* ============ الرسم ============ */
+var SHARK = '<img class="sharkImg" alt="" aria-hidden="true" src="data:image/jpeg;base64,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">';
+var ICON_SYNC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4.5h-4.5"/></svg>';
+function render(){
+  var html = '';
+  html += headerHtml();
+  if(!LIVE && !HOSTED) html += '<div class="demo">👀 '+L('دي بيانات تجريبية للعرض بس. أول ما ترفع الأبلكيشن على Google Apps Script، هيقرا رسايل الراجحي الحقيقية.',
+    'This is demo data. Once the app is on Google Apps Script, it reads your real Al Rajhi messages.')+'</div>';
+  HEAD_X = '';
+  var body = ({home:vHome, tx:vTx, report:vReport, income:vIncome, gold:vGold, wealth:vWealth, inst:vInstPage, settings:vSettings})[UI.tab]();
+  html += pageHead() + body;
+  Motion.before();
+  document.getElementById('app').innerHTML = html;
+  // الحركة بتشتغل بس لما الشاشة نفسها تتغير (تاب/فترة/فلتر/لغة)، مش مع كل تحديث صغير
+  Motion.after([UI.tab, UI.period, UI.offset, UI.txFilter, LANG].join('|'));
+  [].forEach.call(document.querySelectorAll('#tabs button'),function(b){ b.classList.toggle('on', b.dataset.t===(UI.tab==='inst'?'wealth':UI.tab)); });
+  document.getElementById('fab').style.display = (UI.tab==='home'||UI.tab==='tx'||UI.tab==='report')?'grid':'none';
+  if(typeof TabBar!=='undefined') TabBar.update();
+}
+// اسم كل صفحة فوق، عشان تعرف إنت فين
+var PAGE_T = {tx:['العمليات','Transactions'], report:['التقارير','Reports'], income:['الدخل','Income'], gold:['الدهب','Gold'],
+  wealth:['فلوسي','My money'], inst:['الأقساط والكريدت','Installments & credit'], settings:['الإعدادات','Settings']};
+var PAGE_BACK = {inst:'wealth', settings:'home'};
+var HEAD_X = ''; // أزرار الصفحة اللي بتظهر جنب اسمها (زي جنيه/ريال)
+function pageHead(){
+  var t = PAGE_T[UI.tab]; if(!t) return '';
+  var b = PAGE_BACK[UI.tab];
+  return '<div class="pageHead">'+(b?'<button class="back" onclick="go(\''+b+'\')" aria-label="'+L('رجوع','Back')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>':'')+
+    '<h2 data-split>'+L(t[0],t[1])+'</h2>'+(HEAD_X?'<div style="margin-inline-start:auto">'+HEAD_X+'</div>':'')+'</div>';
+}
+var ICON_GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+function syncText(){
+  if(UI.syncing) return L('بيدوّر على عمليات جديدة…','Checking for new transactions…');
+  if(!D.lastSync) return L('لسه متحدثش','Not synced yet');
+  var d = pd(D.lastSync), mins = Math.round((new Date()-d)/60000);
+  if(mins<1) return L('آخر تحديث دلوقتي','Updated just now');
+  if(mins<60) return L('آخر تحديث من '+mins+' دقيقة','Updated '+mins+' min ago');
+  return L('آخر تحديث ','Updated ')+dayLabel(d)+' '+hhmm(d);
+}
+
+/* ============ البروفايل (فوق) ============ */
+function greetWord(){
+  var hr=new Date().getHours();
+  return hr<5 ? L('سهران؟ 🌙','Up late? 🌙') : hr<12 ? L('صباح الخير 👋','Good morning 👋') : hr<18 ? L('مساء الخير 👋','Good afternoon 👋') : L('مساء الخير 👋','Good evening 👋');
+}
+function avatarHtml(){
+  var s=S(), nm=userName();
+  if(s.avatar) return '<img src="'+esc(s.avatar)+'" alt="">';
+  return '<span>'+esc((nm||'?').trim().charAt(0).toUpperCase())+'</span>';
+}
+function headerHtml(){
+  return '<header class="top">'+
+    '<button class="profile" onclick="editProfile()" aria-label="'+L('البروفايل','Profile')+'">'+
+      '<div class="avatar">'+avatarHtml()+'</div>'+
+      '<div class="pname"><small>'+greetWord()+'</small><h1'+(UI.tab==='home'?' data-split':'')+'>'+esc(userName())+'</h1></div>'+
+    '</button>'+
+    '<div style="display:flex;gap:8px">'+
+      '<button class="iconbtn langbtn" onclick="setLang(\''+L('en','ar')+'\')" aria-label="'+L('Switch to English','التحويل للعربي')+'">'+L('EN','ع')+'</button>'+
+      '<button class="iconbtn'+(UI.syncing?' spin':'')+'" onclick="sync()" title="'+esc(syncText())+'" aria-label="'+L('تحديث','Refresh')+'">'+ICON_SYNC+'</button>'+
+      '<button class="iconbtn'+(UI.tab==='settings'?' on':'')+'" onclick="go(\'settings\')" aria-label="'+L('الإعدادات','Settings')+'">'+ICON_GEAR+'</button>'+
+    '</div></header>'+
+    (UI.tab==='home'?'<div class="syncLine">'+(UI.syncing?'<i class="dot"></i>':'')+esc(syncText())+'</div>':'');
+}
+function editProfile(){
+  var s=S();
+  draft={avatar:s.avatar||''};
+  openSheet('<h2>'+L('البروفايل','Profile')+'</h2>'+
+    '<div class="profEdit"><div class="avatar big" id="pAv">'+avatarHtml()+'</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">'+
+        '<label class="btn ghost" style="width:auto;padding:10px 16px;cursor:pointer">📷 '+L('اختار صورة','Choose photo')+'<input type="file" accept="image/*" id="pFile" style="display:none" onchange="pickAvatar(this)"></label>'+
+        '<button class="btn ghost" style="width:auto;padding:10px 16px" onclick="draft.avatar=\'\';document.getElementById(\'pAv\').innerHTML=\'<span>\'+esc((document.getElementById(\'pN\').value||\'?\').charAt(0))+\'</span>\'">'+L('شيل الصورة','Remove photo')+'</button>'+
+      '</div></div>'+
+    '<div class="field"><label>'+L('اسمك بالعربي','Your name in Arabic')+'</label><input id="pN" value="'+esc(s.name||'')+'"></div>'+
+    '<div class="field"><label>'+L('اسمك بالإنجليزي','Your name in English')+'</label><input id="pE" value="'+esc(s.nameEn||'')+'" dir="ltr"></div>'+
+    '<button class="btn" onclick="saveProfile()">'+L('حفظ','Save')+'</button>');
+}
+function pickAvatar(inp){
+  var f=inp.files&&inp.files[0]; if(!f) return;
+  var r=new FileReader();
+  r.onload=function(){ var img=new Image(); img.onload=function(){
+    var n=160, c=document.createElement('canvas'); c.width=n; c.height=n; var x=c.getContext('2d');
+    var m=Math.min(img.width,img.height); x.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,n,n);
+    draft.avatar=c.toDataURL('image/jpeg',0.82);
+    document.getElementById('pAv').innerHTML='<img src="'+draft.avatar+'" alt="">';
+  }; img.src=r.result; };
+  r.readAsDataURL(f);
+}
+function saveProfile(){
+  var n=document.getElementById('pN').value.trim(), e=document.getElementById('pE').value.trim();
+  busy(call('saveSettings',{name:n||S().name, nameEn:e||S().nameEn, avatar:draft.avatar}), L('اتحفظ ✓','Saved ✓'));
+}
+
+/* ============ القفل: Face ID (WebAuthn) + رقم سري احتياطي ============
+   الإعداد متخزن على الموبايل ده بس (localStorage). ده قفل للشاشة على الجهاز،
+   والبيانات نفسها متأمنة أصلًا بتسجيل دخول جوجل. */
+var Lock = (function(){
+  var KEY='sayad-lock', lastHidden=0, open=false, pinBuf='';
+  function cfg(){ try{ return JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ return {}; } }
+  function save(c){ try{ localStorage.setItem(KEY, JSON.stringify(c)); }catch(e){} }
+  function b64(buf){ return btoa(String.fromCharCode.apply(null,new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+  function unb64(s){ s=s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; var b=atob(s), a=new Uint8Array(b.length); for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return a; }
+  function rnd(n){ var a=new Uint8Array(n); crypto.getRandomValues(a); return a; }
+  function hasWebAuthn(){ return !!(window.PublicKeyCredential && navigator.credentials && navigator.credentials.create); }
+  function hashPin(p){ return crypto.subtle.digest('SHA-256', new TextEncoder().encode('sayad|'+p)).then(function(h){ return b64(h); }); }
+
+  function enrollFaceId(){
+    if(!hasWebAuthn()) return Promise.reject(new Error('no-webauthn'));
+    return navigator.credentials.create({publicKey:{
+      challenge: rnd(32), rp:{name:'Sayad Elarsh'},
+      user:{id:rnd(16), name:'sayad-user', displayName:userName()||'Sayad'},
+      pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+      authenticatorSelection:{authenticatorAttachment:'platform', userVerification:'required', residentKey:'discouraged'},
+      timeout:60000, attestation:'none'
+    }}).then(function(cred){ var c=cfg(); c.cred=b64(cred.rawId); save(c); return true; });
+  }
+  function verifyFaceId(){
+    var c=cfg(); if(!c.cred || !hasWebAuthn()) return Promise.reject(new Error('no-cred'));
+    return navigator.credentials.get({publicKey:{ challenge:rnd(32), allowCredentials:[{type:'public-key', id:unb64(c.cred)}], userVerification:'required', timeout:60000 }});
+  }
+
+  function overlay(){
+    var el=document.getElementById('lock');
+    if(!el){ el=document.createElement('div'); el.id='lock'; el.className='lock'; document.body.appendChild(el); }
+    return el;
+  }
+  function draw(msg){
+    var c=cfg(), el=overlay();
+    el.innerHTML='<div class="lockIn">'+
+      '<div class="lockLogo">'+SHARK+'</div>'+
+      '<div class="lockName">'+L('صياد القرش','Sayad Elarsh')+'</div>'+
+      '<div class="lockMsg" id="lockMsg">'+(msg||L('مقفول','Locked'))+'</div>'+
+      '<div class="pinDots" id="pinDots">'+[0,1,2,3].map(function(i){return '<i class="'+(i<pinBuf.length?'on':'')+'"></i>';}).join('')+'</div>'+
+      '<div class="keypad">'+[1,2,3,4,5,6,7,8,9].map(function(n){return '<button onclick="Lock.key('+n+')">'+n+'</button>';}).join('')+
+        (c.cred?'<button class="fid" onclick="Lock.tryFace()" aria-label="Face ID">'+FACEID_SVG+'</button>':'<span></span>')+
+        '<button onclick="Lock.key(0)">0</button>'+
+        '<button class="del" onclick="Lock.del()" aria-label="'+L('مسح','Delete')+'">⌫</button></div>'+
+    '</div>';
+  }
+  function show(){
+    var c=cfg(); if(!c.on) return;
+    open=true; pinBuf=''; draw(); document.body.classList.add('locked');
+    if(c.cred) setTimeout(tryFace, 250);
+  }
+  function unlock(){
+    open=false; pinBuf='';
+    var el=document.getElementById('lock');
+    if(el){ el.classList.add('out'); setTimeout(function(){ el.remove(); }, 350); }
+    document.body.classList.remove('locked');
+  }
+  function tryFace(){
+    verifyFaceId().then(unlock).catch(function(e){
+      var m=document.getElementById('lockMsg');
+      if(m) m.textContent = L('Face ID مش متاح هنا، اكتب الرقم السري','Face ID isn’t available here — enter your PIN');
+    });
+  }
+  function key(n){
+    if(pinBuf.length>=4) return; pinBuf+=String(n); draw();
+    if(pinBuf.length===4){
+      var c=cfg();
+      hashPin(pinBuf).then(function(h){
+        if(h===c.pin) unlock();
+        else { pinBuf=''; draw(L('الرقم غلط، جرّب تاني','Wrong PIN, try again'));
+          var d=document.getElementById('pinDots'); if(d && typeof gsap!=='undefined' && !Motion.isReduced()) gsap.fromTo(d,{x:-10},{x:0,duration:.5,ease:'elastic.out(1,0.3)'}); }
+      });
+    }
+  }
+  function del(){ pinBuf=pinBuf.slice(0,-1); draw(); }
+
+  // لو سبت الأبلكيشن أكتر من دقيقة، يتقفل تاني
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState==='hidden') lastHidden=Date.now();
+    else if(cfg().on && !open && lastHidden && Date.now()-lastHidden>60000) show();
+  });
+
+  return {
+    cfg:cfg, show:show, key:key, del:del, tryFace:tryFace, hasWebAuthn:hasWebAuthn,
+    enable:function(pin){ return hashPin(pin).then(function(h){ var c=cfg(); c.on=true; c.pin=h; save(c); }); },
+    enrollFaceId:enrollFaceId,
+    disable:function(){ save({}); }
+  };
+})();
+var FACEID_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M9 9.5v1M15 9.5v1M12 9.5V13h-1M9.5 15.5c1.4 1.2 3.6 1.2 5 0"/></svg>';
+
+function editLock(){
+  var c=Lock.cfg();
+  openSheet('<h2>🔒 '+L('قفل الأبلكيشن','App lock')+'</h2>'+
+    '<div class="dim" style="font-size:13px;margin-bottom:14px">'+L('لما تفتح الأبلكيشن (أو ترجعله بعد دقيقة) هيطلب Face ID، ولو مش متاح يطلب الرقم السري. الإعداد ده على الموبايل ده بس.',
+      'When you open the app (or come back after a minute) it asks for Face ID, or your PIN if Face ID isn’t available. This setting is for this device only.')+'</div>'+
+    (c.on
+      ? '<div class="kv" style="cursor:default"><span>'+L('القفل','Lock')+'</span><b class="good">'+L('شغال','On')+'</b></div>'+
+        '<div class="kv" style="cursor:default"><span>Face ID</span><b class="'+(c.cred?'good':'muted')+'">'+(c.cred?L('متفعّل','Enabled'):L('مش متفعّل','Not set up'))+'</b></div>'+
+        (!c.cred?'<button class="btn" style="margin-top:12px" onclick="setupFace()">'+L('فعّل Face ID','Set up Face ID')+'</button>':'')+
+        '<button class="btn danger" style="margin-top:10px" onclick="Lock.disable();closeSheet();toast(L(\'القفل اتقفل\',\'Lock turned off\'))">'+L('اقفل القفل','Turn off lock')+'</button>'
+      : '<div class="field"><label>'+L('اختار رقم سري من 4 أرقام (احتياطي لو Face ID مشتغلش)','Choose a 4-digit PIN (backup if Face ID doesn’t work)')+'</label>'+
+          '<input id="lp1" class="amountIn" inputmode="numeric" type="password" maxlength="4" autocomplete="off" placeholder="••••"></div>'+
+        '<div class="field"><label>'+L('اكتبه تاني','Enter it again')+'</label><input id="lp2" class="amountIn" inputmode="numeric" type="password" maxlength="4" autocomplete="off" placeholder="••••"></div>'+
+        '<button class="btn" onclick="enableLock()">'+L('شغّل القفل','Turn on lock')+'</button>'));
+}
+function enableLock(){
+  var a=document.getElementById('lp1').value, b=document.getElementById('lp2').value;
+  if(!/^\d{4}$/.test(a)) return toast(L('الرقم لازم 4 أرقام','PIN must be 4 digits'));
+  if(a!==b) return toast(L('الرقمين مش زي بعض','PINs don’t match'));
+  Lock.enable(a).then(function(){ setupFace(); });
+}
+function setupFace(){
+  Lock.enrollFaceId().then(function(){ closeSheet(); render(); toast(L('Face ID اتفعّل ✓','Face ID enabled ✓')); })
+    .catch(function(){ closeSheet(); render(); toast(L('القفل شغال بالرقم السري (Face ID مش متاح هنا)','Lock is on with your PIN (Face ID isn’t available here)')); });
+}
+
+/* ---------- الرئيسية ---------- */
+function vHome(){
+  var s=S(), now=new Date(), today=sod(now);
+  var mr = range('month',0), monthTx = inRange(mr);
+  var spentM = sum(monthTx,'expense'), incM = sum(monthTx,'income');
+  var budget = budgetFor(mr);
+  var todayTx = monthTx.filter(function(t){return pd(t.date)>=today;});
+  var spentT = sum(todayTx,'expense');
+  var daysTotal = Math.round((mr.e-mr.s)/864e5), daysLeft = Math.max(1,Math.round((mr.e-today)/864e5));
+  var allowance = Math.max(0,(budget-(spentM-spentT))/daysLeft);
+  var leftT = allowance - spentT;
+  var elapsed = Math.round((today-mr.s)/864e5)+1;
+  var pace = budget*elapsed/daysTotal;
+  var wr = range('week',0), spentW = sum(inRange(wr),'expense');
+  var lastW = sum(prevTx('week',0),'expense');
+
+  var hr = now.getHours(), nm = userName();
+  var hello = hr<5 ? L('سهران يا '+nm+'؟','Up late, '+nm+'?') : hr<12 ? L('صباح الخير يا '+nm,'Good morning, '+nm) : L('مساء الخير يا '+nm, hr<18?'Good afternoon, '+nm:'Good evening, '+nm);
+  var h = '<div class="card hero mint"><canvas class="heroBg" aria-hidden="true"></canvas>'+
+    '<button class="arrowbtn" aria-label="'+L('التقارير','Reports')+'" onclick="UI.period=\'day\';UI.offset=0;go(\'report\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 7 7 17M9 7h8v8"/></svg></button>'+
+    '<div class="label">'+L('صرفت النهارده','Spent today')+'</div>'+
+    '<div class="big">'+countNum(spentT)+'<small>'+CUR()+'</small></div>'+
+    (budget? (leftT>=0
+      ? '<span class="pill">✓ '+L('لسه قدامك '+money(leftT)+' ريال تصرفهم النهارده', money(leftT)+' SAR left to spend today')+'</span>'
+      : '<span class="pill bad">⚠️ '+L('عدّيت حدّ النهارده بـ '+money(-leftT)+' ريال', money(-leftT)+' SAR over today’s limit')+'</span>') : '')+
+    '<div style="margin-top:18px" class="row"><button class="muted tgtBtn" onclick="editMonthBudget()">'+L('الشهر ده: ','This month: ')+money(spentM)+L(' من ',' of ')+money(budget)+' ✏️</button>'+
+    '<span style="font-size:13px" class="'+(spentM>pace?'warn':'good')+'">'+(spentM>pace?L('أسرع من خطتك','Ahead of plan'):L('ماشي على الخطة','On track'))+'</span></div>'+
+    '<div class="bar" style="margin-top:8px"><i style="width:'+Math.min(100,budget?spentM/budget*100:0)+'%;background:'+(spentM>budget?'var(--bad)':spentM>pace?'var(--warn)':'linear-gradient(90deg,var(--mint1),var(--mint2))')+'"></i>'+
+    '<div class="mark" style="inset-inline-start:'+Math.min(100,elapsed/daysTotal*100)+'%"></div></div>'+
+    '<div class="dim" style="font-size:12px;margin-top:6px">'+(mr.salary ? (mr.late ? L('المرتب لسه منزلش · لسه بتصرف من مرتب '+dShort(mr.s),'Salary not in yet · still spending from the '+dShort(mr.s)+' salary') : L('من مرتب '+dShort(mr.s)+' · باقي حوالي '+daysLeft+' يوم للمرتب الجاي','Since the '+dShort(mr.s)+' salary · about '+daysLeft+' days to the next one')) :
+      L('باقي '+daysLeft+' يوم · الخط الأبيض = المفروض تكون صرفت قد إيه لحد النهارده', daysLeft+' days left · the white line shows where your spending should be by today'))+'</div></div>';
+
+  h += '<div class="grid2">'+
+    statCard(L('الأسبوع ده','This week'), spentW, lastW? pctTxt(spentW,lastW,L('عن نفس الوقت الأسبوع اللي فات','vs. same point last week')) : '', 'week','sky')+
+    statCard(L('الشهر ده','This month'), spentM, budget? Math.round(spentM/budget*100)+L('% من الميزانية','% of budget'):'', 'month','violet')+
+    '</div>';
+
+  // الدخل
+  var sal = sum(monthTx.filter(function(t){return t.category==='مرتب';}),'income');
+  var fl = sum(monthTx.filter(function(t){return t.category==='فريلانس';}),'income');
+  var pend = pendingFreelance();
+  var saveRate = incM>0 ? (incM-spentM)/incM : 0;
+  h += '<div class="card"><h3>'+L('دخلك الشهر ده','Income this month')+' <a onclick="go(\'income\')">'+L('التفاصيل','Details')+' '+FWD()+'</a></h3>'+
+    '<div class="row" style="margin-bottom:10px"><b style="font-size:24px;font-weight:400">'+sar(incM)+'</b>'+
+    (incM? '<span class="pill '+(saveRate<0.2?'warn':'')+'">'+L('بتحوّش ','Saving ')+Math.round(saveRate*100)+'%</span>':'')+'</div>'+
+    splitBar([[sal,CATS['مرتب'][1]],[fl,CATS['فريلانس'][1]],[incM-sal-fl,CATS['دخل تاني'][1]]])+
+    '<div class="legend"><span><i style="background:'+CATS['مرتب'][1]+'"></i>'+catName('مرتب')+' '+money(sal)+'</span><span><i style="background:'+CATS['فريلانس'][1]+'"></i>'+catName('فريلانس')+' '+money(fl)+'</span>'+
+    (incM-sal-fl>0?'<span><i style="background:'+CATS['دخل تاني'][1]+'"></i>'+L('تاني','Other')+' '+money(incM-sal-fl)+'</span>':'')+'</div>'+
+    (sal===0 && Number(s.expectedSalary)?'<div class="dim" style="font-size:12.5px;margin-top:10px">⏳ '+L('المرتب ('+money(s.expectedSalary)+') لسه منزلش الشهر ده','Salary ('+money(s.expectedSalary)+') hasn’t arrived yet this month')+'</div>':'')+
+    (pend? '<div class="row" style="margin-top:12px;font-size:13.5px"><span class="muted">'+L('فريلانس لسه برّه','Freelance still owed')+'</span><b class="warn">'+money(pend)+' '+CUR()+'</b></div>':'')+
+    '</div>';
+
+  var alerts = budgetAlerts(monthTx, elapsed/daysTotal);
+  if(alerts) h += '<div class="section-title">'+L('تنبيهات','Alerts')+'</div>'+alerts;
+
+  h += vReview(3);
+  h += donutCard(monthTx, mr, spentM, L('صرفك الشهر ده راح فين','Where this month’s money went'));
+  h += vInstallments(true);
+
+  var last = D.tx.slice().sort(function(a,b){return pd(b.date)-pd(a.date);}).slice(0,6);
+  h += '<div class="card"><h3>'+L('آخر العمليات','Recent transactions')+' <a onclick="go(\'tx\')">'+L('الكل','See all')+' '+FWD()+'</a></h3>'+(last.length? last.map(txRow).join('') : emptyTx())+'</div>';
+
+  h += '<div class="card" onclick="go(\'wealth\')" style="cursor:pointer"><h3>'+L('كل اللي معاك','Everything you have')+' <span class="muted">'+FWD()+'</span></h3><b style="font-size:24px;font-weight:400">'+sar(wealth())+'</b>'+
+    '<div class="dim" style="font-size:12.5px;margin-top:4px">'+L('بنك ','Bank ')+money(s.bankBalance)+' · '+L('كاش ','Cash ')+money(s.cash)+' · '+L('دهب ','Gold ')+money(goldSar())+'</div>'+
+    (debtsTotal()?'<div class="dim" style="font-size:12.5px;margin-top:2px">'+L('بعد الأقساط والكريدت: ','After installments & credit: ')+'<b style="color:var(--text)">'+money(wealth()-debtsTotal())+'</b></div>':'')+'</div>';
+  return h;
+}
+function statCard(k,v,sub,period,tint){
+  return '<div class="stat '+(tint||'')+'" onclick="UI.period=\''+period+'\';UI.offset=0;go(\'report\')" style="cursor:pointer"><div class="k">'+k+'</div><div class="v">'+money(v)+'</div><div class="s">'+sub+'</div></div>';
+}
+function pctTxt(a,b,suffix){
+  if(!b) return '';
+  var p = Math.round((a-b)/b*100);
+  return '<span class="'+(p>0?'bad':'good')+'">'+(p>0?'▲ ':'▼ ')+'<span class="num">'+Math.abs(p)+'%</span></span> '+suffix;
+}
+function splitBar(parts){
+  var tot = parts.reduce(function(a,p){return a+Math.max(0,p[0]);},0);
+  if(!tot) return '<div class="split"><i style="flex:1;background:rgba(255,255,255,.08)"></i></div>';
+  return '<div class="split">'+parts.filter(function(p){return p[0]>0;}).map(function(p){return '<i style="flex:'+p[0]+';background:'+p[1]+'"></i>';}).join('')+'</div>';
+}
+function budgetAlerts(monthTx, frac){
+  var b = S().budgets||{}, out='';
+  byCat(monthTx,'expense').forEach(function(c){
+    var lim = Number(b[c.cat])||0; if(!lim) return;
+    var ic = catSvg(c.cat), nm = '<b>'+esc(catName(c.cat))+'</b> ';
+    if(c.v>lim) out += '<div class="alert">'+ic+'<div>'+nm+L('عدّى الميزانية: صرفت '+money(c.v)+' من '+money(lim)+' ريال','is over budget: '+money(c.v)+' of '+money(lim)+' SAR')+'</div></div>';
+    else if(c.v>lim*Math.max(frac,0.5)+lim*0.15 && c.v>lim*0.8) out += '<div class="alert amber">'+ic+'<div>'+nm+L('قرّب يخلص: ','is almost used up: ')+Math.round(c.v/lim*100)+L('% من ميزانيته','% of its budget')+'</div></div>';
+  });
+  return out;
+}
+/* ---------- هدف الشهر (ميزانية لكل شهر لوحده) ---------- */
+function monthKey(d){ return d.getFullYear()+'-'+p2(d.getMonth()+1); }
+function budgetFor(r){
+  var s=S(), mb=s.monthBudgets||{}, k=monthKey(r.s);
+  return (mb[k]!==undefined && mb[k]!==null && mb[k]!=='') ? Number(mb[k]) : (Number(s.monthlyBudget)||0);
+}
+function editMonthBudget(){
+  var r=range('month',0), k=monthKey(r.s), cur=budgetFor(r), def=Number(S().monthlyBudget)||0;
+  var hasOverride = (S().monthBudgets||{})[k]!==undefined;
+  openSheet('<h2>🎯 '+L('هدف الشهر ده','This month’s target')+'</h2>'+
+    '<div class="dim" style="font-size:13px;margin-bottom:10px">'+L('عايز تصرف قد إيه في ','How much do you want to spend in ')+esc(r.label)+L('؟ الأبلكيشن هيحسبلك تصرف قد إيه كل يوم على الأساس ده.','? The app works out your daily allowance from this.')+'</div>'+
+    '<input class="amountIn" id="mbV" inputmode="decimal" value="'+cur+'">'+
+    '<div class="dim" style="font-size:12px;text-align:center;margin:8px 0 14px">'+L('الهدف العادي لكل الشهور: ','Default for every month: ')+money(def)+'</div>'+
+    '<div class="btns" style="flex-direction:column">'+
+      '<button class="btn" onclick="saveMonthBudget(false)">'+L('للشهر ده بس','This month only')+'</button>'+
+      '<button class="btn ghost" onclick="saveMonthBudget(true)">'+L('خليه لكل الشهور','Use for every month')+'</button>'+
+      (hasOverride?'<button class="btn danger" onclick="clearMonthBudget()">'+L('رجّع الشهر ده للعادي','Reset this month to default')+'</button>':'')+
+    '</div>');
+  setTimeout(function(){ var a=document.getElementById('mbV'); if(a){a.focus(); a.select();} },280);
+}
+function saveMonthBudget(all){
+  var v=parseFloat(document.getElementById('mbV').value); if(!(v>=0)) return toast(L('رقم مش مظبوط','That’s not a valid number'));
+  var k=monthKey(range('month',0).s), mb=Object.assign({}, S().monthBudgets||{});
+  if(all){ delete mb[k]; busy(call('saveSettings',{monthlyBudget:v, monthBudgets:mb}), L('اتحفظ ✓','Saved ✓')); }
+  else { mb[k]=v; busy(call('saveSettings',{monthBudgets:mb}), L('هدف الشهر ده اتغيّر ✓','This month’s target updated ✓')); }
+}
+function clearMonthBudget(){ var k=monthKey(range('month',0).s), mb=Object.assign({}, S().monthBudgets||{}); delete mb[k]; busy(call('saveSettings',{monthBudgets:mb}), L('رجع للعادي','Back to default')); }
+
+/* ---------- الأقساط والكريدت ---------- */
+function todayStr(){ return iso(sod(new Date())).slice(0,10); }
+function instPaid(i){ return i.status==='اتدفع'; }
+function instPlans(){
+  var g={};
+  (D.installments||[]).forEach(function(i){ var k=i.planId||(i.provider+'|'+i.merchant); (g[k]=g[k]||[]).push(i); });
+  return Object.keys(g).map(function(k){
+    var items=g[k].sort(function(a,b){return a.dueDate<b.dueDate?-1:1;});
+    var paid=items.filter(instPaid), left=items.filter(function(i){return !instPaid(i);});
+    var total=Math.max(items.length, Number(items[0].total)||0);
+    return {id:k, provider:items[0].provider, merchant:items[0].merchant, items:items, paidN:paid.length + Math.max(0,total-items.length), total:total,
+      left:left, leftAmt:left.reduce(function(a,i){return a+Number(i.amount);},0), next:left[0]||null, manual:items[0].source==='manual'};
+  }).filter(function(p){ return p.left.length; }).sort(function(a,b){ return a.next.dueDate<b.next.dueDate?-1:1; });
+}
+function instNumTxt(i){ return (i.num&&i.total)? L('قسط '+i.num+' من '+i.total,'Installment '+i.num+' of '+i.total) : ''; }
+function vInstallments(compact){
+  var today=todayStr();
+  var up=(D.installments||[]).filter(function(i){return !instPaid(i);}).sort(function(a,b){return a.dueDate<b.dueDate?-1:1;});
+  if(!up.length && compact) return '';
+  var endM=iso(range('month',0).e).slice(0,10);
+  var thisMonth=up.filter(function(i){return i.dueDate<endM;}).reduce(function(a,i){return a+Number(i.amount);},0);
+  return '<div class="card"><h3>'+L('الأقساط اللي عليك','Your installments')+' <a onclick="go(\'inst\')">'+L('الكل','See all')+' '+FWD()+'</a></h3>'+
+    '<div class="row" style="margin:-4px 0 6px"><span class="muted" style="font-size:13px">'+L('الشهر ده','This month')+'</span><b class="num">'+fmtN(thisMonth,2)+' '+CUR()+'</b></div>'+
+    up.slice(0,3).map(instRow).join('')+'</div>';
+}
+function instRow(i){
+  var d=pd(i.dueDate), late=i.dueDate<todayStr();
+  return '<div class="tx" onclick="editInst(\''+i.id+'\')">'+catIc('أقساط تابي وتمارا', i.merchant+' '+i.provider)+
+    '<div class="mid"><b>'+esc(i.merchant)+'</b><span>'+esc(i.provider)+(instNumTxt(i)?' · '+instNumTxt(i):'')+'</span></div>'+
+    '<div style="text-align:end"><div class="amt">'+money(i.amount,2)+'</div><span class="chg '+(late?'down':'flat')+'">'+(late?L('عدّى ميعاده · ','Overdue · '):'')+dShort(d)+'</span></div></div>';
+}
+function vInstPage(){
+  var plans=instPlans(), all=plans.reduce(function(a,p){return a.concat(p.left);},[]);
+  var r0=range('month',0), r1=range('month',1);
+  var inM=function(r){ var s=iso(r.s).slice(0,10), e=iso(r.e).slice(0,10); return all.filter(function(i){return i.dueDate>=s && i.dueDate<e;}).reduce(function(a,i){return a+Number(i.amount);},0); };
+  var late=all.filter(function(i){return i.dueDate<todayStr();});
+  HEAD_X='<div style="display:flex;gap:8px"><button class="btn ghost" style="width:auto;padding:9px 12px" onclick="addCredit()">💳 '+L('كريدت','Credit')+'</button><button class="btn ghost" style="width:auto;padding:9px 12px" onclick="addInstPlan()">+ '+L('قسط','Plan')+'</button></div>'; var h='';
+  var cc = plans.filter(function(p){return /ائتمان|credit|كريدت/i.test(p.provider);}), ccAmt = cc.reduce(function(a,p){return a+p.leftAmt;},0);
+  if(cc.length) h+='<div class="card" style="padding:14px 16px"><div class="row"><span>💳 '+L('مطلوب على الكريدت كارد','Owed on credit cards')+'</span><b class="num warn">'+fmtN(ccAmt,2)+'</b></div><div class="dim" style="font-size:12px;margin-top:4px">'+L('محسوب في «باقي كله» وفي صافي فلوسك','Included in “Total left” and your net worth')+'</div></div>';
+  h+='<div class="grid3">'+
+    '<div class="stat violet"><div class="k">'+L('الشهر ده','This month')+'</div><div class="v" style="font-size:18px">'+money(inM(r0))+'</div></div>'+
+    '<div class="stat sky"><div class="k">'+L('الشهر الجاي','Next month')+'</div><div class="v" style="font-size:18px">'+money(inM(r1))+'</div></div>'+
+    '<div class="stat gold"><div class="k">'+L('باقي كله','Total left')+'</div><div class="v" style="font-size:18px">'+money(all.reduce(function(a,i){return a+Number(i.amount);},0))+'</div></div></div>';
+  if(late.length) h+='<div class="alert">⚠️<div>'+L('فيه '+late.length+' قسط عدّى ميعاده ومتعلّمش إنه اتدفع. دوس عليه وعلّمه «اتدفع» لو دفعته.', late.length+' installment(s) are past due and not marked paid. Tap to mark them paid if you have.')+'</div></div>';
+  if(!plans.length) return h+'<div class="card"><div class="empty"><span>🎉</span>'+L('مفيش أقساط عليك دلوقتي','No installments right now')+'</div></div>';
+
+  h+='<div class="section-title">'+L('كل خطة','By plan')+'</div>';
+  h+=plans.map(function(p){
+    var pct=p.total? p.paidN/p.total*100 : 0, n=p.next;
+    return '<div class="card plan" onclick="openPlan(\''+esc(p.id)+'\')">'+
+      '<div class="tx" style="border:0;padding:0 0 10px;cursor:pointer">'+catIc('أقساط تابي وتمارا', p.merchant+' '+p.provider)+
+        '<div class="mid"><b>'+esc(p.merchant)+'</b><span>'+esc(p.provider)+' · '+L('دفعت '+p.paidN+' من '+p.total,'Paid '+p.paidN+' of '+p.total)+'</span></div>'+
+        '<div style="text-align:end"><div class="amt">'+money(p.leftAmt,2)+'</div><span class="dim" style="font-size:11.5px">'+L('باقي','left')+'</span></div></div>'+
+      '<div class="bar"><i style="width:'+pct+'%"></i></div>'+
+      '<div class="row" style="margin-top:10px;font-size:13px"><span class="muted">'+L('القسط الجاي','Next')+(n.num?' ('+n.num+'/'+(n.total||p.total)+')':'')+'</span><span><b class="num">'+fmtN(n.amount,2)+'</b> · '+dayLabel(pd(n.dueDate))+'</span></div></div>';
+  }).join('');
+
+  // جدول الشهور الجاية
+  h+='<div class="section-title">'+L('الجدول','Schedule')+'</div>';
+  var byM={}, order=[];
+  all.sort(function(a,b){return a.dueDate<b.dueDate?-1:1;}).forEach(function(i){ var k=i.dueDate.slice(0,7); if(!byM[k]){byM[k]=[];order.push(k);} byM[k].push(i); });
+  h+=order.slice(0,12).map(function(k){
+    var items=byM[k], tot=items.reduce(function(a,i){return a+Number(i.amount);},0), d=pd(k+'-01');
+    return '<div class="dayhead"><span>'+MON(d.getMonth())+' '+d.getFullYear()+'</span><span class="num">'+fmtN(tot,2)+'</span></div>'+
+      '<div class="card" style="padding:4px 16px">'+items.map(instRow).join('')+'</div>';
+  }).join('');
+  return h;
+}
+function findPlan(id){ return instPlans().concat([]).filter(function(p){return p.id===id;})[0]; }
+function openPlan(id){
+  var all=(D.installments||[]).filter(function(i){ return (i.planId||(i.provider+'|'+i.merchant))===id; }).sort(function(a,b){return a.dueDate<b.dueDate?-1:1;});
+  if(!all.length) return;
+  var f=all[0];
+  openSheet('<h2>'+esc(f.merchant)+' · '+esc(f.provider)+'</h2>'+
+    all.map(function(i){
+      var paid=instPaid(i);
+      return '<div class="kv" onclick="toggleInst(\''+i.id+'\')"><div><span>'+(instNumTxt(i)||dShort(pd(i.dueDate)))+'</span><div class="dim" style="font-size:11.5px">'+dayLabel(pd(i.dueDate))+'</div></div>'+
+        '<div style="display:flex;gap:10px;align-items:center"><b class="num">'+fmtN(i.amount,2)+'</b><span class="status '+(paid?'paid':'pend')+'">'+(paid?'✓ '+L('اتدفع','Paid'):'⏳ '+L('جاي','Due'))+'</span></div></div>';
+    }).join('')+
+    '<div class="dim" style="font-size:12px;margin:10px 0">'+L('دوس على أي قسط عشان تعلّمه اتدفع أو لا.','Tap an installment to mark it paid or not.')+'</div>'+
+    '<button class="btn danger" onclick="if(confirm(L(\'تمسح الخطة دي كلها؟\',\'Delete this whole plan?\'))) busy(call(\'deleteInstallmentPlan\',\''+esc(id)+'\'),L(\'اتمسحت\',\'Deleted\'))">'+L('امسح الخطة','Delete plan')+'</button>');
+}
+function editInst(id){ var i=(D.installments||[]).filter(function(x){return x.id===id;})[0]; if(i) openPlan(i.planId||(i.provider+'|'+i.merchant)); }
+function toggleInst(id){
+  var i=(D.installments||[]).filter(function(x){return x.id===id;})[0]; if(!i) return;
+  var o=Object.assign({},i,{status:instPaid(i)?'جاي':'اتدفع'});
+  call('saveInstallment',o).then(function(d){ D=d; render(); openPlan(i.planId||(i.provider+'|'+i.merchant)); toast(o.status==='اتدفع'?L('اتعلّم اتدفع ✓','Marked paid ✓'):L('رجع «جاي»','Marked due')); });
+}
+function addInstPlan(){
+  draft={};
+  openSheet('<h2>'+L('قسط أو كريدت جديد','New installment or credit')+'</h2>'+
+    '<div class="field"><label>'+L('من فين','Provider')+'</label><select id="ipP">'+
+      [['Tabby','Tabby'],['Tamara','Tamara'],[L('بطاقة ائتمان','Credit card'),L('بطاقة ائتمان','Credit card')],[L('قرض','Loan'),L('قرض','Loan')],[L('تاني','Other'),L('تاني','Other')]].map(function(o){return '<option>'+o[0]+'</option>';}).join('')+'</select></div>'+
+    '<div class="field"><label>'+L('على إيه','What for')+'</label><input id="ipM" placeholder="'+L('مثلاً موبايل، كورس، كارت الراجحي…','e.g. phone, course, Al Rajhi card…')+'"></div>'+
+    '<div class="grid2"><div class="field"><label>'+L('القسط كام','Each installment')+'</label><input id="ipA" inputmode="decimal"></div>'+
+    '<div class="field"><label>'+L('عدد الأقساط','Number of installments')+'</label><input id="ipC" inputmode="numeric" value="1"></div></div>'+
+    '<div class="grid2"><div class="field"><label>'+L('دفعت منهم كام','Already paid')+'</label><input id="ipD" inputmode="numeric" value="0"></div>'+
+    '<div class="field"><label>'+L('أول قسط إمتى','First due date')+'</label><input type="date" id="ipF" value="'+todayStr()+'"></div></div>'+
+    '<div class="dim" style="font-size:12px;margin-bottom:10px">'+L('الأقساط بتتكرر كل شهر من أول تاريخ. للكريدت كارد: حط المبلغ المطلوب وعدد 1.','Installments repeat monthly from the first date. For a credit card bill, enter the amount due and 1.')+'</div>'+
+    '<button class="btn" onclick="saveInstPlan()">'+L('ضيف','Add')+'</button>');
+}
+function addCredit(){
+  openSheet('<h2>💳 '+L('كريدت كارد','Credit card')+'</h2>'+
+    '<div class="dim" style="font-size:13px;margin-bottom:12px">'+L('حط المبلغ اللي عليك في الكارت وميعاد السداد. هيتحسب في الديون اللي لازم تدفعها ويتخصم من صافي فلوسك لحد ما تعلّمه «اتدفع».','Enter what you owe on the card and when it’s due. It counts toward the debts you have to pay and comes off your net worth until you mark it paid.')+'</div>'+
+    '<div class="field"><label>'+L('اسم الكارت','Card name')+'</label><input id="ccN" placeholder="'+L('مثلاً كارت الأهلي، AliExpress…','e.g. SNB card, AliExpress…')+'"></div>'+
+    '<div class="grid2"><div class="field"><label>'+L('المبلغ المطلوب','Amount owed')+'</label><input id="ccA" inputmode="decimal"></div>'+
+    '<div class="field"><label>'+L('آخر ميعاد للسداد','Due date')+'</label><input type="date" id="ccD" value="'+todayStr()+'"></div></div>'+
+    '<div class="field"><label>'+L('هتقسّطه على كام شهر؟','Split over how many months?')+'</label><input id="ccC" inputmode="numeric" value="1"></div>'+
+    '<button class="btn" onclick="saveCredit()">'+L('ضيف','Add')+'</button>');
+}
+function saveCredit(){
+  var a=parseAmt(document.getElementById('ccA').value), c=parseInt(document.getElementById('ccC').value,10)||1;
+  if(!(a>0)) return toast(L('اكتب المبلغ','Enter an amount'));
+  busy(call('addInstallmentPlan',{provider:L('بطاقة ائتمان','Credit card'), merchant:document.getElementById('ccN').value||L('كريدت كارد','Credit card'),
+    amount:Math.round(a/c*100)/100, count:c, paidCount:0, firstDue:document.getElementById('ccD').value}), L('اتضاف ✓','Added ✓'));
+}
+function debtsTotal(){ return (D.installments||[]).filter(function(i){return !instPaid(i);}).reduce(function(a,i){return a+(Number(i.amount)||0);},0); }
+function saveInstPlan(){
+  var a=parseFloat(document.getElementById('ipA').value), c=parseInt(document.getElementById('ipC').value,10)||1;
+  if(!(a>0)) return toast(L('اكتب المبلغ','Enter an amount'));
+  busy(call('addInstallmentPlan',{provider:document.getElementById('ipP').value, merchant:document.getElementById('ipM').value||document.getElementById('ipP').value,
+    amount:a, count:c, paidCount:parseInt(document.getElementById('ipD').value,10)||0, firstDue:document.getElementById('ipF').value}), L('اتضاف ✓','Added ✓'));
+}
+
+/* ---------- مؤشر سعر الدهب ---------- */
+function gSeries(){ return (D.goldSeries||[]).filter(function(x){return x.p>0;}); }
+function avgOf(a){ return a.length? a.reduce(function(s,x){return s+x;},0)/a.length : 0; }
+function gIndicator(){
+  var p=gP(), s=gSeries(); if(!p || s.length<20) return '';
+  var cur=p.pound, last=s.map(function(x){return x.p;});
+  var a30=avgOf(last.slice(-21)), a90=avgOf(last.slice(-63)), lo=Math.min.apply(null,last.concat([cur])), hi=Math.max.apply(null,last.concat([cur]));
+  var d30=(cur-a30)/a30*100, d90=(cur-a90)/a90*100, pos=hi>lo?(cur-lo)/(hi-lo)*100:50;
+  var lvl = d30<=-2 ? 'low' : d30>=2 ? 'high' : 'mid';
+  var title = lvl==='low' ? L('السعر أرخص من المعتاد','Price is below its usual level') : lvl==='high' ? L('السعر أغلى من المعتاد','Price is above its usual level') : L('السعر في المعتاد','Price is around its usual level');
+  var pounds=(D.gold||[]).filter(function(g){return g.kind==='pound';}), pq=pounds.reduce(function(a,g){return a+Number(g.qty);},0);
+  var myAvg = pq? pounds.reduce(function(a,g){return a+gPaid(g);},0)/pq : 0, dMy = myAvg? (cur-myAvg)/myAvg*100 : 0;
+  function pctTxt2(v){ return '<b class="num '+(v<0?'up':'down')+'">'+(v>0?'+':'')+v.toFixed(1)+'%</b>'; }
+  return '<div class="card"><h3>'+L('مؤشر السعر','Price check')+' <span class="pill '+(lvl==='low'?'':lvl==='high'?'warn':'muted')+'">'+(lvl==='low'?'🟢 ':lvl==='high'?'🟠 ':'⚪️ ')+title+'</span></h3>'+
+    '<div class="gauge"><div class="gTrack"><i style="inset-inline-start:'+pos.toFixed(1)+'%"></i></div>'+
+      '<div class="row dim" style="font-size:11.5px;margin-top:6px"><span>'+L('أقل سعر في 6 شهور','6-month low')+' <span class="num">'+gAmt(lo)+'</span></span><span>'+L('أعلى','High')+' <span class="num">'+gAmt(hi)+'</span></span></div></div>'+
+    '<div class="kv" style="cursor:default"><span>'+L('مقارنة بمتوسط آخر شهر','vs. last month’s average')+'</span>'+pctTxt2(d30)+'</div>'+
+    '<div class="kv" style="cursor:default"><span>'+L('مقارنة بمتوسط آخر 3 شهور','vs. last 3 months’ average')+'</span>'+pctTxt2(d90)+'</div>'+
+    (myAvg?'<div class="kv" style="cursor:default"><span>'+L('مقارنة بمتوسط اللي دفعته في الجنيه (','vs. your average cost per pound (')+'<span class="num">'+gAmt(myAvg)+'</span>)</span>'+pctTxt2(dMy)+'</div>':'')+
+    '<div class="dim" style="font-size:11.5px;margin-top:10px">'+L('🟢 لما السعر يبقى تحت متوسط آخر شهر بـ 2% أو أكتر · 🟠 لما يبقى فوقه بـ 2% أو أكتر. ده مقارنة بأسعار اللي فاتت بس، مش توقّع للسعر ولا نصيحة استثمار.',
+      '🟢 when the price is 2%+ below last month’s average · 🟠 when it’s 2%+ above. This only compares with past prices; it isn’t a forecast or investment advice.')+'</div></div>';
+}
+
+/* ---------- العمليات ---------- */
+function txRow(t){
+  var d = pd(t.date), a = Number(t.amount)||0, inc = t.type==='income' || (t.type==='expense' && a<0), sav = t.type==='saving';
+  var src = (t.source==='sms'||t.source==='push')?'':t.source==='cash'?' · '+L('كاش','Cash'):t.source==='import'?'':' · '+L('يدوي','Manual');
+  var sub = sav ? L('ادخار · مش محسوب في المصاريف','Savings · not counted as spending') : esc(catName(t.category))+(t.type==='expense'&&a<0?' · '+L('رجعتلك','refund'):'');
+  return '<div class="tx'+(needsReview(t)?' review':'')+'" onclick="editTx(\''+t.id+'\')">'+catIc(t.category, t.merchant)+
+    '<div class="mid"><b>'+esc(t.merchant||catName(t.category))+'</b><span>'+sub+' · '+hhmm(d)+src+(t.note?' · '+esc(t.note):'')+'</span></div>'+
+    '<div class="amt'+(inc?' in':'')+(sav?' dim':'')+'"><span class="num">'+(inc?'+':'')+fmtN(Math.abs(a),2)+'</span></div>'+reviewChips(t)+'</div>';
+}
+/* حوالة شخصية مش معروف راحت في إيه → اختيارات سريعة جنبها */
+function needsReview(t){ return t.type==='expense' && t.category==='حوالة شخصية' && Number(t.amount)>0; }
+function reviewChips(t){
+  if(!needsReview(t)) return '';
+  return '<div class="rchips" onclick="event.stopPropagation()"><em>'+L('راحت في إيه؟','What was it for?')+'</em>'+REVIEW_CATS.map(function(c){
+    return '<button onclick="event.stopPropagation();setTxCat(\''+t.id+'\',\''+c+'\')">'+catSvg(c)+esc(catName(c))+'</button>';}).join('')+'</div>';
+}
+function setTxCat(id,c){
+  var t=D.tx.filter(function(x){return x.id===id;})[0]; if(t){ t.category=c; render(); }
+  call('updateTx', id, {category:c}, false).then(function(d){ D=d; render(); toast(L('اتحطت في «'+catName(c)+'» ✓','Moved to “'+catName(c)+'” ✓')); }).catch(function(e){ toast(String(e&&e.message||e)); });
+}
+function vReview(limit){
+  var list = D.tx.filter(needsReview).sort(function(a,b){return pd(b.date)-pd(a.date);});
+  if(!list.length) return '';
+  return '<div class="card"><h3>🔍 '+L('حوالات محتاج تحددها','Transfers to sort')+' <span class="pill warn">'+list.length+'</span></h3>'+
+    '<div class="dim" style="font-size:12.5px;margin-bottom:4px">'+L('دوس على البند المناسب جنب كل حوالة. أي تحويل لنور أو حسين أقل من 100 بيتحسب أكل لوحده.','Tap the right category beside each transfer. Anything under 100 to Nour or Hussein counts as food automatically.')+'</div>'+
+    list.slice(0,limit||4).map(txRow).join('')+
+    (list.length>(limit||4)?'<button class="btn ghost" style="margin-top:10px" onclick="UI.txFilter=\'حوالة شخصية\';go(\'tx\')">'+L('شوف الباقي ('+(list.length-(limit||4))+')','See the rest ('+(list.length-(limit||4))+')')+'</button>':'')+'</div>';
+}
+function emptyTx(){ return '<div class="empty"><span class="emptyShark">'+SHARK+'</span>'+L('مفيش عمليات لسه. أول ما تدفع بالكارت هتظهر هنا لوحدها.','No transactions yet. They’ll show up here on their own as soon as you pay by card.')+'</div>'; }
+function vTx(){
+  var q = UI.q.trim().toLowerCase();
+  var list = D.tx.filter(function(t){
+    if(UI.txFilter==='expense' && t.type!=='expense') return false;
+    if(UI.txFilter==='income' && t.type!=='income') return false;
+    if(UI.txFilter!=='all' && UI.txFilter!=='expense' && UI.txFilter!=='income' && t.category!==UI.txFilter) return false;
+    if(q && (t.merchant+' '+t.category+' '+catName(t.category)+' '+(t.note||'')).toLowerCase().indexOf(q)<0) return false;
+    return true;
+  }).sort(function(a,b){return pd(b.date)-pd(a.date);});
+  var h = '<div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg><input placeholder="'+L('دوّر على تاجر أو بند…','Search a merchant or category…')+'" value="'+esc(UI.q)+'" oninput="UI.q=this.value;renderList()"></div>';
+  var chips = [['all',L('الكل','All')],['expense',L('مصاريف','Expenses')],['income',L('دخل','Income')]].concat(EXP.concat(INC).filter(function(c){return D.tx.some(function(t){return t.category===c;});}).map(function(c){return [c,catLabel(c)];}));
+  h += '<div class="chips">'+chips.map(function(c){return '<button class="chip'+(UI.txFilter===c[0]?' on':'')+'" onclick="UI.txFilter=\''+c[0]+'\';render()">'+c[1]+'</button>';}).join('')+'</div>';
+  h += '<div id="txlist">'+txGroups(list)+'</div>';
+  return h;
+}
+function renderList(){ render(); var inp=document.querySelector('.search input'); if(inp){inp.focus(); inp.setSelectionRange(inp.value.length,inp.value.length);} }
+function txGroups(list){
+  if(!list.length) return '<div class="card">'+emptyTx()+'</div>';
+  var groups = {}, order=[];
+  list.slice(0,400).forEach(function(t){ var k=t.date.slice(0,10); if(!groups[k]){groups[k]=[];order.push(k);} groups[k].push(t); });
+  return order.map(function(k){
+    var g = groups[k], out = sum(g,'expense'), inn = sum(g,'income');
+    return '<div class="dayhead"><span>'+dayLabel(pd(k))+'</span><span>'+(out?L('صرفت ','Spent ')+money(out):'')+(inn?' <span class="good">+'+money(inn)+'</span>':'')+'</span></div>'+
+      '<div class="card" style="padding:4px 16px">'+g.map(txRow).join('')+'</div>';
+  }).join('');
+}
+
+/* ---------- دايرة الصرف (نسبة كل بند) + ليميت كل بند ---------- */
+function donutData(list){
+  var cats = byCat(list,'expense').filter(function(c){return c.v>0;}), tot = cats.reduce(function(a,c){return a+c.v;},0);
+  var top = cats.slice(0,7), rest = cats.slice(7).reduce(function(a,c){return a+c.v;},0);
+  if(rest>0) top.push({cat:'__rest',v:rest});
+  return {cats:top, all:cats, tot:tot};
+}
+function donutSvg(dd, centerTop, centerBig){
+  var R=42, C=2*Math.PI*R, off=0, gap=dd.cats.length>1?1.2:0;
+  var segs = dd.cats.map(function(c){
+    var len = dd.tot? c.v/dd.tot*C : 0, col = c.cat==='__rest'?'#475569':(CATS[c.cat]||['','#94a3b8'])[1];
+    var seg = '<circle r="'+R+'" cx="50" cy="50" fill="none" stroke="'+col+'" stroke-width="13" stroke-dasharray="'+Math.max(0,len-gap).toFixed(2)+' '+C.toFixed(2)+'" stroke-dashoffset="'+(-off).toFixed(2)+'" class="dseg"'+(c.cat!=='__rest'?' onclick="openCat(\''+c.cat+'\')"':'')+'/>';
+    off += len; return seg;
+  }).join('');
+  return '<svg class="donut" viewBox="0 0 100 100" role="img" aria-label="'+L('نسبة كل بند','Share per category')+'"><g transform="rotate(-90 50 50)"><circle r="'+R+'" cx="50" cy="50" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="13"/>'+segs+'</g>'+
+    '<text x="50" y="45" text-anchor="middle" class="dT">'+centerTop+'</text><text x="50" y="60" text-anchor="middle" class="dB">'+centerBig+'</text></svg>';
+}
+function donutCard(list, r, spent, title, factor){
+  var dd = donutData(list); if(!dd.tot) return '';
+  var b = S().budgets||{}; factor = factor||1;
+  var legend = dd.cats.map(function(c){
+    var rest = c.cat==='__rest', col = rest?'#475569':(CATS[c.cat]||['','#94a3b8'])[1], pct = Math.round(c.v/dd.tot*100);
+    var lim = rest?0:(Number(b[c.cat])||0)*factor, over = lim && c.v>lim;
+    return '<div class="dl'+(over?' over':'')+'"'+(rest?'':' onclick="openCat(\''+c.cat+'\')"')+'><i style="background:'+col+'"></i><span>'+(rest?L('باقي البنود','Everything else'):esc(catName(c.cat)))+'</span><b class="num">'+pct+'%</b>'+
+      (lim?'<em class="'+(over?'bad':'dim')+'">'+(over?'⚠️ ':'')+Math.round(c.v/lim*100)+L('% من الليميت','% of limit')+'</em>':'')+'</div>';
+  }).join('');
+  return '<div class="card donutCard"><h3>'+title+'</h3><div class="dwrap">'+donutSvg(dd, L('صرفت','Spent'), fmtN(dd.tot))+'<div class="dlegend">'+legend+'</div></div>'+
+    '<div class="dim" style="font-size:12px;margin-top:10px">'+L('دوس على أي بند عشان تشوف عملياته أو تحط له ليميت في الشهر.','Tap any category to see its transactions or set a monthly limit.')+'</div></div>';
+}
+function openCat(c){
+  var mr = range('month',0), list = inRange(mr).filter(function(t){return t.category===c && t.type==='expense';}).sort(function(a,b){return pd(b.date)-pd(a.date);});
+  var v = list.reduce(function(a,t){return a+(Number(t.amount)||0);},0), lim = Number((S().budgets||{})[c])||0;
+  var prev = prevTx('month',0).filter(function(t){return t.category===c && t.type==='expense';}).reduce(function(a,t){return a+(Number(t.amount)||0);},0);
+  openSheet('<h2>'+catLabel(c)+'</h2>'+
+    '<div class="row" style="margin-bottom:8px"><b style="font-size:28px;font-weight:400">'+sar(v)+'</b><span class="muted" style="font-size:13px">'+esc(mr.label)+'</span></div>'+
+    (prev?'<div class="dim" style="font-size:12.5px;margin-bottom:10px">'+pctTxt(v,prev,L('عن نفس الوقت الشهر اللي فات','vs. same point last month'))+'</div>':'')+
+    (lim?'<div class="bar" style="margin-bottom:6px"><i style="width:'+Math.min(100,v/lim*100)+'%;background:'+(v>lim?'var(--bad)':(CATS[c]||['','#94a3b8'])[1])+'"></i></div>'+
+      '<div class="dim" style="font-size:12.5px;margin-bottom:14px">'+(v>lim?'<span class="bad">'+L('عدّيت الليميت بـ ','Over the limit by ')+money(v-lim)+'</span>':L('فاضل ','Left: ')+money(lim-v)+L(' من ',' of ')+money(lim))+'</div>':'')+
+    '<div class="field"><label>'+L('ليميت البند ده في الشهر','Monthly limit for this category')+'</label><div style="display:flex;gap:8px"><input id="catLim" inputmode="decimal" placeholder="'+L('من غير ليميت','No limit')+'" value="'+(lim||'')+'" style="flex:1">'+
+      '<button class="btn" style="width:auto;padding:0 18px" onclick="saveCatLimit(\''+c+'\')">'+L('حفظ','Save')+'</button></div>'+
+      '<div class="dim" style="font-size:11.5px;margin-top:6px">'+L('هينبهك لما تقرّب منه أو تعدّيه. سيبه فاضي عشان تشيله.','You’ll get a heads-up when you get close or go over. Leave it empty to remove it.')+'</div></div>'+
+    '<div class="section-title" style="margin-top:6px">'+L('عمليات الشهر ده','This month’s transactions')+' (<span class="num">'+list.length+'</span>)</div>'+
+    (list.length? '<div>'+list.slice(0,12).map(txRow).join('')+'</div>' : '<div class="dim">'+L('مفيش عمليات في البند ده الشهر ده','Nothing in this category this month')+'</div>')+
+    (list.length>12?'<button class="btn ghost" style="margin-top:10px" onclick="closeSheet();UI.txFilter=\''+c+'\';go(\'tx\')">'+L('شوف الكل','See all')+'</button>':''));
+}
+function saveCatLimit(c){
+  var v = parseFloat(String(document.getElementById('catLim').value).replace(',','.')), b = Object.assign({}, S().budgets||{});
+  if(v>0) b[c]=v; else delete b[c];
+  busy(call('saveSettings',{budgets:b}), v>0? L('الليميت اتحفظ ✓','Limit saved ✓') : L('الليميت اتشال','Limit removed'));
+}
+
+/* ---------- التقارير ---------- */
+function vReport(){
+  var r = range(UI.period, UI.offset), list = inRange(r);
+  var prev = prevTx(UI.period, UI.offset);
+  var spent = sum(list,'expense'), inc = sum(list,'income'), pSpent = sum(prev,'expense');
+  var h = '<div class="seg">'+[['day',L('يوم','Day')],['week',L('أسبوع','Week')],['month',L('شهر','Month')],['year',L('سنة','Year')]].map(function(p){
+    return '<button class="'+(UI.period===p[0]?'on':'')+'" onclick="UI.period=\''+p[0]+'\';UI.offset=0;UI.tip=\'\';render()">'+p[1]+'</button>';}).join('')+'</div>';
+  h += '<div class="nav"><button aria-label="'+L('اللي قبله','Previous')+'" onclick="UI.offset--;UI.tip=\'\';render()">'+BACK()+'</button><b>'+r.label+'</b><button aria-label="'+L('اللي بعده','Next')+'" onclick="UI.offset++;UI.tip=\'\';render()" '+(UI.offset>=0?'disabled':'')+'>'+FWD()+'</button></div>';
+
+  var net = inc - spent;
+  var prevName = ({day:L('امبارح','yesterday'),week:L('الأسبوع اللي فات','last week'),month:L('الشهر اللي فات','last month'),year:L('السنة اللي فاتت','last year')})[UI.period];
+  h += '<div class="grid2">'+
+    '<div class="stat sky"><div class="k">'+L('صرفت','Spent')+'</div><div class="v">'+money(spent)+'</div><div class="s">'+(pSpent?pctTxt(spent,pSpent,L('عن ','vs. ')+prevName):'&nbsp;')+'</div></div>'+
+    '<div class="stat mint"><div class="k">'+L('دخلك','Income')+'</div><div class="v good">'+money(inc)+'</div><div class="s">'+(inc?L('بتحوّش ','Saving ')+Math.round(net/inc*100)+'%':'&nbsp;')+'</div></div>'+
+    '</div>';
+  h += '<div class="card"><div class="row"><span class="muted">'+L('الصافي','Net')+' ('+(net>=0?L('فاضل معاك','left over'):L('صرفت أكتر من دخلك','spent more than you earned'))+')</span><b class="'+(net>=0?'good':'bad')+'" style="font-size:20px;font-weight:500">'+signed(net)+'</b></div>';
+  if(UI.period==='month'||UI.period==='week'){
+    var b = UI.period==='month'? budgetFor(r) : budgetFor(range('month',0)), lim = UI.period==='month'? b : b*7/30;
+    if(lim) h += '<div style="margin-top:12px" class="row"><span class="muted" style="font-size:13px">'+L('الميزانية ','Budget ')+money(lim)+'</span><span style="font-size:13px" class="'+(spent>lim?'bad':'good')+'">'+(spent>lim?L('عدّيت بـ ','Over by ')+money(spent-lim):L('فاضل ','Left ')+money(lim-spent))+'</span></div>'+
+      '<div class="bar" style="margin-top:6px"><i style="width:'+Math.min(100,spent/lim*100)+'%;'+(spent>lim?'background:var(--bad)':'')+'"></i></div>';
+  }
+  h += '</div>';
+
+  if(UI.period!=='day') h += '<div class="card chartCard"><h3>'+(UI.period==='year'?L('الصرف شهر بشهر','Spending by month'):L('الصرف يوم بيوم','Spending by day'))+'</h3>'+chart(r,list)+'</div>';
+
+  var cats = byCat(list,'expense'), budgets = S().budgets||{};
+  var factor = UI.period==='month'?1: UI.period==='week'?7/30 : UI.period==='year'?12 : 1/30;
+  if(UI.period!=='day') h += donutCard(list, r, spent, L('نسبة كل بند','Share per category'), factor);
+  h += '<div class="card"><h3>'+L('صرفك راح فين','Where your money went')+'</h3>'+(cats.length? cats.map(function(c){
+    var lim = (Number(budgets[c.cat])||0)*factor, col=(CATS[c.cat]||['','#888'])[1];
+    var pct = spent? Math.round(c.v/spent*100):0;
+    return '<div class="cat" onclick="openCat(\''+c.cat+'\')"><div class="row"><b>'+catLabel(c.cat)+'</b><span>'+money(c.v)+' <span class="dim" style="font-size:12px">'+pct+'%</span></span></div>'+
+      '<div class="bar"><i style="width:'+(lim?Math.min(100,c.v/lim*100):pct)+'%;background:'+(lim&&c.v>lim?'var(--bad)':col)+'"></i></div>'+
+      (lim&&UI.period!=='day'?'<div class="dim" style="font-size:11.5px;margin-top:4px">'+(c.v>lim?'<span class="bad">'+L('عدّى الميزانية ('+money(lim)+')','Over budget ('+money(lim)+')')+'</span>':L('من ميزانية ','of a ')+money(lim)+L('',' budget'))+'</div>':'')+'</div>';
+  }).join('') : '<div class="empty"><span>🌊</span>'+L('مفيش مصاريف في الفترة دي','No spending in this period')+'</div>')+'</div>';
+
+  var m = {}; list.forEach(function(t){ if(t.type==='expense'){ var k=t.merchant||t.category; m[k]=m[k]||{v:0,n:0,cat:t.category}; m[k].v+=Number(t.amount); m[k].n++; }});
+  var top = Object.keys(m).map(function(k){return {k:k,v:m[k].v,n:m[k].n,cat:m[k].cat};}).sort(function(a,b){return b.v-a.v;}).slice(0,6);
+  if(top.length) h += '<div class="card"><h3>'+L('أكتر أماكن صرفت فيها','Top merchants')+'</h3>'+top.map(function(t){
+    return '<div class="tx" style="cursor:default">'+catIc(t.cat, t.k)+'<div class="mid"><b>'+esc(t.k)+'</b><span>'+t.n+L(' مرة',t.n===1?' time':' times')+'</span></div><div class="amt">'+money(t.v)+'</div></div>';}).join('')+'</div>';
+
+  var ic = byCat(list,'income');
+  if(ic.length) h += '<div class="card"><h3>'+L('دخلك جاي منين','Where your income came from')+'</h3>'+ic.map(function(c){
+    return '<div class="tx" style="cursor:default">'+catIc(c.cat)+'<div class="mid"><b>'+esc(catName(c.cat))+'</b><span>'+Math.round(c.v/inc*100)+L('% من دخلك','% of income')+'</span></div><div class="amt in">+'+money(c.v)+'</div></div>';}).join('')+'</div>';
+
+  if(UI.period==='day') h += '<div class="section-title">'+L('عمليات ','Transactions · ')+r.label+'</div>'+txGroups(list.sort(function(a,b){return pd(b.date)-pd(a.date);}));
+  return h;
+}
+function chart(r,list){
+  var buckets=[], i;
+  if(r.period==='year'){ for(i=0;i<12;i++) buckets.push({s:new Date(r.s.getFullYear(),i,1),e:new Date(r.s.getFullYear(),i+1,1),l:MON3(i),full:MON(i)}); }
+  else { for(var d=new Date(r.s); d<r.e; d=addD(d,1)) buckets.push({s:new Date(d),e:addD(d,1),l:r.period==='week'?DAY3(d.getDay()):String(d.getDate()),full:dayLabel(d)}); }
+  var today = sod(new Date());
+  buckets.forEach(function(b){ b.v = list.reduce(function(a,t){ var d=pd(t.date); return a+(t.type==='expense'&&d>=b.s&&d<b.e?Number(t.amount):0); },0); });
+  var max = Math.max.apply(null, buckets.map(function(b){return b.v;}).concat([1]));
+  var past = buckets.filter(function(b){return b.s<=today;}), avg = past.length? past.reduce(function(a,b){return a+b.v;},0)/past.length : 0;
+  var daily = budgetFor(range('month',0))/30, lim = r.period==='year'? daily*30 : daily;
+  var showEvery = buckets.length>16? 5 : 1;
+  var h = '<div class="chartTip" id="tip">'+(UI.tip||L('المتوسط ','Average ')+money(avg)+' '+CUR()+' '+(r.period==='year'?L('في الشهر','a month'):L('في اليوم','a day')))+'</div><div class="chart'+(buckets.length>16?' dense':'')+'">';
+  buckets.forEach(function(b,idx){
+    var cls = (b.s<=today&&today<b.e)?' hot':(lim&&b.v>lim*1.6?' over':'')+(b.s>today?' future':'');
+    h += '<div class="col'+cls+'" onclick="tipShow(\''+esc(b.full)+'\','+b.v+')"><div class="trk"><i style="height:'+(b.v/max*100)+'%"></i></div><small>'+((idx%showEvery===0||buckets.length<=16)?b.l:'&nbsp;')+'</small></div>';
+  });
+  return h+'</div>';
+}
+function tipShow(l,v){ var el=document.getElementById('tip'); if(el) el.innerHTML = l+': <b style="color:var(--text)">'+money(v)+' '+CUR()+'</b>'; }
+
+/* ---------- الدخل ---------- */
+function vIncome(){
+  var now = new Date(), y = now.getFullYear();
+  var mr = range('month',0), monthTx = inRange(mr);
+  var flRecM = sum(monthTx.filter(function(t){return t.category==='فريلانس';}),'income');
+  var pend = pendingFreelance();
+  var yearFl = D.freelance.filter(function(f){return f.status==='اتقبض' && String(f.date).slice(0,4)==String(y);}).reduce(function(a,f){return a+Number(f.amount);},0);
+  var target = Number(S().freelanceTarget)||0;
+
+  var h = '<div class="grid3">'+
+    '<div class="stat mint"><div class="k">'+L('فريلانس الشهر','Freelance this month')+'</div><div class="v good" style="font-size:18px">'+money(flRecM)+'</div></div>'+
+    '<div class="stat gold"><div class="k">'+L('لسه برّه','Still owed')+'</div><div class="v warn" style="font-size:18px">'+money(pend)+'</div></div>'+
+    '<div class="stat violet"><div class="k">'+L('فريلانس ','Freelance ')+y+'</div><div class="v" style="font-size:18px">'+money(yearFl)+'</div></div></div>';
+  if(target) h += '<div class="card"><div class="row"><span class="muted" style="font-size:13px">'+L('هدف الفريلانس الشهري','Monthly freelance goal')+'</span><span style="font-size:13px"><span class="num">'+fmtN(flRecM)+' / '+fmtN(target)+'</span></span></div>'+
+    '<div class="bar" style="margin-top:8px"><i style="width:'+Math.min(100,flRecM/target*100)+'%"></i></div></div>';
+
+  var months=[]; for(var i=5;i>=0;i--){ var r=range('month',-i); var l=inRange(r);
+    months.push({l:MON3(r.s.getMonth()), sal:sum(l.filter(function(t){return t.category==='مرتب';}),'income'), fl:sum(l.filter(function(t){return t.category==='فريلانس';}),'income'), ex:sum(l,'expense')}); }
+  var mx = Math.max.apply(null, months.map(function(m){return Math.max(m.sal+m.fl,m.ex);}).concat([1]));
+  h += '<div class="card"><h3>'+L('دخلك ومصاريفك آخر 6 شهور','Income vs. spending, last 6 months')+'</h3><div class="chart" style="height:150px;gap:10px">'+months.map(function(m){
+    return '<div class="col" style="flex-direction:row;align-items:flex-end;gap:3px;justify-content:center" onclick="tipShow2(\''+m.l+'\','+m.sal+','+m.fl+','+m.ex+')">'+
+      '<div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%;width:14px"><i style="height:'+(m.fl/mx*100)+'%;background:var(--violet);border-radius:99px 99px 0 0;min-height:0"></i><i style="height:'+(m.sal/mx*100)+'%;background:rgba(255,255,255,.9);border-radius:0 0 99px 99px;min-height:0"></i></div>'+
+      '<div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%;width:14px"><i style="height:'+(m.ex/mx*100)+'%;background:var(--pink);opacity:.75;border-radius:99px;min-height:0"></i></div></div>';
+  }).join('')+'</div><div style="display:flex;gap:10px;justify-content:space-around;font-size:11px;color:var(--dim);margin-top:4px">'+months.map(function(m){return '<span>'+m.l+'</span>';}).join('')+'</div>'+
+    '<div class="chartTip" id="tip2" style="margin-top:6px">'+L('دوس على أي شهر','Tap a month')+'</div>'+
+    '<div class="legend"><span><i style="background:#fff"></i>'+catName('مرتب')+'</span><span><i style="background:var(--violet)"></i>'+catName('فريلانس')+'</span><span><i style="background:var(--pink)"></i>'+L('مصاريف','Spending')+'</span></div></div>';
+
+  var fl = D.freelance.slice().sort(function(a,b){ if(a.status!==b.status) return a.status==='لسه'?-1:1; return a.date<b.date?1:-1; });
+  h += '<div class="card"><h3>'+L('فواتير الفريلانس','Freelance invoices')+' <a onclick="editFreelance()">+ '+L('فاتورة جديدة','New invoice')+'</a></h3>'+(fl.length? fl.map(function(f){
+    return '<div class="tx" onclick="editFreelance(\''+f.id+'\')">'+catIc('فريلانس')+'<div class="mid"><b>'+esc(f.client)+'</b><span>'+dShort(pd(f.date))+(f.note?' · '+esc(f.note):'')+'</span></div>'+
+      '<div style="text-align:end"><div class="amt">'+money(f.amount)+'</div><span class="status '+(f.status==='اتقبض'?'paid':'pend')+'" onclick="event.stopPropagation();toggleFl(\''+f.id+'\')">'+(f.status==='اتقبض'?'✓ ':'⏳ ')+stName(f.status)+'</span></div></div>';
+  }).join('') : '<div class="empty">'+L('مفيش فواتير','No invoices')+'</div>')+'</div>';
+
+  var cl={}; D.freelance.forEach(function(f){ var k=String(f.client).replace(/\s*\(.*\)$/,''); cl[k]=cl[k]||{v:0,n:0}; cl[k].v+=Number(f.amount); cl[k].n++; });
+  var cls = Object.keys(cl).map(function(k){return {k:k,v:cl[k].v,n:cl[k].n};}).sort(function(a,b){return b.v-a.v;});
+  var tot = cls.reduce(function(a,c){return a+c.v;},0);
+  if(cls.length) h += '<div class="card"><h3>'+L('العملاء','Clients')+'</h3>'+cls.map(function(c){
+    return '<div class="cat" style="cursor:default"><div class="row"><b>'+esc(c.k)+'</b><span>'+money(c.v)+' <span class="dim" style="font-size:12px">· '+c.n+L(' شغلانة',c.n===1?' job':' jobs')+'</span></span></div><div class="bar"><i style="width:'+(c.v/tot*100)+'%"></i></div></div>';}).join('')+'</div>';
+
+  var sal = D.tx.filter(function(t){return t.category==='مرتب';}).sort(function(a,b){return pd(b.date)-pd(a.date);}).slice(0,6);
+  h += '<div class="card"><h3>'+catName('مرتب')+'</h3>'+(sal.length? sal.map(txRow).join('') : '<div class="empty">'+L('المرتب هيتسجل لوحده أول ما ينزل في الحساب','Your salary will be recorded on its own as soon as it lands')+'</div>')+'</div>';
+  return h;
+}
+function tipShow2(l,s,f,e){ var el=document.getElementById('tip2'); if(el) el.innerHTML = l+': '+catName('مرتب')+' '+money(s)+' · '+catName('فريلانس')+' '+money(f)+' · '+L('مصاريف','Spending')+' '+money(e); }
+
+/* ---------- الدهب ---------- */
+// الجنيه الدهب = 8 جرام عيار 21 · كل الحسابات بالجنيه المصري، والعرض بالجنيه أو بالريال
+UI.goldCur = (function(){ try{ return localStorage.getItem('sayad-goldcur') || 'EGP'; }catch(e){ return 'EGP'; } })();
+function gP(){ return D.goldPrice || null; }
+function egpRate(){ var p=gP(); return (p && p.egpPerSar) || Number(S().egpPerSar) || 14.4; }
+function gKarat(h){ return h.kind==='pound' ? 21 : (Number(h.karat)||21); }
+function gGrams(h){ return h.kind==='pound' ? Number(h.qty)*8 : Number(h.qty); }
+function gramPrice(k){ var p=gP(); if(!p) return 0; return k===24?p.g24 : k===18?p.g18 : p.g21; }
+function gValue(h){ var p=gP(); if(!p) return 0; return h.kind==='pound' ? Number(h.qty)*p.pound : Number(h.qty)*gramPrice(gKarat(h)); }
+function gPaid(h){ return h.currency==='SAR' ? Number(h.paid)*(Number(h.fx)||egpRate()) : Number(h.paid); }
+function gTotals(){
+  var t={value:0, paid:0, pounds:0, grams:0, pure:0};
+  (D.gold||[]).forEach(function(h){ t.value+=gValue(h); t.paid+=gPaid(h); if(h.kind==='pound') t.pounds+=Number(h.qty); else t.grams+=Number(h.qty);
+    t.pure += gGrams(h)*gKarat(h)/24; });
+  t.pl = t.value - t.paid; t.pct = t.paid ? t.pl/t.paid*100 : 0; return t;
+}
+function gCurLabel(){ return UI.goldCur==='SAR' ? CUR() : L('ج.م','EGP'); }
+function gAmt(egp,dec){ return fmtN(UI.goldCur==='SAR' ? egp/egpRate() : egp, dec); }
+function gMoney(egp){ return '<span class="num">'+gAmt(egp)+'</span>'; }
+function gSigned(egp){ var v = UI.goldCur==='SAR' ? egp/egpRate() : egp; return '<span class="num">'+(v<0?'−':'+')+fmtN(Math.abs(v))+'</span>'; }
+function plClass(v){ return v>0.5 ? 'up' : v<-0.5 ? 'down' : 'flat'; }
+function arrow(v){ return v>0.5 ? '▲' : v<-0.5 ? '▼' : '•'; }
+function gName(h){
+  var q = fmtN(h.qty,2);
+  if(h.kind==='pound') return L(q+' جنيه دهب', q+' gold pound'+(Number(h.qty)===1?'':'s'));
+  if(h.kind==='bar') return L('سبيكة '+q+' جم عيار '+gKarat(h), q+' g bar · '+gKarat(h)+'k');
+  return L(q+' جم عيار '+gKarat(h), q+' g · '+gKarat(h)+'k');
+}
+// سعر امبارح (أو آخر يوم قبل النهارده) عشان نعرف طالع ولا نازل
+function gPrev(field){
+  var h=(D.goldHistory||[]), today=iso(new Date()).slice(0,10);
+  for(var i=h.length-1;i>=0;i--){ if(h[i].date<today && Number(h[i][field])>0) return Number(h[i][field]); }
+  var sr=(D.goldSeries||[]).filter(function(x){return x.d<today && x.p>0;}), p=gP();
+  if(sr.length && p && p.pound){ var last=sr[sr.length-1].p, ratio=Number(p[field])/p.pound; return field==='pound'? last : Math.round(last*ratio); }
+  return 0;
+}
+function spark(values, w, hgt){
+  values = values.filter(function(v){return v>0;});
+  if(values.length<2) return '<div class="dim" style="font-size:12px;text-align:center;padding:14px 0">'+L('الرسم هيظهر بعد كام يوم من تسجيل السعر','The chart appears after a few days of recorded prices')+'</div>';
+  var mn=Math.min.apply(null,values), mx=Math.max.apply(null,values), rg=(mx-mn)||1;
+  var pts=values.map(function(v,i){ return [ (i/(values.length-1))*w, hgt-4-((v-mn)/rg)*(hgt-12) ]; });
+  var up = values[values.length-1] >= values[0], col = up?'var(--good)':'var(--bad)';
+  var d = pts.map(function(p,i){return (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1);}).join(' ');
+  var last = pts[pts.length-1];
+  return '<svg class="spark" viewBox="0 0 '+w+' '+hgt+'" preserveAspectRatio="none" style="direction:ltr">'+
+    '<defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+(up?'#7ef0c6':'#ff8a8a')+'" stop-opacity=".35"/><stop offset="1" stop-color="'+(up?'#7ef0c6':'#ff8a8a')+'" stop-opacity="0"/></linearGradient></defs>'+
+    '<path d="'+d+' L'+w+' '+hgt+' L0 '+hgt+' Z" fill="url(#sg)"/>'+
+    '<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'+
+    '<circle cx="'+last[0]+'" cy="'+last[1]+'" r="3.5" fill="'+col+'"/></svg>';
+}
+function sinceTxt(at){
+  if(!at) return '';
+  var mins=Math.round((new Date()-pd(at))/60000);
+  if(mins<1) return L('دلوقتي','just now');
+  if(mins<60) return L('من '+mins+' دقيقة',mins+' min ago');
+  var h=Math.round(mins/60); if(h<24) return L('من '+h+' ساعة',h+' h ago');
+  return dayLabel(pd(at));
+}
+
+function vGold(){
+  var p = gP(), t = gTotals(), cls = plClass(t.pl);
+  var prevPound = gPrev('pound'), dayChg = (p && prevPound) ? (p.pound/prevPound - 1) : 0;
+  var dayChgValue = t.value - (t.value/(1+dayChg));
+  var cur = '<div class="seg mini" style="width:150px">'+[['EGP',L('جنيه','EGP')],['SAR',L('ريال','SAR')]].map(function(c){
+    return '<button class="'+(UI.goldCur===c[0]?'on':'')+'" onclick="setGoldCur(\''+c[0]+'\')">'+c[1]+'</button>';}).join('')+'</div>';
+
+  HEAD_X = cur; var h = '';
+
+  // الهيرو: دهبك يساوي كام دلوقتي + كسبان ولا خسران
+  h += '<div class="card hero goldHero"><canvas class="heroBg" aria-hidden="true"></canvas>'+
+    '<div class="label">'+L('دهبك يساوي دلوقتي','Your gold is worth now')+'</div>'+
+    '<div class="big">'+(p? countNum(UI.goldCur==='SAR'? t.value/egpRate() : t.value) : '—')+'<small>'+gCurLabel()+'</small></div>'+
+    (p ? '<div class="plBig '+cls+'"><span class="arr">'+arrow(t.pl)+'</span> '+gSigned(t.pl)+' <small>'+gCurLabel()+'</small> <span class="pct num">('+(t.pct>=0?'+':'')+t.pct.toFixed(1)+'%)</span></div>'+
+      '<div class="plCaption">'+(t.pl>0.5?L('إنت كسبان 🎉','You’re in profit 🎉'):t.pl<-0.5?L('إنت خسران دلوقتي','You’re down right now'):L('على قدّ اللي دفعته','Break-even'))+'</div>' : '')+
+    '<div class="goldMeta">'+
+      '<div><span>'+L('دفعت','You paid')+'</span><b>'+gMoney(t.paid)+'</b></div>'+
+      
+      (p&&prevPound?'<div><span>'+L('النهارده','Today')+'</span><b class="'+plClass(dayChgValue)+'">'+arrow(dayChgValue)+' '+gSigned(dayChgValue)+'</b></div>':'')+
+    '<div class="wide"><span>'+L('عندك','You hold')+'</span><b><span class="num">'+fmtN(t.pounds,2)+'</span> '+L('جنيه دهب','gold pounds')+(t.grams?' + <span class="num">'+fmtN(t.grams,2)+'</span> '+L('جم سبايك','g of bars'):'')+' · '+L('يعني ','≈ ')+'<span class="num">'+fmtN(t.pure,1)+'</span> '+L('جم دهب صافي (عيار 24)','g of pure gold (24k)')+'</b></div>'+
+    '</div></div>';
+
+  // سعر السوق
+  if(p){
+    var rowsP = [
+      ['pound', L('الجنيه الدهب','Gold pound'), L('8 جرام عيار 21','8 g · 21k'), p.pound],
+      ['g21', L('جرام عيار 21','Gram · 21k'), '', p.g21],
+      ['g24', L('جرام عيار 24','Gram · 24k'), '', p.g24],
+      ['g18', L('جرام عيار 18','Gram · 18k'), '', p.g18]
+    ];
+    h += '<div class="card"><h3>'+L('سعر السوق','Market price')+' <span class="liveDot '+(p.live?'on':'')+'">'+(p.live?L('مباشر','Live'):L('آخر سعر','Last price'))+' · '+sinceTxt(p.at)+'</span></h3>'+
+      rowsP.map(function(r){
+        var prev = gPrev(r[0]), chg = prev? (r[3]-prev) : 0, pc = prev? chg/prev*100 : 0;
+        return '<div class="mkt"><div><b>'+r[1]+'</b>'+(r[2]?'<span>'+r[2]+'</span>':'')+'</div>'+
+          '<div class="mktR"><b class="num">'+gAmt(r[3])+' <small>'+gCurLabel()+'</small></b>'+
+          (prev?'<span class="chg '+plClass(chg)+'">'+arrow(chg)+' <span class="num">'+(pc>=0?'+':'')+pc.toFixed(2)+'%</span></span>':'<span class="chg flat">'+L('أول يوم','First day')+'</span>')+'</div></div>';
+      }).join('')+
+      '<div class="sparkWrap">'+spark((gSeries().length? gSeries().slice(-63).map(function(x){return x.p;}) : (D.goldHistory||[]).slice(-30).map(function(x){return x.pound;})).concat([p.pound]), 320, 70)+
+      '<div class="dim" style="font-size:11.5px;display:flex;justify-content:space-between;margin-top:4px"><span>'+(gSeries().length? L('سعر الجنيه آخر 3 شهور','Gold pound, last 3 months') : L('سعر الجنيه آخر 30 يوم','Gold pound, last 30 days'))+'</span>'+
+      '<span class="num">$'+fmtN(p.xauUsd,0)+'/oz · $1 = '+fmtN(p.usdEgp,2)+' '+L('ج','EGP')+'</span></div></div>'+
+      '<button class="btn ghost" style="margin-top:12px" onclick="editCalib()">⚖️ '+L('ظبط على سعر الصاغة','Match my jeweler’s price')+'</button>'+
+      '</div>' + gIndicator();
+  } else {
+    h += '<div class="card"><div class="empty"><span>📡</span>'+L('سعر الدهب مش متاح دلوقتي. هيتحدث أول ما النت يرجع.','Gold price isn’t available right now. It’ll update once you’re back online.')+'</div></div>';
+  }
+
+  // اللي اشتريته
+  var list = (D.gold||[]).slice().sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); });
+  h += '<div class="card"><h3>'+L('الدهب اللي اشتريته','Your purchases')+' <a onclick="editGold()">+ '+L('اشتريت دهب','Add purchase')+'</a></h3>'+
+    (list.length? list.map(function(x){
+      var v=gValue(x), pdd=gPaid(x), pl=v-pdd, pc=pdd?pl/pdd*100:0;
+      return '<div class="tx" onclick="editGold(\''+x.id+'\')"><div class="ic goldIc">'+(x.kind==='pound'?'🪙':'🧈')+'</div>'+
+        '<div class="mid"><b>'+esc(gName(x))+'</b><span>'+L('دفعت ','Paid ')+gMoney(pdd)+(x.currency==='SAR'?' ('+L('بالريال','in SAR')+')':'')+(x.date?' · '+dShort(pd(x.date)):'')+(x.note?' · '+esc(x.note):'')+'</span></div>'+
+        '<div style="text-align:end"><div class="amt">'+(p?gMoney(v):'—')+'</div>'+(p?'<span class="chg '+plClass(pl)+'">'+arrow(pl)+' '+gSigned(pl)+' <span class="num">('+(pc>=0?'+':'')+pc.toFixed(1)+'%)</span></span>':'')+'</div></div>';
+    }).join('') : '<div class="empty"><span>🪙</span>'+L('لسه مسجلتش دهب','No gold added yet')+'</div>')+'</div>';
+  return h;
+}
+UI.wCur = (function(){ try{ return localStorage.getItem('sayad-wcur') || 'SAR'; }catch(e){ return 'SAR'; } })();
+function setWCur(c){ UI.wCur=c; try{ localStorage.setItem('sayad-wcur',c); }catch(e){} render(); }
+function setGoldCur(c){ UI.goldCur=c; try{ localStorage.setItem('sayad-goldcur',c); }catch(e){} render(); }
+
+function editGold(id){
+  var x = id ? (D.gold||[]).filter(function(g){return g.id===id;})[0] : {kind:'pound', karat:21, qty:'', paid:'', currency:'EGP', date:iso(new Date()).slice(0,10), note:''};
+  draft = {id:id, kind:x.kind==='pound'?'pound':'grams', karat:gKarat(x), currency:x.currency||'EGP', mode:'total'};
+  if(x.kind==='bar') draft.kind='grams';
+  openSheet('<h2>🪙 '+(id?esc(gName(x)):L('اشتريت دهب','Add a gold purchase'))+'</h2>'+
+    '<div class="field"><label>'+L('نوعه','Type')+'</label><div class="seg" id="gKind">'+
+      '<button class="'+(draft.kind==='pound'?'on':'')+'" onclick="gSet(\'kind\',\'pound\')">'+L('جنيه دهب','Gold pound')+'</button>'+
+      '<button class="'+(draft.kind==='grams'?'on':'')+'" onclick="gSet(\'kind\',\'grams\')">'+L('سبيكة / جرامات','Bar / grams')+'</button></div></div>'+
+    '<div class="grid2"><div class="field"><label id="gQL">'+(draft.kind==='pound'?L('عدد الجنيهات','Number of pounds'):L('الوزن بالجرام','Weight (g)'))+'</label><input id="gQ" inputmode="decimal" value="'+esc(x.qty)+'" oninput="gPreview()"></div>'+
+    '<div class="field" id="gKarF" style="display:'+(draft.kind==='pound'?'none':'block')+'"><label>'+L('العيار','Karat')+'</label><select id="gKar" onchange="draft.karat=+this.value;gPreview()">'+
+      [24,21,18].map(function(k){return '<option value="'+k+'"'+(draft.karat===k?' selected':'')+'>'+k+'</option>';}).join('')+'</select></div></div>'+
+    '<div class="field"><label>'+L('دفعت بالعملة','Paid in')+'</label><div class="seg" id="gCur">'+
+      '<button class="'+(draft.currency==='EGP'?'on':'')+'" onclick="gSet(\'currency\',\'EGP\')">'+L('جنيه مصري','Egyptian pound')+'</button>'+
+      '<button class="'+(draft.currency==='SAR'?'on':'')+'" onclick="gSet(\'currency\',\'SAR\')">'+L('ريال','Saudi riyal')+'</button></div></div>'+
+    '<div class="field"><label>'+L('السعر','Price')+'</label><div class="seg mini" id="gMode" style="margin-bottom:8px">'+
+      '<button class="on" onclick="gSet(\'mode\',\'total\')">'+L('الإجمالي','Total')+'</button>'+
+      '<button onclick="gSet(\'mode\',\'unit\')" id="gUnitBtn">'+(draft.kind==='pound'?L('للجنيه','Per pound'):L('للجرام','Per gram'))+'</button></div>'+
+      '<input id="gP" inputmode="decimal" value="'+esc(x.paid)+'" oninput="gPreview()" placeholder="0"></div>'+
+    '<div class="grid2"><div class="field"><label>'+L('التاريخ','Date')+'</label><input type="date" id="gD" value="'+esc(String(x.date||'').slice(0,10))+'"></div>'+
+    '<div class="field"><label>'+L('ملاحظة','Note')+'</label><input id="gN" value="'+esc(x.note)+'" placeholder="'+L('اختياري','Optional')+'"></div></div>'+
+    '<div class="gPrev" id="gPrev"></div>'+
+    '<div class="btns"><button class="btn" onclick="saveGoldForm()">'+L('حفظ','Save')+'</button>'+(id?delBtn('delGold()'):'')+'</div>');
+  gPreview();
+}
+function gSet(k,v){
+  draft[k]=v;
+  var ids={kind:'gKind',currency:'gCur',mode:'gMode'};
+  [].forEach.call(document.getElementById(ids[k]).children,function(b,i){
+    var vals = k==='kind'?['pound','grams']:k==='currency'?['EGP','SAR']:['total','unit']; b.classList.toggle('on', vals[i]===v); });
+  if(k==='kind'){
+    document.getElementById('gKarF').style.display = v==='pound'?'none':'block';
+    document.getElementById('gQL').textContent = v==='pound'?L('عدد الجنيهات','Number of pounds'):L('الوزن بالجرام','Weight (g)');
+    document.getElementById('gUnitBtn').textContent = v==='pound'?L('للجنيه','Per pound'):L('للجرام','Per gram');
+  }
+  gPreview();
+}
+function gFormItem(){
+  var q = parseFloat(document.getElementById('gQ').value)||0, pr = parseFloat(document.getElementById('gP').value)||0;
+  var total = draft.mode==='unit' ? pr*q : pr;
+  return {id:draft.id, kind:draft.kind==='pound'?'pound':(q>0&&draft.karat===24?'bar':'grams'), karat:draft.kind==='pound'?21:draft.karat, qty:q, paid:Math.round(total*100)/100,
+    currency:draft.currency, date:document.getElementById('gD').value, note:document.getElementById('gN').value};
+}
+function gPreview(){
+  var el=document.getElementById('gPrev'); if(!el) return;
+  var it=gFormItem(); if(!(it.qty>0)){ el.innerHTML=''; return; }
+  if(!gP()){ el.innerHTML='<span class="dim">'+L('سعر السوق مش متاح دلوقتي','Market price unavailable right now')+'</span>'; return; }
+  var v=gValue(it), paid=gPaid(Object.assign({},it,{fx:it.currency==='SAR'?egpRate():0})), pl=v-paid;
+  el.innerHTML = '<div class="row"><span class="muted">'+L('قيمته دلوقتي','Worth now')+'</span><b class="num">'+fmtN(v)+' '+L('ج.م','EGP')+'</b></div>'+
+    (it.paid>0?'<div class="row" style="margin-top:6px"><span class="muted">'+(pl>=0?L('هتبقى كسبان','You’d be up'):L('هتبقى خسران','You’d be down'))+'</span><b class="chg '+plClass(pl)+'">'+arrow(pl)+' <span class="num">'+fmtN(Math.abs(pl))+' '+L('ج.م','EGP')+' ('+(paid?(pl/paid*100).toFixed(1):'0')+'%)</span></b></div>':'')+
+    (it.paid>0&&draft.mode==='total'?'<div class="dim" style="font-size:12px;margin-top:6px">'+(draft.kind==='pound'?L('يعني ','That’s ')+fmtN(it.paid/it.qty)+L(' للجنيه',' per pound'):L('يعني ','That’s ')+fmtN(it.paid/it.qty)+L(' للجرام',' per gram'))+' '+(it.currency==='SAR'?CUR():L('ج.م','EGP'))+'</div>':'');
+}
+function saveGoldForm(){
+  var it=gFormItem();
+  if(!(it.qty>0)) return toast(L('اكتب الكمية','Enter the quantity'));
+  if(!(it.paid>0)) return toast(L('اكتب السعر','Enter the price'));
+  if(draft.id){ var old=(D.gold||[]).filter(function(g){return g.id===draft.id;})[0]; if(old && old.currency===it.currency) it.fx=old.fx; }
+  busy(call('saveGold', it), L('اتحفظ ✓','Saved ✓'));
+}
+function delGold(){ if(confirm(L('تمسح الشروة دي؟','Delete this purchase?'))) busy(call('deleteGold', draft.id), L('اتمسحت','Deleted')); }
+function editCalib(){
+  var p=gP();
+  openSheet('<h2>⚖️ '+L('ظبط على سعر الصاغة','Match your jeweler’s price')+'</h2>'+
+    '<div class="dim" style="font-size:13px;margin-bottom:12px">'+L('السعر محسوب من سعر الدهب العالمي والدولار. اكتب سعر بيع الجنيه الدهب اللي الصايغ قالهولك النهارده، والأبلكيشن هيتظبط عليه على طول.',
+      'Prices are calculated from the global gold price and the dollar rate. Enter today’s gold pound price from your jeweler and the app will match it from now on.')+'</div>'+
+    '<div class="field"><label>'+L('سعر الجنيه الدهب (جنيه مصري)','Gold pound price (EGP)')+'</label><input class="amountIn" id="cP" inputmode="decimal" value="'+(p?p.pound:'')+'"></div>'+
+    '<button class="btn" onclick="var v=+document.getElementById(\'cP\').value; if(!(v>0)) return toast(L(\'اكتب السعر\',\'Enter the price\')); busy(call(\'calibrateGold\', v), L(\'اتظبط ✓\',\'Matched ✓\'))">'+L('ظبّط','Match')+'</button>');
+}
+
+/* ---------- فلوسي ---------- */
+function vWealth(){
+  var s = S(), g = goldSar();
+  var eg = UI.wCur==='EGP', fx = egpRate(), wv = function(v){ return eg ? v*fx : v; }, wl = eg ? L('ج.م','EGP') : CUR();
+  var wseg = '<div class="seg mini" style="width:130px">'+[['SAR',L('ريال','SAR')],['EGP',L('جنيه','EGP')]].map(function(c){
+    return '<button class="'+(UI.wCur===c[0]?'on':'')+'" onclick="setWCur(\''+c[0]+'\')">'+c[1]+'</button>';}).join('')+'</div>';
+  var h = '<div class="card hero violet"><canvas class="heroBg" aria-hidden="true"></canvas><div class="row"><div class="label">'+L('كل اللي معاك','Everything you have')+'</div>'+wseg+'</div><div class="big">'+countNum(wv(wealth()))+'<small>'+wl+'</small></div>'+
+    (eg?'<div class="dim" style="font-size:12px;margin-top:-4px">'+L('الريال = ','1 SAR = ')+'<span class="num">'+fx.toFixed(2)+'</span> '+L('جنيه','EGP')+'</div>':'')+
+    splitBar([[s.bankBalance,'#2dd4bf'],[s.cash,'#60a5fa'],[g,'#eab308']])+
+    '<div class="legend"><span><i style="background:#2dd4bf"></i>'+L('بنك','Bank')+'</span><span><i style="background:#60a5fa"></i>'+L('كاش','Cash')+'</span><span><i style="background:#eab308"></i>'+L('دهب','Gold')+'</span></div>'+
+    (debtsTotal()?'<div class="row" style="margin-top:14px;font-size:13.5px"><span class="muted">'+L('بعد الأقساط والكريدت (','After debts (')+money(wv(debtsTotal()))+')</span><b><span class="num">'+money(wv(wealth()-debtsTotal()))+'</span> '+wl+'</b></div>':'')+'</div>';
+  h += '<div class="card">'+
+    kv('🏦 '+L('رصيد البنك','Bank balance'), money(s.bankBalance), "editNum('bankBalance')", s.bankBalanceAt?L('بيتحدث لوحده مع كل عملية · ','Updates itself with every transaction · ')+dayLabel(pd(s.bankBalanceAt)):'')+
+    kv('💵 '+L('كاش معاك','Cash on hand'), money(s.cash), "editNum('cash')", L('لما تسجل مصروف كاش بيتخصم من هنا','Cash expenses you add are taken from here'))+
+    kv('🧾 '+L('عليك أقساط وكريدت','Installments & credit owed'), '<span class="warn">−'+money(debtsTotal())+'</span>', "go('inst')", L('كل الأقساط اللي لسه متدفعتش + الكريدت كارد','All unpaid installments + credit cards'))+
+    kv('🪙 '+L('الدهب','Gold'), money(g), "go('gold')", (function(){ var t=gTotals(); return D.goldPrice ? '<span class="'+(t.pl>=0?'good':'bad')+'">'+arrow(t.pl)+' <span class="num">'+(t.pct>=0?'+':'')+t.pct.toFixed(1)+'%</span></span> · '+L('التفاصيل في تاب الدهب','Details in the Gold tab') : L('التفاصيل في تاب الدهب','Details in the Gold tab'); })())+
+    '</div>';
+  return h;
+}
+function vSettings(){
+  var s = S(), h = '';
+  h += '<div class="section-title">'+L('إنت','You')+'</div><div class="card">'+
+    kv('👤 '+L('البروفايل','Profile'), esc(userName()), "editProfile()")+
+    kv('🌐 '+L('اللغة','Language'), L('العربي','English'), "editLang()")+
+    kv('🔒 '+L('قفل بـ Face ID','Face ID lock'), Lock.cfg().on?'<span class="good">'+L('شغال','On')+'</span>':L('مقفول','Off'), "editLock()")+
+    '</div>';
+  h += '<div class="section-title">'+L('الميزانية','Budget')+'</div><div class="card">'+
+    kv(L('ميزانية الشهر','Monthly budget'), money(s.monthlyBudget), "editNum('monthlyBudget')")+
+    kv(L('المرتب المتوقع','Expected salary'), money(s.expectedSalary), "editNum('expectedSalary')")+
+    kv(L('هدف الفريلانس','Freelance goal'), money(s.freelanceTarget), "editNum('freelanceTarget')")+
+    kv(L('الشهر بيبدأ','Month starts'), s.monthMode==='day' ? L('يوم ','Day ')+'<span class="num">'+(s.monthStartDay||1)+'</span>' : L('مع نزول المرتب','When salary lands'), "editMonthMode()", s.monthMode==='day'?'':L('بتصرف من المرتب لحد المرتب اللي بعده','You spend from one salary to the next'))+
+    kv(L('الأسبوع بيبدأ','Week starts on'), DAY(Number(s.weekStartDay)||0), "editWeek()")+
+    kv(L('ميزانية كل بند','Budget per category'), FWD(), "editBudgets()")+
+    '</div>';
+  h += '<div class="section-title">💳 '+L('الكريدت كارد','Credit card')+'</div><div class="card">'+
+    kv(L('آخر أرقام الكارت','Card last digits'), '<span class="num">'+esc(String(s.ccCards||'8806').replace(/\|/g,' · '))+'</span>', "editCcCards()", L('كل شرا بيها بيتجمع كدين الشهر ده','Every purchase adds to this month’s credit bill'))+
+    kv(L('يوم السداد','Payment day'), L('يوم ','Day ')+'<span class="num">'+(s.ccDueDay||1)+'</span>'+L(' في الشهر اللي بعده',' of next month'), "editNum('ccDueDay')")+
+    kv(L('كلمات المرتب والفريلانس','Salary & freelance keywords'), FWD(), "editKeywords()", L('عشان يعرف إن الفلوس اللي دخلت مرتب ولا فريلانس','How it tells salary from freelance money'))+
+    '</div>';
+
+  var rules = D.rules||[];
+  h += '<div class="section-title">'+L('حاجات اتعلمها لوحده','Things it learned')+' (<span class="num">'+rules.length+'</span>)</div><div class="card">'+(rules.length? rules.map(function(r){
+    return '<div class="kv" style="cursor:default"><span>'+esc(r.pattern)+'</span><div style="display:flex;gap:10px;align-items:center"><b>'+catLabel(r.category)+'</b><button onclick="delRule(\''+esc(r.pattern).replace(/\\/g,'\\\\').replace(/&#39;/g,"\\'")+'\')" class="bad" aria-label="'+L('شيل','Remove')+'">✕</button></div></div>';
+  }).join('') : '<div class="dim" style="font-size:13px">'+L('لما تغيّر بند عملية وتختار "طبّق على الكل"، هيفتكرها هنا ويصنّف بيها بعد كده.','When you change a transaction’s category and pick “apply to all”, it’s remembered here and used from then on.')+'</div>')+'</div>';
+
+  h += '<div class="section-title">'+L('بيجيب العمليات منين','Where transactions come from')+'</div><div class="card" style="font-size:13.5px">'+
+    '<div class="kv" style="cursor:default"><span>⚡ '+L('رسايل الراجحي من الآيفون مباشرة','Al Rajhi messages, straight from the iPhone')+'</span><b class="good">'+L('في ثانية','Instantly')+'</b></div>'+
+    '<div class="kv" style="cursor:default"><span>📩 '+L('نسخة احتياطي على الجيميل','Backup copy via Gmail')+'</span><b>'+L('كل 5 دقايق','Every 5 min')+'</b></div>'+
+    '<div class="kv" style="cursor:default"><span>💳 '+L('إيميلات تابي وتمارا','Tabby & Tamara emails')+'</span><b>'+L('كل 5 دقايق','Every 5 min')+'</b></div>'+
+    '<div class="dim" style="margin-top:8px">'+L('الأوتوميشن على الآيفون بيبعت كل رسالة فيها 5836 أو 1649 للأبلكيشن على طول، ونسخة لجيميلك احتياطي لو النت فصل. المكرر بيتشال لوحده.',
+      'The iPhone automation sends every message with 5836 or 1649 straight to the app, plus a copy to your Gmail in case you’re offline. Duplicates are removed automatically.')+'</div></div>';
+  return h;
+}
+function kv(k,v,on,sub){ return '<div class="kv" onclick="'+on+'"><div><span>'+k+'</span>'+(sub?'<div class="dim" style="font-size:11.5px">'+sub+'</div>':'')+'</div><b>'+v+'</b></div>'; }
+
+/* ============ الشيتات (Bottom sheets) ============ */
+function openSheet(html){ var s=document.getElementById('sheet'); s.innerHTML='<div class="grab"></div>'+html; s.scrollTop=0; document.getElementById('sheetBg').style.display='block'; Motion.lock(true); s._open=true; requestAnimationFrame(function(){ if(s._open) s.classList.add('open');}); }
+function closeSheet(){ var s=document.getElementById('sheet'); s._open=false; s.classList.remove('open'); document.getElementById('sheetBg').style.display='none'; Motion.lock(false); }
+document.getElementById('sheetBg').onclick = closeSheet;
+
+var draft = null;
+function catGrid(type, sel){
+  return '<div class="catgrid">'+(type==='income'?INC:EXP).map(function(c){
+    return '<button class="'+(sel===c?'on':'')+'" onclick="pickCat(this,\''+c+'\')"><span>'+catSvg(c)+'</span>'+esc(catName(c))+'</button>';}).join('')+'</div>';
+}
+function pickCat(el,c){ draft.category=c; [].forEach.call(el.parentNode.children,function(b){b.classList.toggle('on',b===el);}); var cl=document.getElementById('clientField'); if(cl) cl.style.display = c==='فريلانس'?'block':'none';
+  // الإضافة السريعة: المبلغ مكتوب + اخترت البند = يتسجل على طول (الفريلانس بيستنى اسم العميل)
+  if(draft.quick && c!=='فريلانس' && parseAmt(document.getElementById('fAmt').value)>0) saveNew();
+  else if(draft.quick && c==='فريلانس' && !document.getElementById('qSave')){ cl.insertAdjacentHTML('afterend','<button class="btn" id="qSave" onclick="saveNew()">'+L('ضيف','Add')+'</button>'); } }
+function parseAmt(v){ return parseFloat(String(v||'').replace(/[٠-٩]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'.indexOf(d);}).replace(',','.')); }
+function delBtn(fn){ return '<button class="btn danger" style="width:auto;padding:14px 20px" onclick="'+fn+'">'+L('مسح','Delete')+'</button>'; }
+
+function editTx(id){
+  var t = D.tx.filter(function(x){return x.id===id;})[0]; if(!t) return;
+  draft = {id:id, category:t.category, type:t.type};
+  var same = D.tx.filter(function(x){return x.merchant && x.merchant===t.merchant;}).length;
+  openSheet('<h2>'+esc(t.merchant||catName(t.category))+'</h2>'+
+    '<div class="row" style="margin-bottom:14px"><b style="font-size:30px;font-weight:400" class="'+(t.type==='income'?'good':'')+'"><span class="num">'+(t.type==='income'?'+':'')+fmtN(t.amount,2)+'</span> <small class="muted" style="font-size:14px">'+CUR()+'</small></b><span class="muted" style="font-size:13px">'+dayLabel(pd(t.date))+' '+hhmm(pd(t.date))+'</span></div>'+
+    (t.raw?'<div class="field"><label>'+L('رسالة البنك','Bank message')+'</label><div class="raw">'+esc(t.raw)+'</div></div>':'')+
+    '<div class="field"><label>'+L('البند','Category')+'</label>'+catGrid(t.type,t.category)+'</div>'+
+    (t.type==='income'?'<div class="field" id="clientField" style="display:'+(t.category==='فريلانس'?'block':'none')+'"><label>'+L('العميل','Client')+'</label><input id="fClient" list="clients" placeholder="'+L('مثلاً','e.g.')+' Al Manea">'+clientsList()+'</div>':'')+
+    (t.merchant?'<label class="check"><input type="checkbox" id="fAll" checked> '+L('طبّق على كل عمليات «'+esc(t.merchant)+'»'+(same>1?' ('+same+')':'')+' واللي جاية','Apply to all “'+esc(t.merchant)+'” transactions'+(same>1?' ('+same+')':'')+' and future ones')+'</label>':'')+
+    '<div class="field"><label>'+L('ملاحظة','Note')+'</label><input id="fNote" value="'+esc(t.note||'')+'" placeholder="'+L('اختياري','Optional')+'"></div>'+
+    '<div class="btns"><button class="btn" onclick="saveTx()">'+L('حفظ','Save')+'</button>'+delBtn('delTx()')+'</div>');
+}
+function clientsList(){ var c={}; D.freelance.forEach(function(f){c[f.client]=1;}); return '<datalist id="clients">'+Object.keys(c).map(function(k){return '<option value="'+esc(k)+'">';}).join('')+'</datalist>'; }
+function saveTx(){
+  var all = document.getElementById('fAll'), cl=document.getElementById('fClient');
+  var patch = {category:draft.category, note:document.getElementById('fNote').value};
+  if(cl && cl.value) patch.client = cl.value;
+  busy(call('updateTx', draft.id, patch, all?all.checked:false), L('اتحفظ ✓','Saved ✓'));
+}
+function delTx(){ if(confirm(L('تمسح العملية دي؟','Delete this transaction?'))) busy(call('deleteTx', draft.id), L('اتمسحت','Deleted')); }
+
+function addTx(){
+  draft = {type:'expense', category:'', source:'cash', quick:true};
+  openSheet('<h2>'+L('كاش داخل ولا خارج؟','Cash in or out?')+'</h2>'+
+    '<div class="seg" style="margin-bottom:14px"><button class="on" id="tE" onclick="setType(\'expense\')">− '+L('صرفت','Spent')+'</button><button id="tI" onclick="setType(\'income\')">+ '+L('دخلي','Received')+'</button></div>'+
+    '<input class="amountIn" id="fAmt" inputmode="decimal" placeholder="0" autocomplete="off">'+
+    '<div class="field" style="margin-top:12px"><input id="fMer" placeholder="'+L('على إيه؟ (اختياري) قهوة، تاكسي، بقالة…','What for? (optional) coffee, taxi…')+'"></div>'+
+    '<div class="field" id="clientField" style="display:none"><label>'+L('العميل','Client')+'</label><input id="fClient" list="clients" placeholder="'+L('مثلاً','e.g.')+' Bread Ahead">'+clientsList()+'</div>'+
+    '<div class="field"><label>'+L('اختار البند · هيتسجل على طول','Pick a category · saves right away')+'</label><div id="cg">'+catGrid('expense','')+'</div></div>'+
+    '<details class="more"><summary>'+L('تفاصيل أكتر','More options')+'</summary>'+
+    '<div class="grid2" style="margin-top:10px"><div class="field"><label>'+L('اتدفع','Paid with')+'</label><select id="fSrc"><option value="cash">'+L('كاش (يتخصم من الكاش)','Cash (taken from cash)')+'</option><option value="manual">'+L('كارت / تاني','Card / other')+'</option></select></div>'+
+    '<div class="field"><label>'+L('إمتى','When')+'</label><input type="datetime-local" id="fDate" value="'+iso(new Date())+'"></div></div></details>');
+  setTimeout(function(){ var a=document.getElementById('fAmt'); if(a) a.focus(); }, 280);
+}
+function setType(t){
+  draft.type=t; draft.category = '';
+  document.getElementById('tE').classList.toggle('on',t==='expense'); document.getElementById('tI').classList.toggle('on',t==='income');
+  document.getElementById('cg').innerHTML = catGrid(t, draft.category);
+  document.getElementById('clientField').style.display = 'none';
+}
+function saveNew(){
+  var amt = parseAmt(document.getElementById('fAmt').value);
+  if(!(amt>0)) return toast(L('اكتب المبلغ الأول','Enter the amount first'));
+  if(!draft.category) return toast(L('اختار البند','Pick a category'));
+  var cl = document.getElementById('fClient');
+  busy(call('addTx',{type:draft.type, amount:amt, category:draft.category, merchant:document.getElementById('fMer').value||draft.category,
+    source:document.getElementById('fSrc').value, date:document.getElementById('fDate').value, client: cl?cl.value:''}), L('اتسجلت ✓','Added ✓'));
+}
+
+function editFreelance(id){
+  var f = id? D.freelance.filter(function(x){return x.id===id;})[0] : {date:iso(new Date()).slice(0,10),client:'',amount:'',status:'لسه',note:''};
+  draft = {id:id};
+  openSheet('<h2>'+(id?L('فاتورة ','Invoice · ')+esc(f.client):L('فاتورة فريلانس جديدة','New freelance invoice'))+'</h2>'+
+    '<div class="field"><label>'+L('العميل','Client')+'</label><input id="fC" list="clients" value="'+esc(f.client)+'">'+clientsList()+'</div>'+
+    '<div class="grid2"><div class="field"><label>'+L('المبلغ (ريال)','Amount (SAR)')+'</label><input id="fA" inputmode="decimal" value="'+esc(f.amount)+'"></div>'+
+    '<div class="field"><label>'+L('التاريخ','Date')+'</label><input type="date" id="fD" value="'+esc(String(f.date).slice(0,10))+'"></div></div>'+
+    '<div class="field"><label>'+L('الحالة','Status')+'</label><select id="fS"><option value="لسه"'+(f.status==='لسه'?' selected':'')+'>'+stName('لسه')+'</option><option value="اتقبض"'+(f.status==='اتقبض'?' selected':'')+'>'+stName('اتقبض')+'</option></select></div>'+
+    '<div class="field"><label>'+L('ملاحظة','Note')+'</label><input id="fN" value="'+esc(f.note)+'"></div>'+
+    '<div class="dim" style="font-size:12.5px;margin-bottom:10px">💡 '+L('لما الفلوس تنزل في البنك بنفس المبلغ، الفاتورة هتتعلم «اتقبض» لوحدها.','When the same amount lands in your bank, the invoice is marked “Paid” on its own.')+'</div>'+
+    '<div class="btns"><button class="btn" onclick="saveFl()">'+L('حفظ','Save')+'</button>'+(id?delBtn('delFl()'):'')+'</div>');
+}
+function saveFl(){
+  var a = parseFloat(document.getElementById('fA').value); if(!(a>0)) return toast(L('اكتب المبلغ','Enter an amount'));
+  var o = {client:document.getElementById('fC').value||L('عميل','Client'), amount:a, date:document.getElementById('fD').value, status:document.getElementById('fS').value, note:document.getElementById('fN').value};
+  if(draft.id){ var old=D.freelance.filter(function(x){return x.id===draft.id;})[0]; o = Object.assign({},old,o); }
+  busy(call('saveFreelance',o),L('اتحفظت ✓','Saved ✓'));
+}
+function delFl(){ if(confirm(L('تمسح الفاتورة؟','Delete this invoice?'))) busy(call('deleteFreelance',draft.id),L('اتمسحت','Deleted')); }
+function toggleFl(id){ var f=D.freelance.filter(function(x){return x.id===id;})[0]; var o=Object.assign({},f,{status:f.status==='لسه'?'اتقبض':'لسه'}); busy(call('saveFreelance',o), o.status==='اتقبض'?L('اتقبض ✓','Marked paid ✓'):L('رجعت «لسه»','Back to pending')); }
+
+var NUM_LABEL = {
+  bankBalance:['رصيد البنك (ريال)','Bank balance (SAR)'], cash:['الكاش اللي معاك (ريال)','Cash on hand (SAR)'],
+  monthlyBudget:['ميزانية المصاريف في الشهر (ريال)','Monthly spending budget (SAR)'], expectedSalary:['المرتب في الشهر (ريال)','Monthly salary (SAR)'],
+  freelanceTarget:['الفريلانس المتوقع في الشهر (ريال)','Expected freelance per month (SAR)'],
+  monthStartDay:['الشهر بيبدأ يوم كام؟','Which day does your month start?'],
+  ccDueDay:['بتسدد الكريدت يوم كام في الشهر اللي بعده؟','Which day of next month is the credit card due?']
+};
+function editMonthMode(){
+  var m=S().monthMode||'salary';
+  openSheet('<h2>'+L('الشهر بيبدأ إمتى؟','When does your month start?')+'</h2>'+
+    '<button class="btn '+(m!=='day'?'':'ghost')+'" style="margin-bottom:8px" onclick="busy(call(\'saveSettings\',{monthMode:\'salary\'}),L(\'اتحفظ ✓\',\'Saved ✓\'))">💼 '+L('مع نزول المرتب','When my salary lands')+'</button>'+
+    '<button class="btn '+(m==='day'?'':'ghost')+'" onclick="closeSheet();busy(call(\'saveSettings\',{monthMode:\'day\'}),L(\'اتحفظ ✓\',\'Saved ✓\'));setTimeout(function(){editNum(\'monthStartDay\');},400)">📅 '+L('في يوم ثابت','On a fixed day')+'</button>'+
+    '<div class="dim" style="font-size:12.5px;margin-top:10px">'+L('«مع المرتب»: الشهر بيبدأ يوم ما المرتب ينزل فعلاً، ولو اتأخر بتفضل في الشهر القديم لحد ما ينزل.','“With salary”: the month starts the day your salary actually lands. If it’s late, you stay in the old month until it arrives.')+'</div>');
+}
+function editCcCards(){
+  openSheet('<h2>💳 '+L('آخر أرقام الكريدت كارد','Credit card last digits')+'</h2><input class="amountIn" id="fCc" inputmode="numeric" value="'+esc(String(S().ccCards||'8806').replace(/\|/g,' '))+'">'+
+    '<div class="dim" style="font-size:12.5px;margin:8px 0">'+L('لو عندك أكتر من كارت، اكتبهم بمسافة بينهم.','More than one card? Separate them with spaces.')+'</div>'+
+    '<div class="btns"><button class="btn" onclick="var v=document.getElementById(\'fCc\').value.replace(/[^0-9]+/g,\'|\').replace(/^\\||\\|$/g,\'\');busy(call(\'saveSettings\',{ccCards:v||\'8806\'}),L(\'اتحفظ ✓\',\'Saved ✓\'))">'+L('حفظ','Save')+'</button></div>');
+}
+function editNum(key){
+  draft={key:key};
+  var lb = NUM_LABEL[key]||[key,key];
+  openSheet('<h2>'+L(lb[0],lb[1])+'</h2><input class="amountIn" id="fV" inputmode="decimal" value="'+esc(S()[key])+'"><div class="btns"><button class="btn" onclick="saveNum()">'+L('حفظ','Save')+'</button></div>');
+  setTimeout(function(){ var a=document.getElementById('fV'); a.focus(); a.select(); },280);
+}
+function saveNum(){ var v=parseFloat(document.getElementById('fV').value); if(isNaN(v)) return toast(L('رقم مش مظبوط','That’s not a valid number')); var p={}; p[draft.key]=v; if(draft.key==='bankBalance') p.bankBalanceAt=iso(new Date()); busy(call('saveSettings',p),L('اتحفظ ✓','Saved ✓')); }
+function editWeek(){
+  openSheet('<h2>'+L('الأسبوع بيبدأ يوم','Week starts on')+'</h2>'+[6,0,1].map(function(d){return '<button class="btn ghost" style="margin-bottom:8px" onclick="busy(call(\'saveSettings\',{weekStartDay:'+d+'}),L(\'اتحفظ ✓\',\'Saved ✓\'))">'+DAY(d)+'</button>';}).join(''));
+}
+function editLang(){
+  openSheet('<h2>🌐 '+L('اللغة','Language')+'</h2>'+
+    '<button class="btn '+(LANG==='ar'?'':'ghost')+'" style="margin-bottom:8px" onclick="closeSheet();setLang(\'ar\')">العربي</button>'+
+    '<button class="btn '+(LANG==='en'?'':'ghost')+'" onclick="closeSheet();setLang(\'en\')">English</button>');
+}
+function editBudgets(){
+  var b=S().budgets||{};
+  openSheet('<h2>'+L('ميزانية كل بند في الشهر','Monthly budget per category')+'</h2>'+EXP.map(function(c,i){
+    return '<div class="row" style="margin-bottom:8px"><span style="flex:1">'+catLabel(c)+'</span><input style="width:110px;text-align:center" inputmode="decimal" id="b'+i+'" value="'+esc(b[c]||'')+'" placeholder="—"></div>';}).join('')+
+    '<div class="dim" style="font-size:12.5px;margin:8px 0">'+L('المجموع دلوقتي: ','Current total: ')+money(EXP.reduce(function(a,c){return a+(Number(b[c])||0);},0))+'</div>'+
+    '<button class="btn" onclick="saveBudgets()">'+L('حفظ','Save')+'</button>');
+}
+function saveBudgets(){ var b={}; EXP.forEach(function(c,i){ var v=parseFloat(document.getElementById('b'+i).value); if(v>0) b[c]=v; }); busy(call('saveSettings',{budgets:b}),L('اتحفظت ✓','Saved ✓')); }
+function editKeywords(){
+  var s=S();
+  openSheet('<h2>'+L('كلمات التعرّف','Recognition keywords')+'</h2>'+
+    '<div class="field"><label>'+L('الفلوس اللي بتدخل وفيها الكلمات دي = مرتب (افصل بـ |)','Incoming money with these words = salary (separate with |)')+'</label><textarea id="k1" rows="2">'+esc(s.salaryKeywords)+'</textarea></div>'+
+    '<div class="field"><label>'+L('الفلوس اللي بتدخل وفيها الكلمات دي = فريلانس','Incoming money with these words = freelance')+'</label><textarea id="k2" rows="3">'+esc(s.freelanceKeywords)+'</textarea></div>'+
+    '<button class="btn" onclick="busy(call(\'saveSettings\',{salaryKeywords:k1.value,freelanceKeywords:k2.value}),L(\'اتحفظ ✓\',\'Saved ✓\'))">'+L('حفظ','Save')+'</button>');
+}
+function delRule(p){ busy(call('deleteRule',p),L('اتشالت','Removed')); }
+
+/* ============ عام ============ */
+function busy(promise,msg){
+  return promise.then(function(d){ D=d; closeSheet(); render(); if(msg) toast(msg); }).catch(function(e){ toast(L('حصلت مشكلة: ','Something went wrong: ')+(e&&e.message||e)); });
+}
+function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(function(){t.classList.remove('show');},2200); }
+function go(t){ UI.tab=t; if(t!=='tx'){UI.txFilter='all';} Motion.toTop(); render(); }
+function sync(quiet){
+  if(UI.syncing) return; UI.syncing=true; render();
+  call('syncNow').then(function(r){ UI.syncing=false; D=r.data; render();
+      if(!quiet || r.added) toast(r.added? L('لقيت '+r.added+' عملية جديدة 🦈','Found '+r.added+' new transaction'+(r.added===1?'':'s')+' 🦈') : L('مفيش جديد','Nothing new')); })
+    .catch(function(e){ UI.syncing=false; render(); toast(L('مقدرتش أحدّث: ','Couldn’t refresh: ')+(e&&e.message||e)); });
+}
+/* ===== البار اللي تحت: كورة زجاج بتتزحلق ورا الأيقونة، وبتمشي مع صباعك لو سحبت ===== */
+var TabBar = (function(){
+  var bar = document.getElementById('tabs'), btns = [].slice.call(bar.querySelectorAll('button'));
+  var bub = document.createElement('span'); bub.className='tabBubble'; bub.setAttribute('aria-hidden','true'); bar.insertBefore(bub, bar.firstChild);
+  var drag=null, lastTab=null, G = typeof gsap!=='undefined';
+  function calm(){ return Motion.isReduced() || !G; }
+  function center(b){ return b.offsetLeft + b.offsetWidth/2; }
+  function setX(x, mode){
+    var tx = x - bub.offsetWidth/2;
+    if(calm() || mode==='instant'){ if(G) gsap.set(bub,{x:tx, scaleX:1, scaleY:1}); else bub.style.transform='translateX('+tx+'px)'; return; }
+    if(mode==='follow'){ gsap.to(bub,{x:tx, duration:.18, ease:'power3.out', overwrite:'auto'}); return; }
+    // نطّة ناعمة: بتتمط وهي ماشية وترجع لشكلها لما توصل
+    var dist = Math.abs(tx - (gsap.getProperty(bub,'x')||0));
+    gsap.to(bub,{x:tx, duration:.6, ease:'elastic.out(1,0.72)', overwrite:'auto'});
+    if(dist>4) gsap.fromTo(bub,{scaleX:1+Math.min(dist/260,.35), scaleY:1-Math.min(dist/600,.15)},{scaleX:1, scaleY:1, duration:.7, ease:'elastic.out(1,0.45)', overwrite:false});
+  }
+  function pop(b){
+    if(calm()) return; var svg=b.querySelector('svg'); if(!svg) return;
+    gsap.fromTo(svg,{scale:.6, rotate:-12},{scale:1, rotate:0, duration:.55, ease:'back.out(3)', clearProps:'transform'});
+  }
+  function nearest(x){ var best=btns[0], d=1e9; btns.forEach(function(b){ var dd=Math.abs(center(b)-x); if(dd<d){d=dd;best=b;} }); return best; }
+  function localX(e){ return e.clientX - bar.getBoundingClientRect().left; }
+  function clampX(x){ var c=btns.map(center), lo=Math.min.apply(null,c), hi=Math.max.apply(null,c); return Math.max(lo, Math.min(hi, x)); } // شغالة عربي (يمين←شمال) وإنجليزي
+
+  bar.addEventListener('pointerdown', function(e){
+    drag = {id:e.pointerId, x0:e.clientX, moved:false, target:e.target.closest('button')};
+    try{ bar.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  bar.addEventListener('pointermove', function(e){
+    if(!drag || e.pointerId!==drag.id) return;
+    if(!drag.moved && Math.abs(e.clientX-drag.x0) > 6){ drag.moved=true; bar.classList.add('dragging'); }
+    if(!drag.moved) return;
+    var x = clampX(localX(e)), n = nearest(x);
+    setX(x,'follow');
+    btns.forEach(function(b){ b.classList.toggle('near', b===n); });
+  });
+  function end(e){
+    if(!drag || (e && e.pointerId!==drag.id)) return;
+    var b = drag.moved ? nearest(clampX(localX(e))) : drag.target;
+    drag=null; bar.classList.remove('dragging'); btns.forEach(function(x){ x.classList.remove('near'); });
+    if(b && b.dataset.t!==UI.tab) go(b.dataset.t); else update(true);
+  }
+  bar.addEventListener('pointerup', end);
+  bar.addEventListener('pointercancel', function(e){ if(!drag) return; drag=null; bar.classList.remove('dragging'); btns.forEach(function(x){ x.classList.remove('near'); }); update(true); });
+  // الكيبورد (Enter/Space) لسه شغال
+  btns.forEach(function(b){ b.addEventListener('click', function(e){ if(e.detail===0) go(b.dataset.t); }); });
+  window.addEventListener('resize', function(){ update(false,true); });
+
+  function update(force, instant){
+    var tt = UI.tab==='inst'?'wealth':UI.tab;
+    var b = btns.filter(function(x){return x.dataset.t===tt;})[0] || btns[0];
+    var changed = lastTab!==null && lastTab!==UI.tab;
+    if(lastTab===null || instant) setX(center(b),'instant');
+    else if(changed || force) setX(center(b));
+    if(changed) pop(b);
+    lastTab = UI.tab;
+  }
+  return { update:update };
+})();
+document.getElementById('fab').onclick = addTx;
+document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') sync(true); });
+applyLang();
+
+/* ============ وضع تجريبي (لما تفتحه برّه Apps Script) ============ */
+var Demo = (function(){
+  var KEY='sayad-demo-v2', db;
+  function rnd(seed){ return function(){ seed=(seed*16807)%2147483647; return (seed-1)/2147483646; }; }
+  function build(){
+    var r = rnd(42), tx=[], id=0, now=new Date();
+    function add(d,type,amount,cat,mer,src,raw){ tx.push({id:'d'+(id++),date:iso(d),type:type,amount:Math.round(amount*100)/100,category:cat,merchant:mer,source:src||'sms',raw:raw||'',note:''}); }
+    var M = {
+      'أكل':[['Panda : Retail Co',15,90,.9],['BARNS',12,45,.7],['Shawerma House',25,45,.4],['COFE : SHAY SMSEM',5,25,.45],['STARBUCKS KSA',18,32,.2],['HungerStation',35,80,.25],['Keeta',30,70,.25],['Tamimi Markets',40,160,.15],['تحويل لنور',20,95,.12]],
+      'شوبينج':[['IKEA',30,300,.04],['Amazon.sa',40,400,.06],['ZARASA',120,300,.03],['JARIR BOOKSTORE',15,120,.03]],
+      'عربية':[['Uber',18,45,.18],['ALDREES',60,100,.05]],
+      'اشتراكات وأدوات شغل':[],'عناية شخصية وصيدلية':[['Nahdi Pharmacy',15,60,.05],['Eight Minutes Salon',20,40,.04]],
+      'حوالة شخصية':[['تحويل لحسين',120,400,.03]],
+      'مصاريف شغل':[['تحويل لنور',150,600,.01]]
+    };
+    var start = new Date(now.getFullYear(), now.getMonth()-3, 1);
+    for(var d=new Date(start); d<=now; d=addD(d,1)){
+      Object.keys(M).forEach(function(c){ M[c].forEach(function(m){ if(r()<m[3]){ var h=new Date(d); h.setHours(8+Math.floor(r()*14),Math.floor(r()*60)); if(h<=now) add(h,'expense',m[1]+r()*(m[2]-m[1]),c,m[0],'sms','شراء عبر نقاط البيع\nبطاقة: 1649;مدى-ابل باي\nمبلغ: SAR '+(0).toFixed(2)+'\nلدى: '+m[0]); } }); });
+      var dom=d.getDate(), at=function(hh){var x=new Date(d);x.setHours(hh,10);return x;};
+      if(dom===1) add(at(10),'expense',1500,'إيجار','Ejar — إيجار الشقة');
+      if(dom===2) add(at(11),'expense',500,'مساعدة البيت (مصر)','تحويل لمصر');
+      if(dom===5) add(at(9),'expense',126.5,'موبايل وإنترنت','Mobily');
+      if(dom===15){ add(at(3),'expense',136.5,'اشتراكات وأدوات شغل','HIGGSFIELD INC.'); add(at(3),'expense',4.31,'رسوم بنكية','رسوم عمليات سحب اليكترون'); add(at(4),'expense',44.99,'اشتراكات وأدوات شغل','APPLE.COM/BILL'); }
+      if(dom===20) add(at(4),'expense',21.99,'اشتراكات وأدوات شغل','SPOTIFY'); if(dom===22) add(at(5),'expense',45,'اشتراكات وأدوات شغل','NETFLIX.COM');
+      if(dom===1||dom===14) add(at(12),'expense',237.68+r()*40,'أقساط تابي وتمارا',dom===1?'Tamara':'Tabby');
+      if(dom===27 && at(9)<=now) add(at(9),'income',15000,'مرتب','PODMEDIA NETWORK — راتب','sms','إيداع راتب\nمبلغ: SAR 15,000.00\nإلى: 5836');
+    }
+    tx.forEach(function(t){ if(t.raw) t.raw=t.raw.replace('SAR 0.00','SAR '+t.amount.toFixed(2)); });
+    // فريلانس اتقبض على البنك
+    [['2026-09-01T14:00',8630,'Bread Ahead'],['2026-09-09T12:00',4000,'Al Manea'],['2026-10-16T16:20',3000,'Al Manea'],['2026-10-22T11:00',2500,'HEBA']].forEach(function(f){ add(pd(f[0]),'income',f[1],'فريلانس',f[2]); });
+    add(addD(sod(now),-3),'expense',740,'معدات تصوير','Neewer NW-7000 — Amazon','sms');
+    add(addD(sod(now),-9),'expense',1250,'سفر','flynas','sms');
+    add(addD(sod(now),-40),'saving',5000,'ادخار','سحب صراف','import');
+    add(addD(sod(now),-6),'expense',-25,'أكل','تحويل من نور','import');
+    var fl = [['2026-08-27','Al Manea',4000,'اتقبض',''],['2026-09-01','Bread Ahead',8630,'اتقبض','5000 + 4000 ناقص (170 + 200)'],['2026-09-09','Al Manea',4000,'اتقبض',''],
+      ['2026-10-16','Al Manea',3000,'اتقبض',''],['2026-10-27','Bread Ahead',5000,'لسه','هيتحصل آخر نوفمبر'],['2026-10-29','Al Manea',4000,'لسه','هيتحصل آخر نوفمبر'],
+      ['2026-11-01','Bread Ahead',4000,'لسه','هيتحصل آخر نوفمبر'],['2026-11-20','Remaining',2000,'لسه','هيتحصل آخر نوفمبر'],
+      ['2026-06-25','Al Manea',4000,'اتقبض',''],['2026-06-29','Bread Ahead',4500,'اتقبض',''],['2026-07-09','Al Manea (الأحساء)',4500,'اتقبض',''],['2026-07-19','Gloria',4000,'اتقبض',''],['2026-07-20','Al Manea',4000,'اتقبض',''],['2026-08-08','Al Manea',4000,'اتقبض',''],['2026-08-09','Nolte',4000,'اتقبض','']]
+      .map(function(f,i){return {id:'f'+i,date:f[0],client:f[1],amount:f[2],status:f[3],note:f[4],txId:''};});
+    var inst = [['Tabby','Adidas KSA',237.68,'2026-11-14','اتدفع',1,3,'p1'],['Tabby','Adidas KSA',237.68,'2026-12-14','جاي',2,3,'p1'],['Tabby','Adidas KSA',237.69,'2027-01-14','جاي',3,3,'p1'],
+      ['Tamara','Body Masters: - Online',272.11,'2026-11-01','اتدفع',5,6,'p2'],['Tamara','Body Masters: - Online',272.14,'2026-12-01','جاي',6,6,'p2'],
+      ['Tabby','Abdulwahed Riyadh Al-Rahmaniah',310,'2026-11-05','اتدفع',1,4,'p3'],['Tabby','Abdulwahed Riyadh Al-Rahmaniah',310,'2026-12-05','جاي',2,4,'p3'],['Tabby','Abdulwahed Riyadh Al-Rahmaniah',310,'2027-01-05','جاي',3,4,'p3'],['Tabby','Abdulwahed Riyadh Al-Rahmaniah',310,'2027-02-05','جاي',4,4,'p3']]
+      .map(function(x,i){return {id:'i'+i,provider:x[0],merchant:x[1],amount:x[2],dueDate:x[3],status:x[4],num:x[5],total:x[6],planId:x[7],source:'email'};});
+    var gold = [['pound',3,21,108900,'3 جنيه (4,525 للجرام)'],['pound',3.5,21,129500,'3.5 جنيه (4,620 للجرام)'],['pound',3,21,130560,''],['bar',2.5,24,15700,'سبيكة 2.5 جرام'],
+      ['pound',1,21,46340,''],['pound',1,21,47840,''],['pound',1,21,48080,''],['pound',1,21,48180,''],['pound',1,21,47760,''],['pound',1,21,55750,''],['pound',2,21,112320,'2 جنيه (56,160 للجنيه)'],['pound',1,21,51250,''],['pound',1,21,51000,'']]
+      .map(function(g,i){return {id:'g'+i,date:'',kind:g[0],karat:g[2],qty:g[1],paid:g[3],currency:'EGP',fx:0,note:g[4]};});
+    var gh=[], base=44000; for(var k=30;k>=1;k--){ base = base*(1+(r()-0.47)*0.012); gh.push({date:iso(addD(sod(now),-k)).slice(0,10), pound:Math.round(base), g21:Math.round(base/8), g24:Math.round(base/7), g18:Math.round(base/8*18/21)}); }
+    var fix = 44753*0.994/gh[gh.length-1].pound; gh.forEach(function(x){ x.pound=Math.round(x.pound*fix); x.g21=Math.round(x.g21*fix); x.g24=Math.round(x.g24*fix); x.g18=Math.round(x.g18*fix); });
+    var gs=[], gp=40500; for(var q=126;q>=1;q--){ gp=gp*(1+(r()-0.46)*0.011); gs.push({d:iso(addD(sod(now),-q)).slice(0,10), p:Math.round(gp)}); }
+    var gfix=44753*0.993/gs[gs.length-1].p; gs.forEach(function(x){x.p=Math.round(x.p*gfix);});
+    return {tx:tx,freelance:fl,rules:[],installments:inst,lastSync:iso(new Date()),gold:gold,goldHistory:gh,goldSeries:gs,settings:{
+      name:'أحمد',nameEn:'Ahmed',lang:'ar',monthlyBudget:9500,expectedSalary:15000,freelanceTarget:10000,monthStartDay:1,weekStartDay:0,
+      bankBalance:38076,bankBalanceAt:'2026-11-23T12:00',cash:44700,goldPounds:19.75,goldPoundPriceEgp:44800,egpPerSar:14.36,
+      salaryKeywords:'راتب|رواتب|SALARY|PAYROLL|PODMEDIA|POD MEDIA',freelanceKeywords:'AL MANEA|المانع|BREAD AHEAD|GLORIA|NOLTE|HEBA',
+      budgets:{'أكل':1400,'إيجار':1500,'أقساط تابي وتمارا':1400,'شوبينج':1200,'معدات تصوير':1000,'مصاريف شغل':500,'سفر':600,'مساعدة البيت (مصر)':500,'اشتراكات وأدوات شغل':300,'عربية':250,'موبايل وإنترنت':150,'عناية شخصية وصيدلية':100,'رسوم بنكية':50,'متفرقات':100}}};
+  }
+  function price(){ var raw=3553.5/31.1034768*54.33, adj=(db&&db.settings&&db.settings.goldAdjust)||1.03, g24=raw*adj;
+    return {xauUsd:3553.5,usdEgp:54.33,usdSar:3.75,egpPerSar:54.33/3.75,g24:Math.round(g24),g21:Math.round(g24*.875),g18:Math.round(g24*.75),pound:Math.round(g24*.875*8),adjust:adj,at:iso(new Date()),live:true}; }
+  function load(){ try{ db=JSON.parse(localStorage.getItem(KEY)); }catch(e){} if(!db || !db.gold || !db.goldSeries) { db=build(); save(); } }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(db)); }catch(e){} }
+  function out(){ save(); var o=JSON.parse(JSON.stringify(db)); o.goldPrice=price(); return o; }
+  function mkey(m){ return String(m||'').toUpperCase().replace(/[\d*#]+/g,'').replace(/[^A-Z\u0600-\u06FF]+/g,' ').trim().split(' ').slice(0,3).join(' '); }
+  load();
+  return {
+    getData: out,
+    syncNow: function(){ db.lastSync=iso(new Date()); return {added:0,data:out()}; },
+    addTx: function(t){ var row={id:'m'+Date.now(),date:t.date||iso(new Date()),type:t.type,amount:Math.abs(+t.amount),category:t.category,merchant:t.merchant,source:t.source,raw:'',note:''}; db.tx.push(row);
+      if(t.source==='cash') db.settings.cash = (+db.settings.cash||0)+(t.type==='income'?row.amount:-row.amount);
+      if(t.type==='income'&&t.category==='فريلانس') db.freelance.push({id:'f'+Date.now(),date:row.date.slice(0,10),client:t.client||t.merchant,amount:row.amount,status:'اتقبض',note:'',txId:row.id});
+      return out(); },
+    updateTx: function(id,p,all){ var t=db.tx.filter(function(x){return x.id===id;})[0]; var oldCat=t.category; Object.assign(t,p); delete t.client;
+      if(all&&p.category&&t.merchant){ var k=mkey(t.merchant); db.tx.forEach(function(x){ if(mkey(x.merchant)===k&&x.type===t.type) x.category=p.category; });
+        db.rules=db.rules.filter(function(r){return r.pattern!==k;}); db.rules.push({pattern:k,category:p.category}); }
+      if(t.type==='income'&&p.category==='فريلانس'&&oldCat!=='فريلانس'){ var f=db.freelance.filter(function(f){return f.status==='لسه'&&Math.abs(f.amount-t.amount)<1;})[0];
+        if(f){f.status='اتقبض';f.txId=t.id;} else db.freelance.push({id:'f'+Date.now(),date:t.date.slice(0,10),client:p.client||t.merchant,amount:t.amount,status:'اتقبض',note:'',txId:t.id}); }
+      return out(); },
+    deleteTx: function(id){ db.tx=db.tx.filter(function(x){return x.id!==id;}); return out(); },
+    saveFreelance: function(f){ if(!f.id) f.id='f'+Date.now(); var i=db.freelance.findIndex(function(x){return x.id===f.id;}); if(i>=0) db.freelance[i]=f; else db.freelance.push(f); return out(); },
+    deleteFreelance: function(id){ db.freelance=db.freelance.filter(function(x){return x.id!==id;}); return out(); },
+    saveSettings: function(p){ Object.assign(db.settings,p); return out(); },
+    saveGold: function(g){ if(!g.id) g.id='g'+Date.now(); if(g.currency==='SAR'&&!g.fx) g.fx=price().egpPerSar; var i=db.gold.findIndex(function(x){return x.id===g.id;}); if(i>=0) db.gold[i]=g; else db.gold.push(g); return out(); },
+    deleteGold: function(id){ db.gold=db.gold.filter(function(x){return x.id!==id;}); return out(); },
+    calibrateGold: function(v){ var raw=3553.5/31.1034768*54.33; db.settings.goldAdjust=v/(raw*.875*8); return out(); },
+    addInstallmentPlan: function(pl){ var c=Math.max(1,+pl.count||1), pid='m'+Date.now(), d0=pd(pl.firstDue||iso(new Date()));
+      for(var i=0;i<c;i++){ var d=new Date(d0.getFullYear(),d0.getMonth()+i,d0.getDate()); db.installments.push({id:pid+'-'+i,provider:pl.provider,merchant:pl.merchant,amount:+pl.amount,dueDate:iso(d).slice(0,10),status:i<(+pl.paidCount||0)?'اتدفع':'جاي',num:i+1,total:c,planId:pid,source:'manual'}); }
+      return out(); },
+    saveInstallment: function(o){ var i=db.installments.findIndex(function(x){return x.id===o.id;}); if(i>=0) db.installments[i]=o; return out(); },
+    deleteInstallmentPlan: function(id){ db.installments=db.installments.filter(function(x){return (x.planId||(x.provider+'|'+x.merchant))!==id && x.id!==id;}); return out(); },
+    deleteRule: function(p){ db.rules=db.rules.filter(function(r){return r.pattern!==p;}); return out(); },
+    reset: function(){ localStorage.removeItem(KEY); load(); return out(); }
+  };
+})();
+
+/* ============ ربط الأبلكيشن المستقل (أول مرة بس) ============ */
+function showSetup(msg){
+  var el=document.getElementById('setup'); if(!el){ el=document.createElement('div'); el.id='setup'; el.className='lock'; document.body.appendChild(el); }
+  el.innerHTML='<div class="lockIn" style="text-align:center">'+
+    '<div class="lockLogo">'+SHARK+'</div><div class="lockName">'+L('صياد القرش','Sayad Elarsh')+'</div>'+
+    '<div class="lockMsg">'+(msg||L('اربط الأبلكيشن بحسابك مرة واحدة','Connect the app to your account once'))+'</div>'+
+    '<input id="setupKey" type="password" autocomplete="off" placeholder="'+L('الزق مفتاح الأبلكيشن (APP_TOKEN)','Paste the app key (APP_TOKEN)')+'" style="text-align:center;margin-bottom:12px" dir="ltr">'+
+    '<button class="btn" onclick="saveSetup()">'+L('اربط','Connect')+'</button>'+
+    '<div class="dim" style="font-size:12px;margin-top:12px">'+L('المفتاح بيتحفظ على الموبايل ده بس.','The key is stored on this phone only.')+'</div></div>';
+}
+function saveSetup(){
+  var k=(document.getElementById('setupKey').value||'').trim(); if(k.length<20) return toast(L('المفتاح قصير','That key is too short'));
+  try{ localStorage.setItem('sayad-key',k); }catch(e){}
+  call('getData').then(function(d){ D=d; var el=document.getElementById('setup'); if(el) el.remove(); render(); toast(L('اتربط ✓','Connected ✓')); }).catch(function(){});
+}
+if(HOSTED && 'serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}); }
+
+/* ============ يلا ============ */
+Lock.show();
+Motion.start();
+if(HOSTED && !appKey()) showSetup();
+else call('getData').then(function(d){ D=d;
+  var saved=null; try{ saved=localStorage.getItem('sayad-lang'); }catch(e){}
+  if(!saved && D.settings && (D.settings.lang==='en'||D.settings.lang==='ar') && D.settings.lang!==LANG){ LANG=D.settings.lang; applyLang(); }
+  render(); if(LIVE||HOSTED) sync(true); }).catch(function(e){
+  document.getElementById('app').innerHTML='<div class="card" style="margin-top:40px">مقدرتش أفتح البيانات: '+esc(e&&e.message||e)+'<br><br>اتأكد إنك شغّلت setup() في Apps Script.</div>';
+});
+</script>
+</body>
+</html>
