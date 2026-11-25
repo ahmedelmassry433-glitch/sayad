@@ -862,20 +862,21 @@ function render(){
   else if(!LIVE && !HOSTED) html += '<div class="demo">👀 '+L('دي بيانات تجريبية للعرض بس. أول ما ترفع الأبلكيشن على Google Apps Script، هيقرا رسايل الراجحي الحقيقية.',
     'This is demo data. Once the app is on Google Apps Script, it reads your real Al Rajhi messages.')+'</div>';
   HEAD_X = '';
-  var body = ({home:vHome, tx:vTx, report:vReport, income:vIncome, gold:vGold, wealth:vWealth, inst:vInstPage, settings:vSettings})[UI.tab]();
+  var body = ({home:vHome, tx:vTx, report:vReport, income:vIncome, gold:vGold, wealth:vWealth, inst:vInstPage, settings:vSettings, subs:vSubs, zakat:vZakat})[UI.tab]();
   html += pageHead() + body;
   Motion.before();
   document.getElementById('app').innerHTML = html;
   // الحركة بتشتغل بس لما الشاشة نفسها تتغير (تاب/فترة/فلتر/لغة)، مش مع كل تحديث صغير
   Motion.after([UI.tab, UI.period, UI.offset, UI.txFilter, LANG].join('|'));
-  [].forEach.call(document.querySelectorAll('#tabs button'),function(b){ b.classList.toggle('on', b.dataset.t===(UI.tab==='inst'?'wealth':UI.tab)); });
+  [].forEach.call(document.querySelectorAll('#tabs button'),function(b){ b.classList.toggle('on', b.dataset.t===(({inst:'wealth',zakat:'wealth',subs:'home'})[UI.tab]||UI.tab)); });
   document.getElementById('fab').style.display = (UI.tab==='home'||UI.tab==='tx'||UI.tab==='report')?'grid':'none';
   if(typeof TabBar!=='undefined') TabBar.update();
 }
 // اسم كل صفحة فوق، عشان تعرف إنت فين
 var PAGE_T = {tx:['العمليات','Transactions'], report:['التقارير','Reports'], income:['الدخل','Income'], gold:['الدهب','Gold'],
-  wealth:['فلوسي','My money'], inst:['الأقساط والكريدت','Installments & credit'], settings:['الإعدادات','Settings']};
-var PAGE_BACK = {inst:'wealth', settings:'home'};
+  wealth:['فلوسي','My money'], inst:['الأقساط والكريدت','Installments & credit'], settings:['الإعدادات','Settings'],
+  subs:['الاشتراكات والحاجات الثابتة','Subscriptions & bills'], zakat:['الزكاة','Zakat']};
+var PAGE_BACK = {inst:'wealth', settings:'home', subs:'home', zakat:'wealth'};
 var HEAD_X = ''; // أزرار الصفحة اللي بتظهر جنب اسمها (زي جنيه/ريال)
 function pageHead(){
   var t = PAGE_T[UI.tab]; if(!t) return '';
@@ -1107,6 +1108,7 @@ function vHome(){
     '<div class="dim" style="font-size:12px;margin-top:6px">'+(mr.salary ? (mr.late ? L('المرتب لسه منزلش · لسه بتصرف من مرتب '+dShort(mr.s),'Salary not in yet · still spending from the '+dShort(mr.s)+' salary') : L('من مرتب '+dShort(mr.s)+' · باقي حوالي '+daysLeft+' يوم للمرتب الجاي','Since the '+dShort(mr.s)+' salary · about '+daysLeft+' days to the next one')) :
       L('باقي '+daysLeft+' يوم · الخط الأبيض = المفروض تكون صرفت قد إيه لحد النهارده', daysLeft+' days left · the white line shows where your spending should be by today'))+'</div></div>';
 
+  h += forecastCard();
   h += '<div class="grid2">'+
     statCard(L('الأسبوع ده','This week'), spentW, lastW? pctTxt(spentW,lastW,L('عن نفس الوقت الأسبوع اللي فات','vs. same point last week')) : '', 'week','sky')+
     statCard(L('الشهر ده','This month'), spentM, budget? Math.round(spentM/budget*100)+L('% من الميزانية','% of budget'):'', 'month','violet')+
@@ -1133,6 +1135,7 @@ function vHome(){
   h += vReview(3);
   h += donutCard(monthTx, mr, spentM, L('صرفك الشهر ده راح فين','Where this month’s money went'));
   h += vInstallments(true);
+  h += subsCard();
 
   var last = D.tx.slice().sort(function(a,b){return pd(b.date)-pd(a.date);}).slice(0,6);
   h += '<div class="card"><h3>'+L('آخر العمليات','Recent transactions')+' <a onclick="go(\'tx\')">'+L('الكل','See all')+' '+FWD()+'</a></h3>'+(last.length? last.map(txRow).join('') : emptyTx())+'</div>';
@@ -1766,15 +1769,251 @@ function vWealth(){
     kv('🏦 '+L('رصيد البنك','Bank balance'), money(s.bankBalance), "editNum('bankBalance')", s.bankBalanceAt?L('بيتحدث لوحده مع كل عملية · ','Updates itself with every transaction · ')+dayLabel(pd(s.bankBalanceAt)):'')+
     kv('💵 '+L('كاش معاك','Cash on hand'), money(s.cash), "editNum('cash')", L('لما تسجل مصروف كاش بيتخصم من هنا','Cash expenses you add are taken from here'))+
     kv('🧾 '+L('عليك أقساط وكريدت','Installments & credit owed'), '<span class="warn">−'+money(debtsTotal())+'</span>', "go('inst')", L('كل الأقساط اللي لسه متدفعتش + الكريدت كارد','All unpaid installments + credit cards'))+
+    kv('🕌 '+L('الزكاة','Zakat'), (function(){ var z=zakatCalc(); return z.due ? money(z.zakat) : '<span class="muted">'+L('تحت النصاب','Below nisab')+'</span>'; })(), "go('zakat')", L('بتتحسب لوحدها من البنك والكاش والدهب','Worked out from your bank, cash and gold'))+
     kv('🪙 '+L('الدهب','Gold'), money(g), "go('gold')", (function(){ var t=gTotals(); return D.goldPrice ? '<span class="'+(t.pl>=0?'good':'bad')+'">'+arrow(t.pl)+' <span class="num">'+(t.pct>=0?'+':'')+t.pct.toFixed(1)+'%</span></span> · '+L('التفاصيل في تاب الدهب','Details in the Gold tab') : L('التفاصيل في تاب الدهب','Details in the Gold tab'); })())+
     '</div>';
   return h;
 }
+/* ============ الاشتراكات: أي حاجة بتتخصم كل شهر بنفس المبلغ تقريباً ============ */
+var SUB_SKIP = {'أكل':1,'حوالة شخصية':1,'مش فلوسي':1,'سداد كريدت':1,'أقساط تابي وتمارا':1,'رسوم بنكية':1};
+var SUB_CATS = {'اشتراكات وأدوات شغل':1,'موبايل وإنترنت':1,'إيجار':1};
+function subKey(t){ return String(t.merchant||'').toUpperCase().replace(/\d+/g,' ').replace(/[^A-Z\u0600-\u06FF]+/g,' ').trim().split(/\s+/).slice(0,2).join(' ')+'|'+t.category; }
+function median(a){ var b=a.slice().sort(function(x,y){return x-y;}), m=Math.floor(b.length/2); return !b.length?0:b.length%2?b[m]:(b[m-1]+b[m])/2; }
+var _subsMemo = null;
+function detectSubs(){
+  var hid = (S().subsHidden||[]), sig = D.tx.length+'|'+hid.join(',')+'|'+(D.lastSync||'');
+  if(_subsMemo && _subsMemo.sig===sig) return _subsMemo.v;
+  var today = sod(new Date()), since = addD(today,-215), g = {};
+  D.tx.forEach(function(t){
+    if(t.type!=='expense' || !(Number(t.amount)>0) || SUB_SKIP[t.category]) return;
+    var d = pd(t.date); if(!(d>=since)) return;
+    var k = subKey(t); if(k.split('|')[0].length<2) return;
+    (g[k]=g[k]||[]).push({d:d, a:Number(t.amount), t:t});
+  });
+  var out = [];
+  Object.keys(g).forEach(function(k){
+    var it = g[k].sort(function(a,b){return a.d-b.d;}), months = {};
+    it.forEach(function(x){ months[monthKey(x.d)] = 1; });
+    var nm = Object.keys(months).length;
+    if(nm<2 || it.length/nm>1.5) return;                       // أقل من شهرين، أو بيتكرر كتير في الشهر (ده مش اشتراك)
+    if(nm<3 && !SUB_CATS[it[0].t.category]) return;
+    var amts = it.map(function(x){return x.a;}), med = median(amts);
+    if(amts.filter(function(a){return Math.abs(a-med)<=Math.max(2,med*0.2);}).length/amts.length < 0.7) return; // المبلغ مش ثابت
+    var gaps = []; for(var i=1;i<it.length;i++) gaps.push((it[i].d-it[i-1].d)/864e5);
+    var gap = median(gaps); if(gap<20 || gap>40) return;
+    var last = it[it.length-1], ago = (today-sod(last.d))/864e5;
+    if(ago > gap+15) return;                                     // اتلغى أو وقف
+    var next = addMon(sod(last.d),1); if(next<today) next = today;
+    var prev = it.length>1 ? it[it.length-2].a : last.a;
+    out.push({key:k, name:enName(last.t.merchant)||catName(last.t.category), merchant:last.t.merchant, cat:last.t.category,
+      amount:last.a, monthly:med, next:next, last:last.d, items:it, hidden:hid.indexOf(k)>=0,
+      up: last.a-prev > Math.max(1,prev*0.05) ? last.a-prev : 0, isNew: it[0].d >= addD(today,-70)});
+  });
+  out.sort(function(a,b){return b.monthly-a.monthly;});
+  _subsMemo = {sig:sig, v:out};
+  saveSubsCache(out);
+  return out;
+}
+// السيرفر محتاج يعرف مواعيد الاشتراكات عشان يبعتلك تنبيه قبلها بيوم
+function saveSubsCache(list){
+  if(!(LIVE||HOSTED)) return;
+  var c = list.filter(function(x){return !x.hidden;}).map(function(x){ return {key:x.key.replace(/[^A-Z\u0600-\u06FF]+/g,'-').slice(0,30), name:x.name, amount:Math.round(x.amount*100)/100, next:iso(x.next).slice(0,10)}; });
+  var js = JSON.stringify(c); if(js===JSON.stringify(S().subsCache||[]) || saveSubsCache._last===js) return;
+  saveSubsCache._last = js;
+  setTimeout(function(){ call('saveSettings',{subsCache:c}).then(function(d){ if(d&&d.settings) D.settings.subsCache=d.settings.subsCache; }).catch(function(){}); }, 1500);
+}
+function subsMonthly(){ return detectSubs().filter(function(x){return !x.hidden;}).reduce(function(a,x){return a+x.monthly;},0); }
+function subRow(x){
+  var tag = x.isNew ? ' <span class="pill" style="padding:1px 7px;font-size:10.5px">'+L('جديد','New')+'</span>' : x.up ? ' <span class="pill warn" style="padding:1px 7px;font-size:10.5px">▲ '+money(x.up)+'</span>' : '';
+  return '<div class="tx" onclick="openSub(\''+esc(x.key).replace(/'/g,"\\'")+'\')">'+catIc(x.cat,x.merchant)+
+    '<div class="mid"><b>'+esc(x.name)+tag+'</b><span>'+L('كل شهر · الجاي ','Monthly · next ')+dayLabel(x.next)+'</span></div>'+
+    '<div class="amt"><span class="num">'+fmtN(x.amount,2)+'</span></div></div>';
+}
+function vSubs(){
+  var all = detectSubs(), list = all.filter(function(x){return !x.hidden;}), hid = all.filter(function(x){return x.hidden;});
+  var m = subsMonthly(), h = '';
+  h += '<div class="card hero sky"><canvas class="heroBg" aria-hidden="true"></canvas><div class="label">'+L('بتدفع كل شهر حوالي','You pay about this every month')+'</div>'+
+    '<div class="big">'+countNum(m)+'<small>'+CUR()+'</small></div>'+
+    '<div class="dim" style="font-size:12.5px">'+L('يعني ','That’s ')+money(m*12)+L(' ريال في السنة · '+list.length+' حاجة ثابتة',' SAR a year · '+list.length+' recurring')+'</div></div>';
+  var news = list.filter(function(x){return x.isNew;}), ups = list.filter(function(x){return x.up;});
+  news.forEach(function(x){ h += '<div class="alert amber">'+catSvg(x.cat)+'<div><b>'+esc(x.name)+'</b> '+L('اشتراك جديد ظهر: '+money(x.amount)+' ريال كل شهر','is a new subscription: '+money(x.amount)+' SAR a month')+'</div></div>'; });
+  ups.forEach(function(x){ h += '<div class="alert">'+catSvg(x.cat)+'<div><b>'+esc(x.name)+'</b> '+L('سعره زاد '+money(x.up)+' ريال آخر مرة','went up by '+money(x.up)+' SAR last time')+'</div></div>'; });
+  h += '<div class="card">'+(list.length ? list.map(subRow).join('') : '<div class="empty">'+L('لسه ملقتش حاجة بتتخصم كل شهر. محتاج شهرين على الأقل من العمليات.','Nothing recurring found yet. It needs at least two months of transactions.')+'</div>')+'</div>';
+  if(hid.length) h += '<div class="section-title">'+L('شيلتها من الاشتراكات','Hidden')+'</div><div class="card">'+hid.map(subRow).join('')+'</div>';
+  h += '<div class="dim" style="font-size:12px;padding:0 6px 10px">'+L('بيلقطها لوحده: نفس المكان، نفس المبلغ تقريباً، كل شهر. دوس على أي واحدة تشوف تاريخها أو تشيلها لو مش اشتراك.','Found automatically: same place, about the same amount, every month. Tap one to see its history or hide it.')+'</div>';
+  return h;
+}
+function openSub(key){
+  var x = detectSubs().filter(function(s){return s.key===key;})[0]; if(!x) return;
+  openSheet('<h2>'+esc(x.name)+'</h2>'+
+    '<div class="row"><span class="muted">'+L('في الشهر','Monthly')+'</span><b>'+sar(x.monthly)+'</b></div>'+
+    '<div class="row" style="margin-top:6px"><span class="muted">'+L('في السنة','Yearly')+'</span><b>'+sar(x.monthly*12)+'</b></div>'+
+    '<div class="row" style="margin-top:6px"><span class="muted">'+L('الجاي','Next')+'</span><b>'+dayLabel(x.next)+'</b></div>'+
+    '<div class="section-title">'+L('آخر مرات اتخصم','Recent charges')+'</div><div class="card" style="padding:4px 14px">'+
+    x.items.slice().reverse().slice(0,8).map(function(i){ return '<div class="row" style="padding:8px 0"><span class="muted">'+dShort(i.d)+' '+i.d.getFullYear()+'</span><span class="num">'+fmtN(i.a,2)+'</span></div>'; }).join('')+'</div>'+
+    '<div class="btns"><button class="btn ghost" onclick="toggleSub(\''+esc(x.key).replace(/'/g,"\\'")+'\')">'+(x.hidden?L('رجّعها للاشتراكات','Show it again'):L('دي مش اشتراك، شيلها','Not a subscription, hide it'))+'</button></div>');
+}
+function toggleSub(key){
+  var h = (S().subsHidden||[]).slice(), i = h.indexOf(key);
+  if(i>=0) h.splice(i,1); else h.push(key);
+  D.settings.subsHidden = h; _subsMemo = null; closeSheet(); render();
+  call('saveSettings',{subsHidden:h}).then(function(d){ D=d; _subsMemo=null; render(); }).catch(function(){});
+}
+
+/* ============ توقّع آخر الشهر (لحد المرتب الجاي) ============ */
+function forecast(){
+  var mr = range('month',0), today = sod(new Date());
+  var daysLeft = Math.max(0, Math.round((mr.e-today)/864e5)), elapsed = Math.max(1, Math.round((today-mr.s)/864e5)+1);
+  var subs = detectSubs().filter(function(x){return !x.hidden;}), sk = {};
+  subs.forEach(function(x){ sk[x.key]=1; });
+  function split(list){ var o={all:0, fixed:0, big:0};
+    list.forEach(function(t){ if(t.type!=='expense' || t.category===NOT_MINE) return; var a=Number(t.amount)||0; o.all+=a;
+      if(sk[subKey(t)] || t.category==='أقساط تابي وتمارا' || t.category==='إيجار') o.fixed+=a; else if(a>=600) o.big+=a; });
+    o.vary = Math.max(0, o.all-o.fixed-o.big); return o; }
+  var cur = split(inRange(mr)), daily = cur.vary/elapsed;
+  var pr = range('month',-1), prevDays = Math.max(1, Math.round((pr.e-pr.s)/864e5)), prv = split(inRange(pr)), prevDaily = prv.vary/prevDays;
+  var w = Math.min(1, elapsed/14), blend = prv.all ? w*daily + (1-w)*prevDaily : daily;
+  var up = [];
+  (D.installments||[]).forEach(function(i){ if(instPaid(i)) return; var d=pd(i.dueDate); if(d>=today && d<mr.e) up.push({name:enName(i.provider)+(i.merchant?' · '+enName(i.merchant):''), amount:Number(i.amount)||0, date:d, kind:'inst', cat:'أقساط تابي وتمارا', text:i.provider}); });
+  subs.forEach(function(x){ if(x.next>=today && x.next<mr.e) up.push({name:x.name, amount:x.amount, date:x.next, kind:'sub', cat:x.cat, text:x.merchant}); });
+  up.sort(function(a,b){return a.date-b.date;});
+  var upSum = up.reduce(function(a,x){return a+x.amount;},0), projVar = blend*daysLeft;
+  var spent = sum(inRange(mr),'expense'), budget = budgetFor(mr), s = S();
+  return {mr:mr, daysLeft:daysLeft, elapsed:elapsed, spent:spent, daily:daily, prevDaily:prevDaily, blend:blend, up:up, upSum:upSum, projVar:projVar,
+    total: spent+upSum+projVar, bankEnd: (Number(s.bankBalance)||0)-upSum-projVar, budget:budget,
+    safeDaily: budget ? (budget-spent-upSum)/Math.max(1,daysLeft) : null};
+}
+function forecastCard(){
+  var f = forecast(); if(!f.mr.open) return '';
+  var over = f.budget ? f.total-f.budget : 0, endTxt = f.daysLeft<=0 ? L('المرتب المفروض ينزل النهارده','Salary should land today') : L('باقي '+f.daysLeft+' يوم للمرتب','Salary in '+f.daysLeft+' days');
+  return '<div class="card" onclick="openForecast()" style="cursor:pointer"><h3>🔮 '+L('توقّع آخر الشهر','End-of-month forecast')+' <span class="muted">'+FWD()+'</span></h3>'+
+    '<div class="row" style="align-items:flex-end"><div><div class="dim" style="font-size:12.5px">'+L('هيفضل معاك في البنك يوم المرتب','Left in the bank on payday')+'</div>'+
+    '<b style="font-size:26px;font-weight:400" class="'+(f.bankEnd<0?'bad':'')+'">'+sar(f.bankEnd)+'</b></div>'+
+    (f.budget ? '<span class="pill '+(over>0?'bad':'')+'">'+(over>0 ? '⚠️ '+L('هتعدّي بـ ','Over by ')+money(over) : '✓ '+L('هتوفّر ','Under by ')+money(-over))+'</span>' : '')+'</div>'+
+    '<div class="dim" style="font-size:12.5px;margin-top:8px">'+L('هتصرف حوالي ','You’ll spend about ')+money(f.total)+L(' الشهر ده: ',' this cycle: ')+money(f.spent)+L(' صرفتهم',' so far')+
+      ' + '+money(f.upSum)+L(' أقساط واشتراكات جاية',' upcoming bills')+' + '+money(f.projVar)+L(' مصروف يومي',' day-to-day')+'</div>'+
+    (f.safeDaily!==null ? '<div style="font-size:13px;margin-top:8px" class="'+(f.safeDaily<f.blend?'warn':'good')+'">'+(f.safeDaily>0 ? L('عشان تفضل في الميزانية: ','To stay on budget: ')+money(f.safeDaily)+L(' ريال في اليوم',' SAR a day')+' · '+L('إنت ماشي بـ ','you’re at ')+money(f.blend) : L('الميزانية خلصت، وفّر اللي تقدر عليه','Budget’s used up — save what you can'))+'</div>' : '')+
+    '<div class="dim" style="font-size:11.5px;margin-top:6px">'+endTxt+'</div></div>';
+}
+function openForecast(){
+  var f = forecast();
+  openSheet('<h2>🔮 '+L('توقّع آخر الشهر','End-of-month forecast')+'</h2>'+
+    '<div class="row"><span class="muted">'+L('صرفت لحد النهارده','Spent so far')+'</span><b>'+sar(f.spent)+'</b></div>'+
+    '<div class="row" style="margin-top:6px"><span class="muted">'+L('المصروف اليومي (من غير الثابت والحاجات الكبيرة)','Day-to-day spending (no bills or big one-offs)')+'</span><b>'+money(f.daily)+L(' / يوم',' / day')+'</b></div>'+
+    (f.prevDaily ? '<div class="row" style="margin-top:6px"><span class="muted">'+L('الشهر اللي فات','Last cycle')+'</span><b>'+money(f.prevDaily)+L(' / يوم',' / day')+'</b></div>' : '')+
+    '<div class="row" style="margin-top:6px"><span class="muted">'+L('باقي للمرتب','Days to payday')+'</span><b>'+f.daysLeft+L(' يوم',' days')+'</b></div>'+
+    '<div class="section-title">'+L('جاي قبل المرتب','Due before payday')+' · '+money(f.upSum)+'</div><div class="card" style="padding:4px 14px">'+
+    (f.up.length ? f.up.map(function(x){ return '<div class="tx" style="cursor:default">'+catIc(x.cat,x.text)+'<div class="mid"><b>'+esc(x.name)+'</b><span>'+(x.kind==='inst'?L('قسط','Installment'):L('اشتراك','Subscription'))+' · '+dayLabel(x.date)+'</span></div><div class="amt"><span class="num">'+fmtN(x.amount,2)+'</span></div></div>'; }).join('')
+      : '<div class="empty">'+L('مفيش أقساط ولا اشتراكات جاية قبل المرتب','No bills due before payday')+'</div>')+'</div>'+
+    '<div class="row" style="margin-top:12px"><span class="muted">'+L('المصروف اليومي لحد المرتب','Day-to-day until payday')+'</span><b>'+money(f.projVar)+'</b></div>'+
+    '<div class="row" style="margin-top:6px"><span>'+L('هيفضل في البنك يوم المرتب','Bank balance on payday')+'</span><b class="'+(f.bankEnd<0?'bad':'good')+'">'+sar(f.bankEnd)+'</b></div>'+
+    '<div class="dim" style="font-size:11.5px;margin-top:12px">'+L('الحسبة: سرعة صرفك اليومي (أول أسبوعين بنخلطها بالشهر اللي فات)، والأقساط والاشتراكات اللي ميعادها قبل المرتب. الحاجات الكبيرة اللي مرة واحدة (600 ريال أو أكتر) مش بتتحسب يومي.','How it works: your daily pace (mixed with last cycle in the first two weeks), plus installments and subscriptions due before payday. One-off purchases of 600 SAR or more aren’t treated as daily.')+'</div>');
+}
+function subsCard(){
+  var list = detectSubs().filter(function(x){return !x.hidden;}); if(!list.length) return '';
+  var news = list.filter(function(x){return x.isNew||x.up;}).length;
+  return '<div class="card" onclick="go(\'subs\')" style="cursor:pointer"><h3>🔁 '+L('اشتراكاتك والحاجات الثابتة','Subscriptions & fixed bills')+' <span class="muted">'+FWD()+'</span></h3>'+
+    '<div class="row"><b style="font-size:22px;font-weight:400">'+sar(subsMonthly())+'<small class="muted" style="font-size:13px"> '+L('/ شهر','/ mo')+'</small></b><span class="pill">'+list.length+L(' حاجة',' items')+'</span></div>'+
+    (news ? '<div class="warn" style="font-size:12.5px;margin-top:6px">'+L('فيه '+news+' حاجة جديدة أو سعرها زاد','There are '+news+' new or pricier ones')+'</div>' : '')+'</div>';
+}
+
+/* ============ الزكاة ============ */
+function hijri(d){ try{ return new Intl.DateTimeFormat(LANG==='en'?'en-u-ca-islamic-umalqura':'ar-SA-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric'}).format(d); }catch(e){ return ''; } }
+function zakatCalc(){
+  var s = S(), p = gP(), fx = egpRate(), zs = s.zakat||{};
+  var g24 = p && p.g24 ? p.g24/fx : (Number(s.goldPoundPriceEgp)||0)/7/fx; // الجنيه = 7 جرام دهب صافي
+  var t = gTotals(), gold = goldSar(), bank = Number(s.bankBalance)||0, cash = Number(s.cash)||0, recv = pendingFreelance(), debts = debtsTotal();
+  var incRecv = zs.recv!==false, decDebts = zs.debts!==false;
+  var base = bank + cash + gold + (incRecv?recv:0) - (decDebts?debts:0), nisab = 85*g24;
+  return {g24:g24, nisab:nisab, gold:gold, pure:t.pure, bank:bank, cash:cash, recv:recv, debts:debts, incRecv:incRecv, decDebts:decDebts,
+    base:base, due: base>=nisab && nisab>0, zakat: base>=nisab ? base*0.025 : 0, goldZakatG: t.pure*0.025};
+}
+function zakatNext(){ var s=S(); if(!s.zakatDate) return null; var d=sod(pd(s.zakatDate)); return d; }
+function vZakat(){
+  var z = zakatCalc(), s = S(), nd = zakatNext(), today = sod(new Date()), h = '';
+  h += '<div class="card hero mint"><canvas class="heroBg" aria-hidden="true"></canvas><div class="label">'+(z.due?L('عليك زكاة حوالي','Your zakat is about'):L('مالك لسه تحت النصاب','You’re below nisab'))+'</div>'+
+    '<div class="big">'+countNum(z.zakat)+'<small>'+CUR()+'</small></div>'+
+    '<div class="dim" style="font-size:12.5px">'+L('2.5% من ','2.5% of ')+money(z.base)+L(' ريال · النصاب ',' SAR · nisab ')+money(z.nisab)+'</div></div>';
+  h += '<div class="card">'+
+    kv('📅 '+L('يوم زكاتك','Your zakat day'), nd ? dShort(nd)+' '+nd.getFullYear() : L('حدده','Set it'), "editZakatDate()",
+      nd ? (hijri(nd)+' · '+(nd<today?L('فات ميعادها','Overdue'):nd-today===0?L('النهارده','Today'):L('باقي '+Math.round((nd-today)/864e5)+' يوم',Math.round((nd-today)/864e5)+' days left'))) : L('اليوم اللي مالك عدّى فيه النصاب، وبعده كل سنة هجري','The day your wealth first passed nisab, then every lunar year'))+
+    (z.due && nd ? kv('✅ '+L('دفعت الزكاة','I paid it'), '', "payZakat()", L('بنسجلها ونحط ميعاد السنة الجاية','Records it and sets next year’s date')) : '')+
+    '</div>';
+  h += '<div class="section-title">'+L('بيتحسب على إيه','What counts')+'</div><div class="card">'+
+    kv('🏦 '+L('البنك','Bank'), money(z.bank), "editNum('bankBalance')")+
+    kv('💵 '+L('الكاش','Cash'), money(z.cash), "editNum('cash')")+
+    kv('🪙 '+L('الدهب','Gold'), money(z.gold), "go('gold')", L('<span class="num">'+fmtN(z.pure,1)+'</span> جرام دهب صافي (عيار 24)','<span class="num">'+fmtN(z.pure,1)+'</span> g pure gold (24k)'))+
+    kv((z.incRecv?'☑️ ':'⬜️ ')+L('فريلانس ليك برّه','Freelance owed to you'), money(z.recv), "toggleZakat('recv')", L('دوس عشان تحسبه أو لأ','Tap to include or not'))+
+    kv((z.decDebts?'☑️ ':'⬜️ ')+L('اخصم الأقساط والكريدت','Subtract installments & credit'), '<span class="warn">−'+money(z.debts)+'</span>', "toggleZakat('debts')", L('دوس عشان تخصمها أو لأ','Tap to subtract or not'))+
+    '<div class="kv" style="cursor:default"><div><span><b>'+L('الإجمالي','Total')+'</b></span></div><b>'+money(z.base)+'</b></div></div>';
+  if(z.pure>0) h += '<div class="dim" style="font-size:12.5px;padding:0 6px 10px">🪙 '+L('لو حابب تخرج زكاة الدهب دهب: حوالي <span class="num">'+fmtN(z.goldZakatG,2)+'</span> جرام عيار 24.','To pay the gold part in gold: about <span class="num">'+fmtN(z.goldZakatG,2)+'</span> g of 24k.')+'</div>';
+  var paid = s.zakatPaid||[];
+  if(paid.length) h += '<div class="section-title">'+L('دفعت قبل كده','Paid before')+'</div><div class="card" style="padding:4px 14px">'+paid.slice().reverse().map(function(x){ return '<div class="row" style="padding:8px 0"><span class="muted">'+dShort(pd(x.date))+' '+pd(x.date).getFullYear()+'</span><span class="num">'+fmtN(x.amount,2)+'</span></div>'; }).join('')+'</div>';
+  h += '<div class="dim" style="font-size:11.5px;padding:0 6px 14px">'+L('النصاب = 85 جرام دهب عيار 24 بسعر النهارده ('+money(z.g24,1)+' ريال للجرام). الحساب تقريبي على الطريقة المشهورة: 2.5% من مالك لو عدّى النصاب وعدّت عليه سنة هجري. لو عندك حالة خاصة اسأل حد متخصص.',
+    'Nisab = 85 g of 24k gold at today’s price ('+money(z.g24,1)+' SAR/g). This is an estimate using the common method: 2.5% of your wealth once it passes nisab for a full lunar year. Ask a scholar for special cases.')+'</div>';
+  return h;
+}
+function toggleZakat(k){ var z = Object.assign({}, S().zakat||{}); z[k] = (z[k]===false); D.settings.zakat = z; render(); call('saveSettings',{zakat:z}).then(function(d){ D=d; render(); }).catch(function(){}); }
+function editZakatDate(){
+  var d = zakatNext() || sod(new Date());
+  openSheet('<h2>📅 '+L('يوم زكاتك','Your zakat day')+'</h2><div class="dim" style="font-size:13px;margin-bottom:10px">'+L('حط اليوم اللي الزكاة بتطلع فيه كل سنة. هبعتلك تنبيه قبله بأسبوع ويومها.','Pick the day your zakat is due each year. You’ll get a reminder a week before and on the day.')+'</div>'+
+    '<input class="amountIn" id="fZd" type="date" value="'+iso(d).slice(0,10)+'" style="font-size:20px">'+
+    '<div class="btns"><button class="btn" onclick="saveZakatDate()">'+L('حفظ','Save')+'</button></div>');
+}
+function saveZakatDate(){ var v = document.getElementById('fZd').value; if(!v) return; busy(call('saveSettings',{zakatDate:v}), L('اتحفظ ✓','Saved ✓')); }
+function payZakat(){
+  var z = zakatCalc(), nd = zakatNext() || sod(new Date());
+  var paid = (S().zakatPaid||[]).concat([{date:iso(new Date()).slice(0,10), amount:Math.round(z.zakat*100)/100}]);
+  var next = iso(addD(nd,354)).slice(0,10); // السنة الهجري ≈ 354 يوم
+  busy(call('saveSettings',{zakatPaid:paid, zakatDate:next}), L('تقبّل الله ✓ الميعاد الجاي ','Recorded ✓ Next due ')+dShort(pd(next)));
+}
+
+/* ============ التنبيهات على الموبايل ============ */
+var NOTIFY_KINDS = [['salary','💼','المرتب نزل','Salary landed'],['income','💰','أي فلوس دخلت','Money coming in'],['review','🔁','حوالة محتاج تحدد راحت فين','Transfers to sort'],
+  ['big','💸','مصروف كبير (1,000 أو أكتر)','Big spending (1,000+)'],['inst','🧾','قسط بكرة أو النهارده','Installment due'],['subs','🔄','اشتراك هيتخصم بكرة','Subscription tomorrow'],
+  ['zakat','🕌','ميعاد الزكاة','Zakat reminder'],['weekly','🍔','الأكل زاد عن المعتاد (كل خميس)','Food above usual (Thursdays)']];
+function pushOn(){ try{ return localStorage.getItem('sayad-push')==='1' && 'Notification' in window && Notification.permission==='granted'; }catch(e){ return false; } }
+function idbKV(){ return new Promise(function(res,rej){ var r=indexedDB.open('sayad',1); r.onupgradeneeded=function(){ r.result.createObjectStore('kv'); }; r.onsuccess=function(){ res(r.result); }; r.onerror=function(){ rej(r.error); }; }); }
+function idbPut(k,v){ return idbKV().then(function(db){ return new Promise(function(res){ var tx=db.transaction('kv','readwrite'); tx.objectStore('kv').put(v,k); tx.oncomplete=function(){ res(); }; tx.onerror=function(){ res(); }; }); }).catch(function(){}); }
+function b64uBytes(s){ s=s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; var b=atob(s), a=new Uint8Array(b.length); for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return a; }
+function editNotify(){
+  var p = S().notify||{}, on = pushOn();
+  var standalone = navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  var can = HOSTED && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  var head = !can ? '<div class="alert amber"><div>'+(DEMO_SITE ? L('التنبيهات بتشتغل في النسخة الحقيقية بس.','Notifications only work in the real app.') :
+      L('افتح «صياد القرش» من الأيكون اللي على الشاشة الرئيسية، مش من سفاري، وبعدين ارجع هنا.','Open Sayad Elarsh from its Home Screen icon (not Safari), then come back here.'))+'</div></div>'
+    : on ? '<div class="row" style="margin-bottom:12px"><span class="good">✓ '+L('التنبيهات شغالة على الموبايل ده','Notifications are on for this phone')+'</span><button class="btn ghost" style="width:auto;padding:8px 14px;margin:0" onclick="testNotify()">'+L('جرّب','Test')+'</button></div>'
+    : '<div class="dim" style="font-size:13px;margin-bottom:10px">'+L('هيوصلك تنبيه زي أي أبلكيشن لما المرتب ينزل، أو قسط قرّب، أو صرفت حاجة كبيرة.','Get alerts like any app: when your salary lands, an installment is due, or you spend something big.')+'</div>'+
+      '<div class="btns" style="margin-top:0"><button class="btn" onclick="enablePush()">🔔 '+L('شغّل التنبيهات','Turn on notifications')+'</button></div>';
+  openSheet('<h2>🔔 '+L('التنبيهات','Notifications')+'</h2>'+head+
+    '<div class="section-title">'+L('ابعتلي لما','Notify me about')+'</div><div class="card">'+NOTIFY_KINDS.map(function(k){
+      return kv(k[1]+' '+L(k[2],k[3]), p[k[0]]===false ? '<span class="muted">'+L('مقفول','Off')+'</span>' : '<span class="good">'+L('شغال','On')+'</span>', "toggleNotify('"+k[0]+"')"); }).join('')+'</div>');
+}
+function toggleNotify(k){ var p = Object.assign({}, S().notify||{}); p[k] = (p[k]===false); D.settings.notify = p; editNotify(); call('saveSettings',{notify:p}).then(function(d){ D=d; }).catch(function(){}); }
+function enablePush(){
+  var perm;
+  try{ perm = Notification.requestPermission(); }catch(e){ return toast(L('الموبايل ده مش بيدعم التنبيهات','This phone doesn’t support notifications')); }
+  toast(L('ثواني…','One moment…'));
+  Promise.resolve(perm).then(function(p){ if(p!=='granted') throw new Error(L('محتاج تسمح بالتنبيهات (Allow). لو رفضتها، فعّلها من إعدادات الآيفون ← Notifications ← صياد القرش','Please tap Allow. If you declined, enable it in iPhone Settings ← Notifications'));
+      return navigator.serviceWorker.ready; })
+    .then(function(reg){ return call('getPushKey').then(function(k){
+      return reg.pushManager.getSubscription().then(function(old){ return old ? old.unsubscribe() : null; })
+        .then(function(){ return reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64uBytes(k.publicKey)}); }); }); })
+    .then(function(sub){ return idbPut('cfg',{api:API_URL, key:appKey(), last:Date.now()-1000}).then(function(){ return call('savePushSub', JSON.parse(JSON.stringify(sub))); }); })
+    .then(function(){ try{ localStorage.setItem('sayad-push','1'); }catch(e){} return call('testPush'); })
+    .then(function(r){ editNotify(); render(); toast(r && r.sent ? L('اشتغلت ✓ هيوصلك تنبيه تجربة دلوقتي','Done ✓ a test notification is on its way') : L('اتفعّلت، بس التجربة موصلتش. جرّب تاني بعد شوية','Turned on, but the test didn’t arrive yet')); })
+    .catch(function(e){ toast(String(e && e.message || e)); });
+}
+function testNotify(){ call('testPush').then(function(r){ toast(r && r.sent ? L('اتبعت ✓','Sent ✓') : L('موصلش، دوس «شغّل التنبيهات» تاني','Didn’t arrive — turn notifications on again')); if(!(r&&r.sent)){ try{ localStorage.removeItem('sayad-push'); }catch(e){} editNotify(); } }).catch(function(e){ toast(String(e&&e.message||e)); }); }
+// كل فتحة: نخلي المفتاح اللي الـ service worker بيستخدمه متحدث
+if(HOSTED && pushOn()) idbKV().then(function(db){ var tx=db.transaction('kv','readonly'), r=tx.objectStore('kv').get('cfg'); r.onsuccess=function(){ var c=r.result||{}; if(c.key!==appKey()||c.api!==API_URL) idbPut('cfg',{api:API_URL,key:appKey(),last:c.last||Date.now()}); }; }).catch(function(){});
+
 function vSettings(){
   var s = S(), h = '';
   h += '<div class="section-title">'+L('إنت','You')+'</div><div class="card">'+
     kv('👤 '+L('البروفايل','Profile'), esc(userName()), "editProfile()")+
     kv('🌐 '+L('اللغة','Language'), L('العربي','English'), "editLang()")+
+    kv('🔔 '+L('التنبيهات','Notifications'), pushOn()?'<span class="good">'+L('شغالة','On')+'</span>':L('مقفولة','Off'), "editNotify()")+
     kv('🔒 '+L('قفل بـ Face ID','Face ID lock'), Lock.cfg().on?'<span class="good">'+L('شغال','On')+'</span>':L('مقفول','Off'), "editLock()")+
     '</div>';
   h += '<div class="section-title">'+L('الميزانية','Budget')+'</div><div class="card">'+
