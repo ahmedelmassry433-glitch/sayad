@@ -583,12 +583,14 @@ var CATS = {
   'معدات تصوير':['📷','#22d3ee'], 'مصاريف شغل':['🎬','#a3e635'], 'سفر':['✈️','#60a5fa'],
   'حوالة شخصية':['🔁','#94a3b8'], 'مساعدة البيت (مصر)':['🇪🇬','#facc15'], 'اشتراكات وأدوات شغل':['🧾','#818cf8'],
   'عربية':['🚗','#2dd4bf'], 'موبايل وإنترنت':['📱','#38bdf8'], 'عناية شخصية وصيدلية':['💊','#e879f9'],
-  'رسوم بنكية':['🏦','#64748b'], 'متفرقات':['📦','#a8a29e'], 'ادخار':['🐷','#86efac'], 'سداد كريدت':['💳','#93c5fd'],
+  'رسوم بنكية':['🏦','#64748b'], 'متفرقات':['📦','#a8a29e'], 'ادخار':['🐷','#86efac'], 'سداد كريدت':['💳','#93c5fd'], 'مش فلوسي':['🤝','#cbd5e1'],
   'مرتب':['💼','#4ade80'], 'فريلانس':['🎬','#34d399'], 'دخل تاني':['💰','#bef264']
 };
-var EXP = ['أكل','إيجار','أقساط تابي وتمارا','شوبينج','معدات تصوير','مصاريف شغل','سفر','مساعدة البيت (مصر)','اشتراكات وأدوات شغل','عربية','موبايل وإنترنت','عناية شخصية وصيدلية','رسوم بنكية','متفرقات','حوالة شخصية'];
+var EXP = ['أكل','إيجار','أقساط تابي وتمارا','شوبينج','معدات تصوير','مصاريف شغل','سفر','مساعدة البيت (مصر)','اشتراكات وأدوات شغل','عربية','موبايل وإنترنت','عناية شخصية وصيدلية','رسوم بنكية','متفرقات','حوالة شخصية','مش فلوسي'];
 // اختيارات سريعة للحوالات اللي مش معروف راحت في إيه
-var REVIEW_CATS = ['أكل','مصاريف شغل','مساعدة البيت (مصر)','شوبينج','عربية','إيجار','متفرقات'];
+var REVIEW_CATS = ['أكل','مصاريف شغل','مساعدة البيت (مصر)','شوبينج','عربية','إيجار','متفرقات','مش فلوسي'];
+// «مش فلوسي»: فلوس جت عليك بس مش بتاعتك وطلعت تاني (زي الـ 5,000 اللي نزلت مع المرتب لحسين). مش مصروف، وبتتخصم من دخلك
+var NOT_MINE = 'مش فلوسي';
 var INC = ['مرتب','فريلانس','دخل تاني'];
 
 /* ============ اللغة: عربي / English ============
@@ -598,12 +600,26 @@ var LANG = (function(){ try{ return localStorage.getItem('sayad-lang') || 'ar'; 
 function L(ar, en){ return LANG==='en' ? en : ar; }
 var CAT_EN = {
   'أكل':'Food', 'إيجار':'Rent', 'أقساط تابي وتمارا':'Tabby & Tamara', 'شوبينج':'Shopping', 'معدات تصوير':'Camera gear',
-  'مصاريف شغل':'Work expenses', 'سفر':'Travel', 'حوالة شخصية':'Personal transfer', 'ادخار':'Savings', 'سداد كريدت':'Credit card payment',
+  'مصاريف شغل':'Work expenses', 'سفر':'Travel', 'حوالة شخصية':'Personal transfer', 'ادخار':'Savings', 'سداد كريدت':'Credit card payment', 'مش فلوسي':'Not my money',
   'مساعدة البيت (مصر)':'Family support (Egypt)', 'اشتراكات وأدوات شغل':'Subscriptions & tools', 'عربية':'Car & transport',
   'موبايل وإنترنت':'Mobile & internet', 'عناية شخصية وصيدلية':'Personal care & pharmacy', 'رسوم بنكية':'Bank fees', 'متفرقات':'Other',
   'مرتب':'Salary', 'فريلانس':'Freelance', 'دخل تاني':'Other income'
 };
 function catName(c){ return LANG==='en' ? (CAT_EN[c]||c) : c; }
+/* أسامي التجار والناس: في الإنجليزي بتتترجم أو تتكتب بحروف إنجليزي */
+var NAME_EN = [['سداد الكريدت كارد','Credit card payment'],['كريدت الراجحي','Al Rajhi credit'],['بطاقة ائتمان','Credit card'],['حوالة شخصية','Personal transfer'],
+  ['سحب صراف','ATM withdrawal'],['تحويل للأهل','Transfer to family'],['تحويل لمصر','Transfer to Egypt'],['تحويل لـ','Transfer to '],['تحويل ل','Transfer to '],['تحويل من ','Transfer from '],
+  ['حوالة','Transfer'],['رسوم ','Fee · '],['إيجار الشقة','Apartment rent'],['إيجار','Rent'],['معدات تصوير','Camera gear'],['كريدت كارد تانية','second credit card'],['مش في كشف الراجحي','not on the Al Rajhi statement'],
+  ['نور','Nour'],['حسين','Hussein'],['صلاح','Salah'],['أحمد','Ahmed'],['احمد','Ahmed'],['محمد','Mohamed'],['مرادى','Mourady'],['مرادي','Mourady'],['مصر','Egypt'],['الراجحي','Al Rajhi'],
+  ['بسيطة','Basita'],['تساهيل','Tasheel'],['تابي','Tabby'],['تمارا','Tamara'],['مرتب','Salary'],['راتب','Salary'],['كاش','Cash']];
+var TRANSLIT = {'ا':'a','أ':'a','إ':'e','آ':'a','ب':'b','ت':'t','ث':'th','ج':'g','ح':'h','خ':'kh','د':'d','ذ':'th','ر':'r','ز':'z','س':'s','ش':'sh','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'a','غ':'gh','ف':'f','ق':'q','ك':'k','ل':'l','م':'m','ن':'n','ه':'h','ة':'a','و':'o','ي':'y','ى':'a','ئ':'e','ؤ':'o','ء':'','ـ':''};
+function enName(m){
+  m = String(m==null?'':m); if(LANG!=='en' || !/[؀-ۿ]/.test(m)) return m;
+  NAME_EN.forEach(function(p){ m = m.split(p[0]).join(p[1]); });
+  m = m.replace(/[؀-ۿ]+/g, function(w){ var o=w.split('').map(function(ch){ return TRANSLIT[ch]!=null?TRANSLIT[ch]:''; }).join(''); return o.charAt(0).toUpperCase()+o.slice(1); });
+  return m.replace(/\s+/g,' ').replace(/\s+·\s*$/,'').trim();
+}
+function txName(t){ if(LANG==='en' && t.category==='مرتب' && /[؀-ۿ]/.test(t.merchant||'')) return 'Salary deposit'; return enName(t.merchant)||catName(t.category); }
 function stName(s){ return s==='اتقبض' ? L('اتقبض','Paid') : L('لسه','Pending'); }
 var MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -734,9 +750,13 @@ function prevTx(period, offset){
   if(now < cur.e){ var e = new Date(p.s.getTime() + (now - cur.s)); p = {s:p.s, e:e<p.e?e:p.e}; }
   return inRange(p);
 }
-function sum(list,type){ return list.reduce(function(a,t){ return a + (t.type===type? Number(t.amount)||0 : 0); },0); }
+function sum(list,type){ return list.reduce(function(a,t){ var v=Number(t.amount)||0;
+  if(t.category===NOT_MINE && t.type==='expense') return type==='income' ? a-v : a;
+  return a + (t.type===type? v : 0); },0); }
+// المرتب بعد ما يتشال منه أي «مش فلوسي»
+function salOf(list){ return sum(list.filter(function(t){return t.category==='مرتب'||t.category===NOT_MINE;}),'income'); }
 function byCat(list,type){
-  var o={}; list.forEach(function(t){ if(t.type===type){ o[t.category]=(o[t.category]||0)+(Number(t.amount)||0); } });
+  var o={}; list.forEach(function(t){ if(t.type===type && t.category!==NOT_MINE){ o[t.category]=(o[t.category]||0)+(Number(t.amount)||0); } });
   return Object.keys(o).map(function(k){return {cat:k,v:o[k]};}).sort(function(a,b){return b.v-a.v;});
 }
 function goldSar(){ if(D.goldPrice && (D.gold||[]).length) return gTotals().value/egpRate(); var s=S(); return (Number(s.goldPounds)||0)*(Number(s.goldPoundPriceEgp)||0)/(Number(s.egpPerSar)||1); }
@@ -767,7 +787,7 @@ var MERCHANT_LOGOS = [
   [/NAHDI/i,'nahdionline.com'], [/DAWAA/i,'al-dawaa.com'],
   [/FLYNAS/i,'flynas.com'], [/FLYADEAL/i,'flyadeal.com'], [/SAUDIA/i,'saudia.com'], [/EGYPTAIR/i,'egyptair.com'],
   [/BOOKING/i,'booking.com'], [/AIRBNB/i,'airbnb.com'], [/AGODA/i,'agoda.com'], [/ALMOSAFER/i,'almosafer.com'], [/EMIRATES/i,'emirates.com'],
-  [/TABBY|تابي/i,'tabby.ai'], [/TAMARA|تمارا/i,'tamara.co'], [/BASITA|BASEETA|بسيطة/i,'baseeta.com'], [/كريدت الراجحي|بطاقة ائتمان|AL ?RAJHI/i,'alrajhibank.com.sa'], [/BODY MASTERS/i,'bodymasters.com.sa']
+  [/TABBY|تابي/i,'tabby.ai'], [/TAMARA|تمارا/i,'tamara.co'], [/BASITA|BASEETA|بسيطة|TASHEEL|تساهيل/i,'baseeta.com'], [/كريدت الراجحي|بطاقة ائتمان|AL ?RAJHI/i,'alrajhibank.com.sa'], [/BODY MASTERS/i,'bodymasters.com.sa']
 ];
 function logoDomain(text){
   if(!text) return null;
@@ -800,7 +820,7 @@ var IC_PATH = {
 };
 var CAT_ICON = {
   'أكل':'food', 'إيجار':'home', 'أقساط تابي وتمارا':'card', 'شوبينج':'bag', 'معدات تصوير':'camera', 'مصاريف شغل':'film',
-  'سفر':'plane', 'حوالة شخصية':'swap', 'ادخار':'coins', 'سداد كريدت':'card', 'مساعدة البيت (مصر)':'heart', 'اشتراكات وأدوات شغل':'repeat', 'عربية':'car',
+  'سفر':'plane', 'حوالة شخصية':'swap', 'ادخار':'coins', 'سداد كريدت':'card', 'مش فلوسي':'swap', 'مساعدة البيت (مصر)':'heart', 'اشتراكات وأدوات شغل':'repeat', 'عربية':'car',
   'موبايل وإنترنت':'phone', 'عناية شخصية وصيدلية':'pill', 'رسوم بنكية':'bank', 'متفرقات':'box',
   'مرتب':'brief', 'فريلانس':'film', 'دخل تاني':'coins'
 };
@@ -1089,7 +1109,7 @@ function vHome(){
     '</div>';
 
   // الدخل
-  var sal = sum(monthTx.filter(function(t){return t.category==='مرتب';}),'income');
+  var sal = salOf(monthTx);
   var fl = sum(monthTx.filter(function(t){return t.category==='فريلانس';}),'income');
   var pend = pendingFreelance();
   var saveRate = incM>0 ? (incM-spentM)/incM : 0;
@@ -1196,8 +1216,8 @@ function vInstallments(compact){
 }
 // القسط بيتعرض باسم وشعار الأبلكيشن اللي عليه (تابي/تمارا/بسيطة/الكريدت)، والمحل جنبه
 function instIc(prov){ return catIc('أقساط تابي وتمارا', prov||''); }
-function instTitle(o){ return '<b>'+esc(o.provider)+'</b>'; }
-function instSub(o, extra){ return '<span>'+(o.merchant?esc(o.merchant)+(extra?' · ':''):'')+(extra||'')+'</span>'; }
+function instTitle(o){ return '<b>'+esc(enName(o.provider))+'</b>'; }
+function instSub(o, extra){ return '<span>'+(o.merchant?esc(enName(o.merchant))+(extra?' · ':''):'')+(extra||'')+'</span>'; }
 function instRow(i){
   var d=pd(i.dueDate), late=i.dueDate<todayStr();
   return '<div class="tx" onclick="editInst(\''+i.id+'\')">'+instIc(i.provider)+
@@ -1246,7 +1266,7 @@ function openPlan(id){
   var all=(D.installments||[]).filter(function(i){ return (i.planId||(i.provider+'|'+i.merchant))===id; }).sort(function(a,b){return a.dueDate<b.dueDate?-1:1;});
   if(!all.length) return;
   var f=all[0];
-  openSheet('<h2>'+esc(f.provider)+(f.merchant?' · '+esc(f.merchant):'')+'</h2>'+
+  openSheet('<h2>'+esc(enName(f.provider))+(f.merchant?' · '+esc(enName(f.merchant)):'')+'</h2>'+
     all.map(function(i){
       var paid=instPaid(i);
       return '<div class="kv" onclick="toggleInst(\''+i.id+'\')"><div><span>'+(instNumTxt(i)||dShort(pd(i.dueDate)))+'</span><div class="dim" style="font-size:11.5px">'+dayLabel(pd(i.dueDate))+'</div></div>'+
@@ -1322,11 +1342,11 @@ function gIndicator(){
 
 /* ---------- العمليات ---------- */
 function txRow(t){
-  var d = pd(t.date), a = Number(t.amount)||0, inc = t.type==='income' || (t.type==='expense' && a<0), sav = t.type==='saving';
+  var d = pd(t.date), a = Number(t.amount)||0, inc = t.type==='income' || (t.type==='expense' && a<0), nm = t.category===NOT_MINE, sav = t.type==='saving' || nm;
   var src = (t.source==='sms'||t.source==='push')?'':t.source==='cash'?' · '+L('كاش','Cash'):t.source==='import'?'':' · '+L('يدوي','Manual');
-  var sub = sav ? L('ادخار · مش محسوب في المصاريف','Savings · not counted as spending') : esc(catName(t.category))+(t.type==='expense'&&a<0?' · '+L('رجعتلك','refund'):'');
+  var sub = nm ? L('مش فلوسك · مش محسوبة مصروف ولا دخل','Not your money · not counted as spending or income') : sav ? L('ادخار · مش محسوب في المصاريف','Savings · not counted as spending') : esc(catName(t.category))+(t.type==='expense'&&a<0?' · '+L('رجعتلك','refund'):'');
   return '<div class="tx'+(needsReview(t)?' review':'')+'" onclick="editTx(\''+t.id+'\')">'+catIc(t.category, t.merchant)+
-    '<div class="mid"><b>'+esc(t.merchant||catName(t.category))+'</b><span>'+sub+' · '+hhmm(d)+src+(t.note?' · '+esc(t.note):'')+'</span></div>'+
+    '<div class="mid"><b>'+esc(txName(t))+'</b><span>'+sub+' · '+hhmm(d)+src+(t.note?' · '+esc(t.note):'')+'</span></div>'+
     '<div class="amt'+(inc?' in':'')+(sav?' dim':'')+'"><span class="num">'+(inc?'+':'')+fmtN(Math.abs(a),2)+'</span></div>'+reviewChips(t)+'</div>';
 }
 /* حوالة شخصية مش معروف راحت في إيه → اختيارات سريعة جنبها */
@@ -1463,10 +1483,10 @@ function vReport(){
       (lim&&UI.period!=='day'?'<div class="dim" style="font-size:11.5px;margin-top:4px">'+(c.v>lim?'<span class="bad">'+L('عدّى الميزانية ('+money(lim)+')','Over budget ('+money(lim)+')')+'</span>':L('من ميزانية ','of a ')+money(lim)+L('',' budget'))+'</div>':'')+'</div>';
   }).join('') : '<div class="empty"><span>🌊</span>'+L('مفيش مصاريف في الفترة دي','No spending in this period')+'</div>')+'</div>';
 
-  var m = {}; list.forEach(function(t){ if(t.type==='expense'){ var k=t.merchant||t.category; m[k]=m[k]||{v:0,n:0,cat:t.category}; m[k].v+=Number(t.amount); m[k].n++; }});
+  var m = {}; list.forEach(function(t){ if(t.type==='expense' && t.category!==NOT_MINE){ var k=t.merchant||t.category; m[k]=m[k]||{v:0,n:0,cat:t.category}; m[k].v+=Number(t.amount); m[k].n++; }});
   var top = Object.keys(m).map(function(k){return {k:k,v:m[k].v,n:m[k].n,cat:m[k].cat};}).sort(function(a,b){return b.v-a.v;}).slice(0,6);
   if(top.length) h += '<div class="card"><h3>'+L('أكتر أماكن صرفت فيها','Top merchants')+'</h3>'+top.map(function(t){
-    return '<div class="tx" style="cursor:default">'+catIc(t.cat, t.k)+'<div class="mid"><b>'+esc(t.k)+'</b><span>'+t.n+L(' مرة',t.n===1?' time':' times')+'</span></div><div class="amt">'+money(t.v)+'</div></div>';}).join('')+'</div>';
+    return '<div class="tx" style="cursor:default">'+catIc(t.cat, t.k)+'<div class="mid"><b>'+esc(enName(t.k))+'</b><span>'+t.n+L(' مرة',t.n===1?' time':' times')+'</span></div><div class="amt">'+money(t.v)+'</div></div>';}).join('')+'</div>';
 
   var ic = byCat(list,'income');
   if(ic.length) h += '<div class="card"><h3>'+L('دخلك جاي منين','Where your income came from')+'</h3>'+ic.map(function(c){
@@ -1480,7 +1500,7 @@ function chart(r,list){
   if(r.period==='year'){ for(i=0;i<12;i++) buckets.push({s:new Date(r.s.getFullYear(),i,1),e:new Date(r.s.getFullYear(),i+1,1),l:MON3(i),full:MON(i)}); }
   else { for(var d=new Date(r.s); d<r.e; d=addD(d,1)) buckets.push({s:new Date(d),e:addD(d,1),l:r.period==='week'?DAY3(d.getDay()):String(d.getDate()),full:dayLabel(d)}); }
   var today = sod(new Date());
-  buckets.forEach(function(b){ b.v = list.reduce(function(a,t){ var d=pd(t.date); return a+(t.type==='expense'&&d>=b.s&&d<b.e?Number(t.amount):0); },0); });
+  buckets.forEach(function(b){ b.v = list.reduce(function(a,t){ var d=pd(t.date); return a+(t.type==='expense'&&t.category!==NOT_MINE&&d>=b.s&&d<b.e?Number(t.amount):0); },0); });
   var max = Math.max.apply(null, buckets.map(function(b){return b.v;}).concat([1]));
   var past = buckets.filter(function(b){return b.s<=today;}), avg = past.length? past.reduce(function(a,b){return a+b.v;},0)/past.length : 0;
   var daily = budgetFor(range('month',0))/30, lim = r.period==='year'? daily*30 : daily;
@@ -1511,7 +1531,7 @@ function vIncome(){
     '<div class="bar" style="margin-top:8px"><i style="width:'+Math.min(100,flRecM/target*100)+'%"></i></div></div>';
 
   var months=[]; for(var i=5;i>=0;i--){ var r=range('month',-i); var l=inRange(r);
-    months.push({l:MON3(r.s.getMonth()), sal:sum(l.filter(function(t){return t.category==='مرتب';}),'income'), fl:sum(l.filter(function(t){return t.category==='فريلانس';}),'income'), ex:sum(l,'expense')}); }
+    months.push({l:MON3(r.s.getMonth()), sal:salOf(l), fl:sum(l.filter(function(t){return t.category==='فريلانس';}),'income'), ex:sum(l,'expense')}); }
   var mx = Math.max.apply(null, months.map(function(m){return Math.max(m.sal+m.fl,m.ex);}).concat([1]));
   h += '<div class="card"><h3>'+L('دخلك ومصاريفك آخر 6 شهور','Income vs. spending, last 6 months')+'</h3><div class="chart" style="height:150px;gap:10px">'+months.map(function(m){
     return '<div class="col" style="flex-direction:row;align-items:flex-end;gap:3px;justify-content:center" onclick="tipShow2(\''+m.l+'\','+m.sal+','+m.fl+','+m.ex+')">'+
@@ -1523,7 +1543,7 @@ function vIncome(){
 
   var fl = D.freelance.slice().sort(function(a,b){ if(a.status!==b.status) return a.status==='لسه'?-1:1; return a.date<b.date?1:-1; });
   h += '<div class="card"><h3>'+L('فواتير الفريلانس','Freelance invoices')+' <a onclick="editFreelance()">+ '+L('فاتورة جديدة','New invoice')+'</a></h3>'+(fl.length? fl.map(function(f){
-    return '<div class="tx" onclick="editFreelance(\''+f.id+'\')">'+catIc('فريلانس')+'<div class="mid"><b>'+esc(f.client)+'</b><span>'+dShort(pd(f.date))+(f.note?' · '+esc(f.note):'')+'</span></div>'+
+    return '<div class="tx" onclick="editFreelance(\''+f.id+'\')">'+catIc('فريلانس')+'<div class="mid"><b>'+esc(enName(f.client))+'</b><span>'+dShort(pd(f.date))+(f.note?' · '+esc(f.note):'')+'</span></div>'+
       '<div style="text-align:end"><div class="amt">'+money(f.amount)+'</div><span class="status '+(f.status==='اتقبض'?'paid':'pend')+'" onclick="event.stopPropagation();toggleFl(\''+f.id+'\')">'+(f.status==='اتقبض'?'✓ ':'⏳ ')+stName(f.status)+'</span></div></div>';
   }).join('') : '<div class="empty">'+L('مفيش فواتير','No invoices')+'</div>')+'</div>';
 
@@ -1803,7 +1823,7 @@ function editTx(id){
   var t = D.tx.filter(function(x){return x.id===id;})[0]; if(!t) return;
   draft = {id:id, category:t.category, type:t.type};
   var same = D.tx.filter(function(x){return x.merchant && x.merchant===t.merchant;}).length;
-  openSheet('<h2>'+esc(t.merchant||catName(t.category))+'</h2>'+
+  openSheet('<h2>'+esc(txName(t))+'</h2>'+
     '<div class="row" style="margin-bottom:14px"><b style="font-size:30px;font-weight:400" class="'+(t.type==='income'?'good':'')+'"><span class="num">'+(t.type==='income'?'+':'')+fmtN(t.amount,2)+'</span> <small class="muted" style="font-size:14px">'+CUR()+'</small></b><span class="muted" style="font-size:13px">'+dayLabel(pd(t.date))+' '+hhmm(pd(t.date))+'</span></div>'+
     (t.raw?'<div class="field"><label>'+L('رسالة البنك','Bank message')+'</label><div class="raw">'+esc(t.raw)+'</div></div>':'')+
     '<div class="field"><label>'+L('البند','Category')+'</label>'+catGrid(t.type,t.category)+'</div>'+
