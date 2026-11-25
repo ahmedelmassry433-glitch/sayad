@@ -659,7 +659,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
-var APP_VER = 'v19';
+var APP_VER = 'v20';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
@@ -2052,12 +2052,13 @@ function zakatEstimate(){
   var tx = D.tx.slice().sort(function(a,b){ return pd(b.date)-pd(a.date); });
   if(!tx.length || !z.nisab) return null;
   var first = sod(pd(tx[tx.length-1].date)), bal = Number(s.bankBalance)||0, cash = Number(s.cash)||0, i = 0, series = [];
+  var cashFrom = s.cashSince ? sod(pd(s.cashSince)) : addD(today,-90); // الكاش الكبير بنحسبه من آخر 3 شهور بس (مش عارفين كان معاك من إمتى)
   function goldOn(d){ var v = 0, undated = false; (D.gold||[]).forEach(function(g){ if(!g.date){ undated = true; v += gValue(g)/fx; } else if(sod(pd(g.date)) <= d) v += gValue(g)/fx; }); return {v:v, undated:undated}; }
   for(var d = today; d >= first; d = addD(d,-1)){
     var dayEnd = addD(d,1);
     while(i < tx.length && pd(tx[i].date) >= dayEnd){ var t = tx[i], a = Number(t.amount)||0;   // نلغي أثر العمليات اللي بعد اليوم ده
       if(t.source==='cash' || /كريدت/.test(t.note||'')){ } else if(t.type==='income') bal -= a; else bal += a; i++; }
-    var g = goldOn(d); series.push({d:d, total: bal + cash + g.v - (z.decDebts ? z.debts : 0), undated:g.undated});
+    var g = goldOn(d); series.push({d:d, total: bal + (d >= cashFrom ? cash : 0) + g.v - (z.decDebts ? z.debts : 0), undated:g.undated});
   }
   var above = series.filter(function(x){ return x.total >= z.nisab; }).length;
   var lastBelow = null; for(var k=0;k<series.length;k++){ if(series[k].total < z.nisab){ lastBelow = series[k].d; break; } }
