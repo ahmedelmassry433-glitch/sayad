@@ -45,14 +45,16 @@ select option{background:#10161a}
     radial-gradient(38vmax 38vmax at 6% 46%, rgba(160,110,255,.42), transparent 62%),
     radial-gradient(34vmax 34vmax at 85% 86%, rgba(245,130,190,.34), transparent 62%),
     radial-gradient(30vmax 30vmax at 25% 100%, rgba(120,180,255,.28), transparent 62%);
-  filter:blur(24px);animation:drift 38s ease-in-out infinite alternate}
+  will-change:transform;animation:drift 38s ease-in-out infinite alternate}
 @keyframes drift{to{transform:translate3d(-3vmax,2vmax,0) rotate(6deg)}}
 .grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.05;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")}
 
 /* الزجاج */
-.glass,.card,.stat,.seg,.search input,.chip,.nav button,.iconbtn,.tabs,.fab,.sheet,.toast,.demo{
+/* البلور على الحاجات اللي فوق الصفحة بس (الشريط، +، الشيتات). الكروت فوق خلفية ناعمة أصلاً، فشكلها مبيتغيرش والأبلكيشن أخف بكتير */
+.tabs,.fab,.sheet,.toast{
   -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+.card,.stat{background-color:rgba(14,20,23,.38)}
 .card,.stat{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
   border:1px solid var(--brd);border-radius:var(--r);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 20px 40px -24px rgba(0,0,0,.7)}
@@ -93,8 +95,7 @@ html[dir=ltr] .greet{letter-spacing:-.4px}
 .greet{font-size:21px;font-weight:600;margin:0 0 14px;line-height:1.35;letter-spacing:-.2px;max-width:80%}
 .greet .w{display:inline-block;will-change:transform,opacity}
 .arrowbtn{position:absolute !important;top:16px;inset-inline-end:16px;width:46px;height:46px;border-radius:50%;
-  display:grid;place-items:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);
-  -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+  display:grid;place-items:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22)}
 .arrowbtn svg{width:18px;height:18px}
 
 /* ميني كروت ملونة */
@@ -109,7 +110,7 @@ html[dir=ltr] .greet{letter-spacing:-.4px}
 
 /* pills */
 .pill{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;font-size:13px;
-  background:rgba(255,255,255,.14);color:#effffa;border:1px solid rgba(255,255,255,.16);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+  background:rgba(255,255,255,.14);color:#effffa;border:1px solid rgba(255,255,255,.16);}
 .pill.bad{background:rgba(255,138,138,.18);color:#ffd5d5;border-color:rgba(255,138,138,.3)}
 .pill.warn{background:rgba(255,210,122,.16);color:#ffe8b8;border-color:rgba(255,210,122,.28)}
 .pill.muted{background:rgba(255,255,255,.08);color:var(--muted)}
@@ -151,7 +152,7 @@ html[dir=ltr] .greet{letter-spacing:-.4px}
 .rchips button{flex:none;white-space:nowrap}
 .rchips em{flex:none;white-space:nowrap;font-style:normal;font-size:11.5px;color:var(--dim);margin-inline-end:2px}
 .rchips button{display:inline-flex;align-items:center;gap:4px;font:inherit;font-size:12px;color:var(--text);padding:5px 10px;border-radius:999px;
-  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);cursor:pointer}
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);cursor:pointer}
 .rchips button:active{transform:scale(.95);background:rgba(255,255,255,.16)}
 .rchips .cIco{width:14px;height:14px}.rchips .cIco svg{width:14px;height:14px}
 .more summary{font-size:13px;color:var(--dim);cursor:pointer;padding:6px 0}
@@ -251,8 +252,7 @@ html[dir=ltr] .greet{letter-spacing:-.4px}
 .sheet.dragging{transition:none}
 .swGhost{position:fixed;left:0;right:0;top:0;height:100vh;overflow:hidden;z-index:2;pointer-events:none;will-change:transform}
 .swGhost .heroBg{display:none}
-body.swiping .card,body.swiping .stat,body.swiping .glass,body.swiping .seg,body.swiping .chip,body.swiping .search input,body.swiping .demo,body.swiping .alert{-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
-body.swiping .heroBg{visibility:hidden}
+
 /* سحب يمين وشمال بين التابات */
 
 .sheet h2{font-size:19px;margin:0 0 14px;font-weight:600}
@@ -289,7 +289,7 @@ body.swiping .heroBg{visibility:hidden}
 .search{position:relative;margin-bottom:10px}
 .search input{padding-inline-start:44px;border-radius:999px;background:rgba(255,255,255,.06)}
 .search svg{position:absolute;inset-inline-start:16px;top:14px;width:18px;height:18px;color:var(--dim)}
-.alert{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;padding:12px 14px;border-radius:22px;background:rgba(255,138,138,.08);border:1px solid rgba(255,138,138,.22);margin-bottom:8px;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+.alert{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;padding:12px 14px;border-radius:22px;background:rgba(255,138,138,.08);border:1px solid rgba(255,138,138,.22);margin-bottom:8px;}
 .alert.amber{background:rgba(255,210,122,.07);border-color:rgba(255,210,122,.25)}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
 .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-inline-end:5px;vertical-align:middle}
@@ -352,7 +352,7 @@ body.locked{overflow:hidden}
 .seg.mini button{padding:7px 0;font-size:13px}
 .hero.goldHero{background:linear-gradient(165deg,rgba(255,236,170,.30) 0%,rgba(243,190,80,.30) 45%,rgba(176,120,30,.45) 100%);border-color:rgba(255,220,140,.3)}
 .plBig{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;font-size:17px;font-weight:600;
-  -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid}
+  border:1px solid}
 .plBig small{font-size:12px;font-weight:500;opacity:.8}
 .plBig .pct{font-size:13px;opacity:.9}
 .plBig.up{background:rgba(74,222,128,.16);color:#9ff5c4;border-color:rgba(74,222,128,.35)}
@@ -522,7 +522,8 @@ var Motion = (function(){
 
 /* ===== خلفية الهيرو: موج هادي (نسخة canvas خفيفة على طريقة Waves من React Bits) ===== */
 var Waves = (function(){
-  var cvs = [], raf = 0, last = 0, reduced = false, t0 = performance.now();
+  var cvs = [], raf = 0, last = 0, reduced = false, t0 = performance.now(), lastScroll = 0;
+  window.addEventListener('scroll', function(){ lastScroll = performance.now(); }, {passive:true});
   var ptr = {x:-1e4, y:-1e4, sx:-1e4, sy:-1e4};
   // Perlin noise 2D
   var P = new Uint8Array(512);
@@ -565,6 +566,7 @@ var Waves = (function(){
     cvs = cvs.filter(function(c){ return c.isConnected; });
     if(!cvs.length || reduced || document.hidden) return;
     raf = requestAnimationFrame(frame);
+    if(document.body.classList.contains('swiping') || now - lastScroll < 150) return; // وإنت بتسحب أو بتعمل سكرول: الموج بيستنى
     if(now - last < 33) return; // ~30fps كفاية وبيوفّر بطارية
     last = now;
     ptr.sx += (ptr.x-ptr.sx)*0.12; ptr.sy += (ptr.y-ptr.sy)*0.12;
@@ -667,7 +669,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
-var APP_VER = 'v28';
+var APP_VER = 'v29';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
