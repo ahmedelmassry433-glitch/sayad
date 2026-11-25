@@ -658,7 +658,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
-var APP_VER = 'v15';
+var APP_VER = 'v16';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
@@ -1834,7 +1834,8 @@ function detectSubs(){
     cl.forEach(function(c){ c.sort(function(a,b){return a.d-b.d;}); var r = test(c, false); if(r) { push(k+'#'+Math.round(median(c.map(function(y){return y.a;}))), c, r); names[out[out.length-1].name] = (names[out[out.length-1].name]||0)+1; } });
     out.forEach(function(x){ if(names[x.name]>1 && x.key.indexOf(k+'#')===0) x.name += ' · '+fmtN(x.amount,2); });
   });
-  man.forEach(function(m){                              // اللي إنت ضفته بإيدك
+  man.forEach(function(m){                              // اللي إنت ضفته بإيدك (لو اتلقط من البنك بعد كده، بنعرض اللي من البنك بس)
+    var mn = String(m.name||'').toLowerCase(); if(mn && out.some(function(x){ return x.name.toLowerCase()===mn || String(x.merchant||'').toLowerCase().indexOf(mn)>=0; })) return;
     var day = Math.min(28, Math.max(1, Number(m.day)||1)), n = new Date(today.getFullYear(), today.getMonth(), day); if(n<today) n = addMon(n,1);
     var a = Number(m.amount)||0;
     out.push({key:'m:'+m.id, mkey:'', name:m.name, merchant:m.name, cat:'اشتراكات وأدوات شغل', kind:'sub', amount:a, monthly: m.cycle==='yearly' ? a/12 : a,
