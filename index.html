@@ -669,7 +669,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
-var APP_VER = 'v30';
+var APP_VER = 'v31';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
@@ -769,6 +769,7 @@ function prevTx(period, offset){
 // الحاجات الثابتة (أقساط، إيجار، سداد كريدت، اشتراكات) بتتحسب في الشهر، بس مش في صرف اليوم أو الأسبوع
 var FIXED_CATS = {'أقساط تابي وتمارا':1,'إيجار':1,'سداد كريدت':1,'مش فلوسي':1};
 function isFixedTx(t){ if(FIXED_CATS[t.category]) return true; try{ var k = subKey(t); return detectSubs().some(function(x){ return x.mkey===k && !x.hidden; }); }catch(e){ return false; } }
+function ccPaid(list){ return list.filter(function(t){ return t.category==='سداد كريدت'; }).reduce(function(a,t){ return a+(Number(t.amount)||0); },0); }
 function varOnly(list){ return list.filter(function(t){ return !isFixedTx(t); }); }
 function sum(list,type){ return list.reduce(function(a,t){ var v=Number(t.amount)||0;
   if(t.category===NOT_MINE && t.type==='expense') return type==='income' ? a-v : a;
@@ -1127,6 +1128,7 @@ function vHome(){
     '<span style="font-size:13px" class="'+(spentM>pace?'warn':'good')+'">'+(spentM>pace?L('أسرع من خطتك','Ahead of plan'):L('ماشي على الخطة','On track'))+'</span></div>'+
     '<div class="bar" style="margin-top:8px"><i style="width:'+Math.min(100,budget?spentM/budget*100:0)+'%;background:'+(spentM>budget?'var(--bad)':spentM>pace?'var(--warn)':'linear-gradient(90deg,var(--mint1),var(--mint2))')+'"></i>'+
     '<div class="mark" style="inset-inline-start:'+Math.min(100,elapsed/daysTotal*100)+'%"></div></div>'+
+    (function(){ var cp = ccPaid(monthTx); return cp>0 ? '<div class="dim" style="font-size:12px;margin-top:8px">💳 '+L('سددت للكريدت ','Paid to the credit card ')+money(cp)+L(' الشهر ده · المشتريات نفسها محسوبة وقت ما اشتريتها',' this cycle · the purchases themselves were counted when made')+'</div>' : ''; })()+
     '<div class="dim" style="font-size:12px;margin-top:6px">'+(mr.salary ? (mr.late ? L('المرتب لسه منزلش · لسه بتصرف من مرتب '+dShort(mr.s),'Salary not in yet · still spending from the '+dShort(mr.s)+' salary') : L('من مرتب '+dShort(mr.s)+' · باقي حوالي '+daysLeft+' يوم للمرتب الجاي','Since the '+dShort(mr.s)+' salary · about '+daysLeft+' days to the next one')) :
       L('باقي '+daysLeft+' يوم · الخط الأبيض = المفروض تكون صرفت قد إيه لحد النهارده', daysLeft+' days left · the white line shows where your spending should be by today'))+'</div></div>';
 
@@ -1381,7 +1383,8 @@ function gIndicator(){
 function txRow(t){
   var d = pd(t.date), a = Number(t.amount)||0, inc = t.type==='income' || (t.type==='expense' && a<0), nm = t.category===NOT_MINE, sav = t.type==='saving' || nm;
   var src = (t.source==='sms'||t.source==='push')?'':t.source==='cash'?' · '+L('كاش','Cash'):t.source==='import'?'':' · '+L('يدوي','Manual');
-  var sub = nm ? L('مش فلوسك · مش محسوبة مصروف ولا دخل','Not your money · not counted as spending or income') : sav ? L('ادخار · مش محسوب في المصاريف','Savings · not counted as spending') : esc(catName(t.category))+(t.type==='expense'&&a<0?' · '+L('رجعتلك','refund'):'');
+  var cpay = t.category==='سداد كريدت';
+  var sub = cpay ? L('سداد الكريدت · المشتريات نفسها اتحسبت وقت الشرا','Credit card payment · the purchases were counted when made') : nm ? L('مش فلوسك · مش محسوبة مصروف ولا دخل','Not your money · not counted as spending or income') : sav ? L('ادخار · مش محسوب في المصاريف','Savings · not counted as spending') : esc(catName(t.category))+(t.type==='expense'&&a<0?' · '+L('رجعتلك','refund'):'');
   return '<div class="tx'+(needsReview(t)?' review':'')+'" onclick="editTx(\''+t.id+'\')">'+catIc(t.category, t.merchant)+
     '<div class="mid"><b>'+esc(txName(t))+'</b><span>'+sub+' · '+hhmm(d)+src+(t.note?' · '+esc(t.note):'')+'</span></div>'+
     '<div class="amt'+(inc?' in':'')+(sav?' dim':'')+'"><span class="num">'+(inc?'+':'')+fmtN(Math.abs(a),2)+'</span></div>'+reviewChips(t)+'</div>';
@@ -1501,6 +1504,10 @@ function vReport(){
     '<div class="stat sky"><div class="k">'+L('صرفت','Spent')+'</div><div class="v">'+money(spent)+'</div><div class="s">'+(pSpent?pctTxt(spent,pSpent,L('عن ','vs. ')+prevName):'&nbsp;')+'</div></div>'+
     '<div class="stat mint"><div class="k">'+L('دخلك','Income')+'</div><div class="v good">'+money(inc)+'</div><div class="s">'+(inc?L('بتحوّش ','Saving ')+Math.round(net/inc*100)+'%':'&nbsp;')+'</div></div>'+
     '</div>';
+  var cpR = ccPaid(list);
+  if(cpR>0) h += '<div class="card" style="padding:12px 16px"><div class="row"><span>💳 '+L('سددت للكريدت','Paid to the credit card')+'</span><b class="num">'+fmtN(cpR,2)+'</b></div>'+
+    '<div class="row" style="margin-top:6px"><span class="muted">'+L('كل اللي طلع من حسابك (صرف + سداد)','Everything that left your account (spending + payments)')+'</span><b class="num">'+fmtN(spent+cpR,2)+'</b></div>'+
+    '<div class="dim" style="font-size:11.5px;margin-top:6px">'+L('السداد مش محسوب في «صرفت» عشان المشتريات اتحسبت يوم ما اشتريتها، وإلا هتتحسب مرتين.','Payments aren’t in “Spent” because the purchases were counted when made — otherwise they’d count twice.')+'</div></div>';
   h += '<div class="card"><div class="row"><span class="muted">'+L('الصافي','Net')+' ('+(net>=0?L('فاضل معاك','left over'):L('صرفت أكتر من دخلك','spent more than you earned'))+')</span><b class="'+(net>=0?'good':'bad')+'" style="font-size:20px;font-weight:500">'+signed(net)+'</b></div>';
   if(UI.period==='month'||UI.period==='week'){
     var b = UI.period==='month'? budgetFor(r) : budgetFor(range('month',0)), lim = UI.period==='month'? b : b*7/30;
