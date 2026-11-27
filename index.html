@@ -669,7 +669,7 @@ var LIVE = typeof google !== 'undefined' && google.script && google.script.run;
 // الأبلكيشن المستقل (على الشاشة الرئيسية) بيكلّم المستقبِل بمفتاحه الخاص
 var API_URL = 'https://script.google.com/macros/s/AKfycbwZah3B5iJi7dKpXn8ZzNclKzf2B1fPcmZ9Tyu5K8TYorBDY8No6ACTZlkMfjQLSz0O1g/exec';
 var DEMO_SITE = !!window.SAYAD_DEMO;
-var APP_VER = 'v29';
+var APP_VER = 'v30';
 var HOSTED = !LIVE && !DEMO_SITE && location.protocol==='https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function appKey(){ try{ return localStorage.getItem('sayad-key')||''; }catch(e){ return ''; } }
 // آخر بيانات بتتحفظ على الموبايل، فالأبلكيشن يفتح عليها على طول ويحدّث في الخلفية
@@ -766,6 +766,10 @@ function prevTx(period, offset){
   if(now < cur.e){ var e = new Date(p.s.getTime() + (now - cur.s)); p = {s:p.s, e:e<p.e?e:p.e}; }
   return inRange(p);
 }
+// الحاجات الثابتة (أقساط، إيجار، سداد كريدت، اشتراكات) بتتحسب في الشهر، بس مش في صرف اليوم أو الأسبوع
+var FIXED_CATS = {'أقساط تابي وتمارا':1,'إيجار':1,'سداد كريدت':1,'مش فلوسي':1};
+function isFixedTx(t){ if(FIXED_CATS[t.category]) return true; try{ var k = subKey(t); return detectSubs().some(function(x){ return x.mkey===k && !x.hidden; }); }catch(e){ return false; } }
+function varOnly(list){ return list.filter(function(t){ return !isFixedTx(t); }); }
 function sum(list,type){ return list.reduce(function(a,t){ var v=Number(t.amount)||0;
   if(t.category===NOT_MINE && t.type==='expense') return type==='income' ? a-v : a;
   return a + (t.type===type? v : 0); },0); }
@@ -1100,14 +1104,14 @@ function vHome(){
   var spentM = sum(monthTx,'expense'), incM = sum(monthTx,'income');
   var budget = budgetFor(mr);
   var todayTx = monthTx.filter(function(t){return pd(t.date)>=today;});
-  var spentT = sum(todayTx,'expense');
+  var spentT = sum(varOnly(todayTx),'expense'), fixedT = sum(todayTx,'expense') - spentT; // الأقساط والإيجار مش «صرف النهارده»
   var daysTotal = Math.round((mr.e-mr.s)/864e5), daysLeft = Math.max(1,Math.round((mr.e-today)/864e5));
   var allowance = Math.max(0,(budget-(spentM-spentT))/daysLeft);
   var leftT = allowance - spentT;
   var elapsed = Math.round((today-mr.s)/864e5)+1;
   var pace = budget*elapsed/daysTotal;
-  var wr = range('week',0), spentW = sum(inRange(wr),'expense');
-  var lastW = sum(prevTx('week',0),'expense');
+  var wr = range('week',0), spentW = sum(varOnly(inRange(wr)),'expense');
+  var lastW = sum(varOnly(prevTx('week',0)),'expense');
 
   var hr = now.getHours(), nm = userName();
   var hello = hr<5 ? L('سهران يا '+nm+'؟','Up late, '+nm+'?') : hr<12 ? L('صباح الخير يا '+nm,'Good morning, '+nm) : L('مساء الخير يا '+nm, hr<18?'Good afternoon, '+nm:'Good evening, '+nm);
@@ -1115,6 +1119,7 @@ function vHome(){
     '<button class="arrowbtn" aria-label="'+L('التقارير','Reports')+'" onclick="UI.period=\'day\';UI.offset=0;go(\'report\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 7 7 17M9 7h8v8"/></svg></button>'+
     '<div class="label">'+L('صرفت النهارده','Spent today')+'</div>'+
     '<div class="big">'+countNum(spentT)+'<small>'+CUR()+'</small></div>'+
+    (fixedT>0 ? '<div class="dim" style="font-size:12px;margin:-6px 0 8px">+ '+money(fixedT)+L(' أقساط وحاجات ثابتة (محسوبة في الشهر بس)',' installments & fixed bills (counted in the month only)')+'</div>' : '')+
     (budget? (leftT>=0
       ? '<span class="pill">✓ '+L('لسه قدامك '+money(leftT)+' ريال تصرفهم النهارده', money(leftT)+' SAR left to spend today')+'</span>'
       : '<span class="pill bad">⚠️ '+L('عدّيت حدّ النهارده بـ '+money(-leftT)+' ريال', money(-leftT)+' SAR over today’s limit')+'</span>') : '')+
@@ -1216,13 +1221,16 @@ function clearMonthBudget(){ var k=monthKey(range('month',0).s), mb=Object.assig
 /* ---------- الأقساط والكريدت ---------- */
 function todayStr(){ return iso(sod(new Date())).slice(0,10); }
 function instPaid(i){ return i.status==='اتدفع'; }
+function isCC(i){ return i.source==='cc' || /ائتمان|كريدت|credit/i.test(i.provider||''); }
 function instPlans(){
   var g={};
-  (D.installments||[]).forEach(function(i){ var k=i.planId||(i.provider+'|'+i.merchant); (g[k]=g[k]||[]).push(i); });
+  (D.installments||[]).forEach(function(i){ var k = isCC(i) ? 'cc-all' : (i.planId||(i.provider+'|'+i.merchant)); (g[k]=g[k]||[]).push(i); });
   return Object.keys(g).map(function(k){
     var items=g[k].sort(function(a,b){return a.dueDate<b.dueDate?-1:1;});
     var paid=items.filter(instPaid), left=items.filter(function(i){return !instPaid(i);});
     var total=Math.max(items.length, Number(items[0].total)||0);
+    if(k==='cc-all'){ var ms = []; left.forEach(function(i){ var m = String(i.merchant||'').replace(/^مشتريات \d{4}-\d{2}$/, L('مشتريات','Purchases')); if(ms.indexOf(m)<0) ms.push(m); });
+      return {id:k, cc:true, provider:L('كريدت الراجحي','Al Rajhi credit'), merchant:ms.join(' + '), items:items, paidN:0, total:0, left:left, leftAmt:left.reduce(function(a,i){return a+Number(i.amount);},0), next:left[0]||null, manual:false}; }
     return {id:k, provider:items[0].provider, merchant:items[0].merchant, items:items, paidN:paid.length + Math.max(0,total-items.length), total:total,
       left:left, leftAmt:left.reduce(function(a,i){return a+Number(i.amount);},0), next:left[0]||null, manual:items[0].source==='manual'};
   }).filter(function(p){ return p.left.length; }).sort(function(a,b){ return a.next.dueDate<b.next.dueDate?-1:1; });
@@ -1231,6 +1239,11 @@ function instNumTxt(i){ return (i.num&&i.total)? L('قسط '+i.num+' من '+i.to
 function vInstallments(compact){
   var today=todayStr();
   var up=(D.installments||[]).filter(function(i){return !instPaid(i);}).sort(function(a,b){return a.dueDate<b.dueDate?-1:1;});
+  // الكريدت كارد سطر واحد بالإجمالي، مش سطر لكل شهر أو مشتريات
+  var ccRows = up.filter(isCC);
+  if(ccRows.length > 1){ var tot = ccRows.reduce(function(a,i){return a+Number(i.amount);},0); up = up.filter(function(i){ return !isCC(i); });
+    up.push({id:'', provider:'كريدت الراجحي', merchant:'', amount:Math.round(tot*100)/100, dueDate:ccRows[0].dueDate, status:'جاي', source:'cc', _agg:true});
+    up.sort(function(a,b){return a.dueDate<b.dueDate?-1:1;}); }
   if(!up.length && compact) return '';
   var endM=iso(range('month',0).e).slice(0,10);
   var thisMonth=up.filter(function(i){return i.dueDate<endM;}).reduce(function(a,i){return a+Number(i.amount);},0);
@@ -1244,7 +1257,7 @@ function instTitle(o){ return '<b>'+esc(enName(o.provider))+'</b>'; }
 function instSub(o, extra){ return '<span>'+(o.merchant?esc(enName(o.merchant))+(extra?' · ':''):'')+(extra||'')+'</span>'; }
 function instRow(i){
   var d=pd(i.dueDate), late=i.dueDate<todayStr();
-  return '<div class="tx" onclick="editInst(\''+i.id+'\')">'+instIc(i.provider)+
+  return '<div class="tx" onclick="'+(i._agg?'go(\'inst\')':'editInst(\''+i.id+'\')')+'">'+instIc(i.provider)+
     '<div class="mid">'+instTitle(i)+instSub(i, instNumTxt(i))+'</div>'+
     '<div style="text-align:end"><div class="amt">'+money(i.amount,2)+'</div><span class="chg '+(late?'down':'flat')+'">'+(late?L('عدّى ميعاده · ','Overdue · '):'')+dShort(d)+'</span></div></div>';
 }
@@ -1267,10 +1280,10 @@ function vInstPage(){
   h+=plans.map(function(p){
     var pct=p.total? p.paidN/p.total*100 : 0, n=p.next;
     return '<div class="card plan" onclick="openPlan(\''+esc(p.id)+'\')">'+
-      '<div class="tx" style="border:0;padding:0 0 10px;cursor:pointer">'+instIc(p.provider)+
-        '<div class="mid">'+instTitle(p)+instSub(p, L('دفعت '+p.paidN+' من '+p.total,'Paid '+p.paidN+' of '+p.total))+'</div>'+
+      '<div class="tx" style="border:0;padding:0 0 10px;cursor:pointer">'+instIc(p.cc?'كريدت الراجحي':p.provider)+
+        '<div class="mid">'+instTitle(p)+instSub(p, p.cc ? L('مطلوب على الكارت','Owed on the card') : L('دفعت '+p.paidN+' من '+p.total,'Paid '+p.paidN+' of '+p.total))+'</div>'+
         '<div style="text-align:end"><div class="amt">'+money(p.leftAmt,2)+'</div><span class="dim" style="font-size:11.5px">'+L('باقي','left')+'</span></div></div>'+
-      '<div class="bar"><i style="width:'+pct+'%"></i></div>'+
+      (p.cc ? '' : '<div class="bar"><i style="width:'+pct+'%"></i></div>')+
       '<div class="row" style="margin-top:10px;font-size:13px"><span class="muted">'+L('القسط الجاي','Next')+(n.num?' ('+n.num+'/'+(n.total||p.total)+')':'')+'</span><span><b class="num">'+fmtN(n.amount,2)+'</b> · '+dayLabel(pd(n.dueDate))+'</span></div></div>';
   }).join('');
 
